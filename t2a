@@ -1,0 +1,9 @@
+#!/bin/sh
+# Tcpdump wrapper for using tcpdump2ascii.
+
+if [ -x ~/scripts/tcpdump2ascii ]; then
+	tcpdump "$@" | ~/scripts/tcpdump2ascii
+else
+	echo "tcpdump2ascii NOT FOUND!"
+	tcpdump "$@"
+fi
