@@ -2,7 +2,8 @@
 
 # A small script to easily change targets of a set of symlinks.
 # Run the script, then edit the generated rename.sh to set the
-# new targets of the files.
+# new targets of the files. Finally run the rename.sh script
+# to modify the links
 
 > rename.sh
 > rename.sh.tmp
