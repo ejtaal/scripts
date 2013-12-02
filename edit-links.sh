@@ -15,7 +15,7 @@ for i in *; do
 		c=$(printf %05d $count)
 		ls -l "$i"
 		stat "$i" | grep "File:" | \
-			sed "s/^.*File: \`\(.*\)' -> \`\(.*\)'\$/NEWTARGET${c}=\"\2\"\t\t# \1/" >> rename.sh
+			sed "s/^.*File: [\`\‘]\(.*\)['’] -> [\`\‘]\(.*\)['’]\$/NEWTARGET${c}=\"\2\"\t\t# \1/" >> rename.sh
 		echo "ln -sfn \"\$NEWTARGET${c}\" \"$i\"" >> rename.sh.tmp
 	fi
 done
