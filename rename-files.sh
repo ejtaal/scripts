@@ -17,6 +17,7 @@
 count=1
 if [ "$1" != "" ]; then
 	for file in "$@"; do
+		if [ "$file" = "rename.sh" -o "$file" = "rename.sh.tmp" ]; then continue; fi
 	  MARKER=$(printf "%05d" ${count})
 	  echo "NEW${MARKER}=\"$file\"" >> rename.sh
 	  echo "ORIG${MARKER}=\"$file\"" >> rename.sh.tmp
@@ -25,6 +26,7 @@ if [ "$1" != "" ]; then
 	done
 else
 	for file in *; do
+		if [ "$file" = "rename.sh" -o "$file" = "rename.sh.tmp" ]; then continue; fi
 	  MARKER=$(printf "%05d" ${count})
 	  echo "NEW${MARKER}=\"$file\"" >> rename.sh
 	  echo "ORIG${MARKER}=\"$file\"" >> rename.sh.tmp
@@ -33,9 +35,8 @@ else
 	done
 fi
 
-cat rename.sh.tmp >> rename.sh
-
-echo "rm -f rename.sh rename.sh.tmp" >> rename.sh
+echo ". ./rename.sh.tmp" >> rename.sh
+echo "rm -f rename.sh rename.sh.tmp" >> rename.sh.tmp
 
 echo "==>> generated script: rename.sh"
 ls -l rename.sh

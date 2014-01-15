@@ -244,7 +244,8 @@ prompt_command() {
 	history -a
 	# Load current history:
 	# Disabled now since actually this is annoying as often i want 
-	# to run the previous command of a terminal
+	# to run the previous command of a terminal and not the previous
+	# system-wide command.
 	#history -n
 
 	# Define some useful colour names

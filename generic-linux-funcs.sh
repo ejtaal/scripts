@@ -62,8 +62,6 @@ get_basic_dist_info() {
 }
 
 system_info() {
-	# TODO: list ssh, terminal, screen, vnc & VM sessions summary
-	# echo " scr:$scr_num vnc:$user_vnc_num/$total_vnc_num VM:$vm_num"
 	
 	if which screen 2> /dev/null | grep -q "^/"; then
 		screens=$(screen -ls | egrep "^[0-9]+ Sockets* in" | sed 's/ Socket.*//')
@@ -134,8 +132,15 @@ system_info() {
 		
 	IPS=$(ip addr | grep 'inet ' | grep -v 127.0.0 | cut -f 1 -d'/' | awk '{ print $2 }' | xargs)
 	GATEWAY=$(ip route | grep ^default | awk '{ print $3 "(" $5 ")" }')
+	echo -n "ip: ${IPS}->$GATEWAY "
 
-	echo -n "ip: ${IPS}->$GATEWAY"
+	for i in /sys/class/power_supply/BAT*; do
+		bat=$(basename $i)
+		cap=$(cat $i/capacity)
+		status=$(cat $i/status | cut -b -3)
+		echo "$bat($status):${cap}% "
+	done
+
 
 }
 
