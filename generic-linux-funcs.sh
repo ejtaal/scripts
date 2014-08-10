@@ -138,7 +138,7 @@ system_info() {
 		bat=$(basename $i)
 		cap=$(cat $i/capacity)
 		status=$(cat $i/status | cut -b -3)
-		echo "$bat($status):${cap}% "
+		echo -n "$bat($status):${cap}% "
 	done
 
 

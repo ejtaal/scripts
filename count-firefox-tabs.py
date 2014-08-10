@@ -13,4 +13,4 @@ def info_for_tab(tab):
 def tabs_from_windows(window):
     return list(map(info_for_tab, window['tabs']))
 all_tabs = list(map(tabs_from_windows, j['windows']))
-print('Statistics: {wins} windows, {tabs} total tabs'.format(wins=len(all_tabs), tabs=sum(map(len, all_tabs))))
+print('{wins} win, {tabs} total tabs'.format(wins=len(all_tabs), tabs=sum(map(len, all_tabs))))
