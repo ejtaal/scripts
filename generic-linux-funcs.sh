@@ -6,6 +6,13 @@
 # It returns the information in a terse format, mainly for use in my
 # super fancy mega ultra bash prompt :), see bashrc for that.
 
+# Define some useful colour names
+esc="\e"; boldon="${esc}[1m"; boldoff="${esc}[22m"; reset="${esc}[0m"
+redf="${esc}[31m";  greenf="${esc}[32m";  yellowf="${esc}[33m";
+bluef="${esc}[34m"; purplef="${esc}[35m"; cyanf="${esc}[36m";
+redfb="${esc}[1m${esc}[31m${esc}[22m";  greenfb="${esc}[1m${esc}[32m";  yellowfb="${esc}[1m${esc}[33m";
+bluefb="${esc}[1m${esc}[34m${esc}[22m"; purplefb="${esc}[1m${esc}[35m"; cyanfb="${esc}[1m${esc}[36m";
+
 get_basic_dist_info() {
 	system_type=$(uname)
 	kernel_info="?"
@@ -31,10 +38,14 @@ get_basic_dist_info() {
 		# Personally, need to cater for RHEL, CentOS, ubuntu, FreeBSD
 		kernel_info=$(uname -r | sed 's/-.*//')
 		proc_info=$(uname -m)
-		if [ -f /etc/issue ]; then
+		if [ -x /usr/bin/lsb_release ]; then
+			os_release=$(/usr/bin/lsb_release -rs)
+			os_desc=$(/usr/bin/lsb_release -ds)
+		elif [ -f /etc/issue ]; then
 			if head -1 /etc/issue | grep -qi ubuntu; then
 				# Maybe could also use /etc/lsb-release in future?
 				os_info=$(head -1 /etc/issue | sed -e 's/ \\.*//')
+				os_icon=
 			elif head -1 /etc/issue | grep -qi centos; then
 				os_info=$(head -1 /etc/issue | sed -e 's# release##' -e 's/ (.*//')
 			elif head -1 /etc/issue | grep -qi ^red; then
@@ -135,6 +146,7 @@ system_info() {
 	echo -n "ip: ${IPS}->$GATEWAY "
 
 	for i in /sys/class/power_supply/BAT*; do
+		if [ ! -f "$i" ]; then continue; fi
 		bat=$(basename $i)
 		cap=$(cat $i/capacity)
 		status=$(cat $i/status | cut -b -3)
