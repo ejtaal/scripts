@@ -126,6 +126,7 @@ export HISTSIZE=50000
 export HISTTIMEFORMAT="%Y-%m-%d--%H:%M"
 export SVKDIFF="/usr/bin/diff -u"
 export COLORIZE_NICEPROMPT=0
+export STATUSLINE_DELAY=10
 
 shopt -s histappend
 shopt -s checkwinsize
@@ -136,6 +137,7 @@ shopt -s checkwinsize
 if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
     . /etc/bash_completion
 fi
+	
 
 ### End of variables ###
 
@@ -221,9 +223,11 @@ rainbowify() {
 # before a command starts. I use it to set a timestamp
 # so we can calc how long a command ran.
 preexec () { 
-	[ -z "$BASH_COMMAND_START" ] && export BASH_COMMAND_START=$(date +%s)
+	[ -z "$BASH_COMMAND_START" ] && export BASH_COMMAND_START=$(date +"%s%3N")
 	#echo "BASH_COMMAND_START=$BASH_COMMAND_START"
-	#:; 
+	
+	# Flush history to disk (command might crash your shell or something you know)
+	history -a
 }
 
 preexec_invoke_exec () {
@@ -240,20 +244,11 @@ prompt_command() {
   # First get the last exit code to display later
   LASTEXIT=$?
 
-	# Flush history to disk
-	history -a
 	# Load current history:
 	# Disabled now since actually this is annoying as often i want 
 	# to run the previous command of a terminal and not the previous
 	# system-wide command.
 	#history -n
-
-	# Define some useful colour names
-  esc="\e"; boldon="${esc}[1m"; boldoff="${esc}[22m"; reset="${esc}[0m"
-  redf="${esc}[31m";  greenf="${esc}[32m";  yellowf="${esc}[33m";
-  bluef="${esc}[34m"; purplef="${esc}[35m"; cyanf="${esc}[36m";
-  redfb="${esc}[1m${esc}[31m${esc}[22m";  greenfb="${esc}[1m${esc}[32m";  yellowfb="${esc}[1m${esc}[33m";
-  bluefb="${esc}[1m${esc}[34m${esc}[22m"; purplefb="${esc}[1m${esc}[35m"; cyanfb="${esc}[1m${esc}[36m";
 
   USERNAME=$(whoami)
   COLUMNSLEFT=$(($COLUMNS-5))
@@ -286,8 +281,8 @@ prompt_command() {
   # Echo numeric exit code + pwd, leave out -n as we want a new line now
 	echo -n -e " $LASTEXIT | ";
 	
-	BASH_COMMAND_END=$(date +%s)
-	BASH_COMMAND_RAN=`human_time $((BASH_COMMAND_END-BASH_COMMAND_START))`
+	BASH_COMMAND_END=$(date +"%s%3N")
+	BASH_COMMAND_RAN=`human_time $BASH_COMMAND_START $BASH_COMMAND_END`
 	
 	echo -n "${BASH_COMMAND_RAN} | "
 	export BASH_COMMAND_START=""
@@ -327,6 +322,25 @@ prompt_command() {
   echo
 	echo -ne "${boldon}${cyanf}${indent}${reset} "
   echo -e "$PROMPTDIR"
+}
+
+statusline() {
+	shopt -s huponexit
+	while sleep $STATUSLINE_DELAY; do
+		#echo -en "${EMB}[${NONE}${NEW_PWD}${EMB}] ${GIT_BRANCH}${SVN_REV}${CURRENT_RV>
+		write_statusline "==>> $(date) My super cool status bar, \$PIPO = $PIPO <<=="
+	done
+}
+
+write_statusline() {
+		lines=`tput lines`
+		tput sc
+		non_scroll_line=$((lines - 1))
+		scroll_region="0 $((lines - 2))"
+		tput csr $scroll_region
+		tput cup $non_scroll_line 0
+		echo -en "${1}"
+		tput rc
 }
 
 niceprompt() {
@@ -497,7 +511,7 @@ persistcommand() {
 		EXITCODE=$?
 		endcommand=`date +%s`
 		#secondsran=$((endcommand-startcommand))
-		readable_string=`human_time $((endcommand-startcommand))`
+		readable_string=`human_time startcommand $endcommand`
 		days=$((secondsran/86400))
 		secondsran=$((secondsran-(days*86400)))
 		hours=$((secondsran/3600))
@@ -527,15 +541,31 @@ persistcommand() {
 }
 
 human_time() {
+	echo human_time "[$*]"
 	# Convert a number of seconds to something more readable by hoo-maans
-	seconds="$1"
-	days=$((seconds/86400))
-	seconds=$((seconds-(days*86400)))
-	hours=$((seconds/3600))
-	seconds=$((seconds-(hours*3600)))
-	mins=$((seconds/60))
-	secondsleft=$((seconds-(mins*60)))
-	echo "${days}d:${hours}h:${mins}m:${secondsleft}s"
+	if [ "${#1}" = 13 ]; then
+		# We've been given millisecs (length of 10 - 7 = 3)
+		seconds=$(($2-$1))
+		msecs="$((seconds%1000))"
+		echo "seconds $seconds"
+		if [ $msecs -lt 100 ]; then pad='0'; fi
+		if [ $msecs -lt 10 ]; then pad='00'; fi
+		msecs=".${pad}$((seconds%1000))"
+		seconds=$(( seconds / 1000))
+	else
+		seconds="$1"
+	fi
+	echo "seconds $seconds msecs $msecs"
+	days=$((seconds / 86400))
+	seconds=$((seconds % 86400))
+	hours=$((seconds / 3600))
+	seconds=$((seconds % 3600))
+	mins=$((seconds / 60))
+	if [ $days -gt 0 ]; then final="${days}d:"; fi
+	if [ $hours -gt 0 ]; then final="${final}${hours}h:"; fi
+	if [ $mins -gt 0 ]; then final="${final}${mins}m"; msecs=; fi
+	secondsleft="$((seconds % 60))${msecs}s"
+	echo "${final}${secondsleft}"
 }
 
 multitail-cut() {
@@ -612,3 +642,7 @@ case "$THISHOST" in
 #		fi
 		;;
 esac
+
+# Now launch the statusline in the background
+write_statusline "[...gathering system information...]"
+statusline &
