@@ -172,3 +172,32 @@ vm_check() {
 	fi
 	echo "$VM_TYPE"
 }
+
+hexToIp(){
+	k=$2
+	printf -v $1 "%d.%d.%d.%d" 0x${k:6:2} 0x${k:4:2} 0x${k:2:2} 0x${k:0:2}
+}
+
+get_default_if() {
+	while read -a rtLine ;do
+  	if [ ${rtLine[1]} == "00000000" ] && [ ${rtLine[7]} == "00000000" ] ;then
+      hexToIp default_gateway ${rtLine[2]}
+			#echo $netInt
+			#echo "addrLine = [$addrLine]"
+			last_2_digits=${default_gateway#[0-9]*.[0-9]*.}
+			device=${rtLine[0]}
+			break
+		fi
+	done < /proc/net/route
+	if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}')
+	echo "${if_ip}->${last_2_digits}"
+}
+
+hexToInt() {
+    printf -v $1 "%d\n" 0x${2:6:2}${2:4:2}${2:2:2}${2:0:2}
+}
+
+intToIp() {
+	local	iIp=$2
+	printf -v $1 "%s.%s.%s.%s" $(($iIp>>24)) $(($iIp>>16&255)) $(($iIp>>8&255)) $(($iIp&255))
+}

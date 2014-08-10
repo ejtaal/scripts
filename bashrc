@@ -257,12 +257,12 @@ prompt_command() {
   fi;
 	PS1="\[${boldon}${indentcolour}\]#\[${reset}\] "
 	echo -ne "${boldon}${indentcolour}┌"
-	i=1
+	i=2
 	while [ $i -lt $COLUMNS ]; do
 		i=$((i+1))
 		echo -ne "─"
 	done
-	echo -e "${reset}"
+	echo -e "┐${reset}"
 	# Ph34r |\/|y l33t B45h |-|A<k3r Pr0|\/|p7 ;)
 
   # First get the last exit code to display later
@@ -316,9 +316,18 @@ prompt_command() {
 	echo -n "$(date +'%Y/%m/%d, %a, %H:%M:%S') | "
 
 	#echo -ne "${boldon}${cyanf}${indent}${reset} "
-	echo -n "$(uptime | sed -e 's/^.*up */+/' -e 's/, */ /g' -e 's/ users*.*/u/') | "
+	echo -n "$(uptime | sed -e 's/^.*up */+/' -e 's/ days*, */d:/g' -e 's/ users*.*/u/') | "
 	read l1 l2 l3 rest < /proc/loadavg
-	echo "$l1 $l2 $l3"
+	echo -n "$l1 $l2 $l3"
+	echo -en "\E[6n"; read -sdR CURPOS; CURPOS=${CURPOS#*;}
+	SPACELEFT=$((COLUMNS-CURPOS))
+	i=0
+	while [ $i -lt $SPACELEFT ]; do
+		i=$((i+1))
+		echo -ne " "
+	done
+	echo -e "${boldon}${indentcolour}${indent}${reset}"
+
 	#echo -ne "${boldon}${cyanf}${indent}${reset} "
 	#if [ $COLORIZE_NICEPROMPT -eq 1 ]; then
 	#	bright_rainbowify "${dist_info}"
@@ -333,7 +342,26 @@ prompt_command() {
   # Echo ' username[tty]@hostname(uname) | time | '
   HOST_COLOR="${yellowf}"
   [ -n "$RUNNING_IN_VM" ] && HOST_COLOR="${cyanf}"
-  echo -n -e "$boldon$usercolour$USERNAME${reset}@${boldon}${HOST_COLOR}$HOSTNAME${reset}:$PROMPTDIR\n"
+  echo -n -e "$boldon$usercolour$USERNAME${reset}@${boldon}${HOST_COLOR}$HOSTNAME${reset}:$PROMPTDIR "
+	# Get current column so we know how much space is left to print more info:
+	echo -en "\E[6n"; read -sdR CURPOS; CURPOS=${CURPOS#*;}
+	SPACELEFT=$((COLUMNS-CURPOS))
+	#echo SPACELEFT = $SPACELEFT
+	MOREINFO="`get_default_if`"
+	#echo MARK
+	#echo MOREINFO = $MOREINFO
+	MOREINFOLENGTH=${#MOREINFO}
+	FILLERSPACE=$((SPACELEFT-MOREINFOLENGTH))
+	i=1
+	while [ $i -lt $FILLERSPACE ]; do
+		i=$((i+1))
+		echo -ne " "
+	done
+	echo -e "${MOREINFO} ${boldon}${indentcolour}${indent}${reset}"
+}
+
+ip_info() {
+	default_route=$(get_default_if)
 }
 
 statusline() {
