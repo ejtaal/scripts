@@ -127,6 +127,7 @@ export HISTTIMEFORMAT="%Y-%m-%d--%H:%M"
 export SVKDIFF="/usr/bin/diff -u"
 export COLORIZE_NICEPROMPT=0
 export STATUSLINE_DELAY=10
+export USERNAME=$(whoami)
 
 shopt -s histappend
 shopt -s checkwinsize
@@ -223,11 +224,19 @@ rainbowify() {
 # before a command starts. I use it to set a timestamp
 # so we can calc how long a command ran.
 preexec () { 
-	[ -z "$BASH_COMMAND_START" ] && export BASH_COMMAND_START=$(date +"%s%3N")
+	# Show system info only after first command has finished.
+	if [ "$BASH_SHOW_SYSINFO" = "0" ]; then
+		BASH_SHOW_SYSINFO=1
+	elif [ "$BASH_SHOW_SYSINFO" = "1" ]; then
+		echo "$(system_info)" "${dist_info}"
+		BASH_SHOW_SYSINFO=2
+	fi
 	#echo "BASH_COMMAND_START=$BASH_COMMAND_START"
 	
 	# Flush history to disk (command might crash your shell or something you know)
 	history -a
+	
+	[ -z "$BASH_COMMAND_START" ] && export BASH_COMMAND_START=$(date +"%s%3N")
 }
 
 preexec_invoke_exec () {
@@ -239,6 +248,21 @@ preexec_invoke_exec () {
 trap 'preexec_invoke_exec' DEBUG
 
 prompt_command() {
+	indentcolour="$cyanf"
+  if [ $USERNAME = "root" -o "$UID" = 0 ]; then
+		usercolour="$redf"
+		indentcolour="$redf"
+  else
+		usercolour="$greenf"
+  fi;
+	PS1="\[${boldon}${indentcolour}\]#\[${reset}\] "
+	echo -ne "${boldon}${indentcolour}┌"
+	i=1
+	while [ $i -lt $COLUMNS ]; do
+		i=$((i+1))
+		echo -ne "─"
+	done
+	echo -e "${reset}"
 	# Ph34r |\/|y l33t B45h |-|A<k3r Pr0|\/|p7 ;)
 
   # First get the last exit code to display later
@@ -250,16 +274,17 @@ prompt_command() {
 	# system-wide command.
 	#history -n
 
-  USERNAME=$(whoami)
-  COLUMNSLEFT=$(($COLUMNS-5))
+  #COLUMNSLEFT=$(($COLUMNS-5))
+  #MYPWD=$(pwd | sed -e "s#^$HOME\$#$HOME (~ HOME)#" -e "s#^$HOME/#~/#")
   MYPWD=$(pwd | sed -e "s#^$HOME\$#$HOME (~ HOME)#" -e "s#^$HOME/#~/#")
-  PWDLENGTH=$(echo -n "$MYPWD" | wc -c)
-  if [ "$PWDLENGTH" -lt "$COLUMNSLEFT" ]; then
-    PROMPTDIR="$MYPWD"
-  else
-    # There's not enough space to print the pwd, so print equal parts of the left and right side
-    PROMPTDIR="$(echo "$MYPWD" | cut -b -$((COLUMNSLEFT/2-2)))...$(echo "$MYPWD" | cut -b $((PWDLENGTH-(COLUMNSLEFT/2)+2))-)"
-  fi
+	PROMPTDIR="$MYPWD"
+  PWDLENGTH=${#MYPWD}
+	#if [ "$PWDLENGTH" -lt "$COLUMNSLEFT" ]; then
+	#  PROMPTDIR="$MYPWD"
+	#else
+	#  # There's not enough space to print the pwd, so print equal parts of the left and right side
+	#  PROMPTDIR="$(echo "$MYPWD" | cut -b -$((COLUMNSLEFT/2-2)))...$(echo "$MYPWD" | cut -b $((PWDLENGTH-(COLUMNSLEFT/2)+2))-)"
+	#fi
   # Set a nicer window title for screen
   SCREENTITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/');
   echo "$TERMCAP" | grep -q 'screen' && echo -n -e "\033k$SCREENTITLE\033\134";
@@ -269,8 +294,8 @@ prompt_command() {
     echo -n -e "\e]0;$(whoami) @ $HOSTNAME | $PROMPTDIR   | \a";
   fi
   
-	indent='='
-	echo -ne "${boldon}${cyanf}${indent}${reset} "
+	indent="│"
+	echo -ne "${boldon}${indentcolour}${indent}${reset} "
 	echo -n -e ${boldon}
   # If last command was successful
   if [ $LASTEXIT -eq 0 ]; then
@@ -290,41 +315,30 @@ prompt_command() {
   
 	echo -n "$(date +'%Y/%m/%d, %a, %H:%M:%S') | "
 
-  # Start bold text
-  echo -n -e $boldon
-  # True if we are root
-  if [ $(id -u) = '0' ]; then
-    # Start red colour
-    echo -n -e $redf
-		PS1="\[${boldon}${redf}\]#\[${reset}\] "
-  else
-    # Start green colour
-    echo -n -e $greenf
-		PS1="\[${boldon}${cyanf}\]\$\[${reset}\] "
-  fi;
+	#echo -ne "${boldon}${cyanf}${indent}${reset} "
+	echo -n "$(uptime | sed -e 's/^.*up */+/' -e 's/, */ /g' -e 's/ users*.*/u/') | "
+	read l1 l2 l3 rest < /proc/loadavg
+	echo "$l1 $l2 $l3"
+	#echo -ne "${boldon}${cyanf}${indent}${reset} "
+	#if [ $COLORIZE_NICEPROMPT -eq 1 ]; then
+	#	bright_rainbowify "${dist_info}"
+	#	echo
+	#else
+	#	echo "${dist_info}"
+	#fi
+	#echo -ne "${boldon}${cyanf}${indent}${reset} "
+  #system_info
+  #echo
+	echo -ne "${boldon}${indentcolour}${indent}${reset} "
   # Echo ' username[tty]@hostname(uname) | time | '
   HOST_COLOR="${yellowf}"
   [ -n "$RUNNING_IN_VM" ] && HOST_COLOR="${cyanf}"
-  echo -n -e "$USERNAME${reset}[$tty]@${boldon}${HOST_COLOR}$HOSTNAME${reset} | "
-	echo
-	echo -ne "${boldon}${cyanf}${indent}${reset} "
-	echo -n "$(uptime | sed -e 's/^.*up */+/' -e 's/, */ /g' -e 's/ users*.*/u/') | "
-	cat /proc/loadavg
-	echo -ne "${boldon}${cyanf}${indent}${reset} "
-	if [ $COLORIZE_NICEPROMPT -eq 1 ]; then
-		bright_rainbowify "${dist_info}"
-		echo
-	else
-		echo "${dist_info}"
-	fi
-	echo -ne "${boldon}${cyanf}${indent}${reset} "
-  system_info
-  echo
-	echo -ne "${boldon}${cyanf}${indent}${reset} "
-  echo -e "$PROMPTDIR"
+  echo -n -e "$boldon$usercolour$USERNAME${reset}@${boldon}${HOST_COLOR}$HOSTNAME${reset}:$PROMPTDIR\n"
 }
 
 statusline() {
+	# Do some clever byobu like magic in here.
+	# Better yet, source byobu's scripts and use their output
 	shopt -s huponexit
 	while sleep $STATUSLINE_DELAY; do
 		#echo -en "${EMB}[${NONE}${NEW_PWD}${EMB}] ${GIT_BRANCH}${SVN_REV}${CURRENT_RV>
@@ -334,16 +348,22 @@ statusline() {
 
 write_statusline() {
 		lines=`tput lines`
+		cols=`tput cols`
 		tput sc
-		non_scroll_line=$((lines - 1))
-		scroll_region="0 $((lines - 2))"
+		#scroll_region="0 $((lines - 2))"
+		scroll_region="0 $((lines - 3))"
 		tput csr $scroll_region
+		non_scroll_line=$((lines - 2))
 		tput cup $non_scroll_line 0
-		echo -en "${1}"
+		echo -e "${1}"
+		echo -en "${2}"
 		tput rc
 }
 
 niceprompt() {
+# Now launch the statusline in the background
+	#statusline &
+	#write_statusline "[...gathering system information...]"
 	dist_info=$(get_basic_dist_info)
 	tty=$(tty | sed -e 's#^/dev/##')
 	COLUMNS=${COLUMNS:-80}
@@ -541,13 +561,13 @@ persistcommand() {
 }
 
 human_time() {
-	echo human_time "[$*]"
+	#echo human_time "[$*]"
 	# Convert a number of seconds to something more readable by hoo-maans
 	if [ "${#1}" = 13 ]; then
 		# We've been given millisecs (length of 10 - 7 = 3)
 		seconds=$(($2-$1))
 		msecs="$((seconds%1000))"
-		echo "seconds $seconds"
+		#echo "seconds $seconds"
 		if [ $msecs -lt 100 ]; then pad='0'; fi
 		if [ $msecs -lt 10 ]; then pad='00'; fi
 		msecs=".${pad}$((seconds%1000))"
@@ -555,7 +575,7 @@ human_time() {
 	else
 		seconds="$1"
 	fi
-	echo "seconds $seconds msecs $msecs"
+	#echo "seconds $seconds msecs $msecs"
 	days=$((seconds / 86400))
 	seconds=$((seconds % 86400))
 	hours=$((seconds / 3600))
@@ -643,6 +663,3 @@ case "$THISHOST" in
 		;;
 esac
 
-# Now launch the statusline in the background
-write_statusline "[...gathering system information...]"
-statusline &
