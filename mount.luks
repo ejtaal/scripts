@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+###
+# Create a luks container like so:
+###
+# dd if=/dev/zero of=$1 bs=1 count=0 seek=$2
+# MAPPER=$(mktemp -up /dev/mapper)
+# LOOPDEV=$(losetup --find --show $1)
+# cryptsetup luksFormat $LOOPDEV
+# cryptsetup luksOpen $LOOPDEV $(basename $MAPPER)
+# mkfs.ext3 $MAPPER
+# cryptsetup luksClose $MAPPER
+# losetup -d $LOOPDEV
+#
+# Then use the following to mount it
+
+set -e
+if [[ $(mount | grep ${2%%/} | wc -l) -gt 0 ]]; then
+  echo "Path $2 is already mounted!" >&2
+  exit 9
+else
+  MAPPER=$(sudo mktemp -up /dev/mapper)
+  cryptsetup luksOpen $1 $(basename $MAPPER)
+  shift
+	chown taal $MAPPER
+	mount $MAPPER $* || cryptsetup luksClose $(basename $MAPPER)
+fi

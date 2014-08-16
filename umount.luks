@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+MAPPER=$(basename $(mount | grep $1 | gawk ' { print $1 } '))
+LOOPDEV=$(cryptsetup status $MAPPER | grep device | gawk ' { print $2 } ')
+umount $1
+cryptsetup luksClose $MAPPER
+losetup -d $LOOPDEV
