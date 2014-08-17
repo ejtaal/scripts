@@ -38,19 +38,31 @@ get_basic_dist_info() {
 		# Personally, need to cater for RHEL, CentOS, ubuntu, FreeBSD
 		kernel_info=$(uname -r | sed 's/-.*//')
 		proc_info=$(uname -m)
-		if [ -x /usr/bin/lsb_release ]; then
-			os_release=$(/usr/bin/lsb_release -rs)
-			os_desc=$(/usr/bin/lsb_release -ds)
+		if [ -f /etc/lsb-release ]; then
+			. /etc/lsb-release
+			if [ $DISTRIB_ID = "Ubuntu" ]; then
+				os_icon=U
+				os_color="$purplefb"
+				os_release="$DISTRIB_RELEASE"
+			fi
 		elif [ -f /etc/issue ]; then
 			if head -1 /etc/issue | grep -qi ubuntu; then
 				# Maybe could also use /etc/lsb-release in future?
 				os_info=$(head -1 /etc/issue | sed -e 's/ \\.*//')
-				os_icon=
+				os_icon="U"
+				os_color="$purplefb"
 			elif head -1 /etc/issue | grep -qi centos; then
 				os_info=$(head -1 /etc/issue | sed -e 's# release##' -e 's/ (.*//')
+				os_icon="COS"
+				os_color="$greenfb"
 			elif head -1 /etc/issue | grep -qi ^red; then
 				os_info=$(head -1 /etc/issue | sed -e 's/Red Hat Linux/RH/' -e 's/Red Hat Enterprise Linux/RHEL/' -e 's# release##' -e 's# Server##' -e 's/ (.*//')
+				os_icon="RHEL"
+				os_color="$redfb"
 			fi
+		elif [ -x /usr/bin/lsb_release ]; then
+			os_release=$(/usr/bin/lsb_release -rs)
+			os_desc=$(/usr/bin/lsb_release -ds)
 		fi
 	
 		# http://linuxhunt.blogspot.com/2010/03/understanding-proccpuinfo.html
@@ -69,7 +81,8 @@ get_basic_dist_info() {
 	cpu_info="$(printf "%dx%s%.1fGHz(%dp,%dc)" $num_visible "$vcpu" $proc_ghz $num_phys $num_cores)"
 
 	#echo "${system_type}/$os_info/$kernel_info/$proc_info/${mem_info}/${num_processors}cpu/${num_cores}core"
-	echo "${system_type}/$os_info/$kernel_info/$proc_info/${mem_info}/${cpu_info}"
+	#echo "${system_type}/$os_info/$kernel_info/$proc_info/${mem_info}/${cpu_info}"
+	# Don't echo any longer, we're passing variables around now
 }
 
 system_info() {
@@ -190,7 +203,7 @@ get_default_if() {
 		fi
 	done < /proc/net/route
 	if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}')
-	echo "${if_ip}->${last_2_digits}"
+	echo "${if_ip} ->${last_2_digits}"
 }
 
 hexToInt() {

@@ -88,6 +88,7 @@ alias ping='konsole_title ping'
 alias rtorrent='konsole_title rtorrent'
 alias scp='konsole_title scp'
 alias screen='konsole_title screen'
+alias sf='start-firefox.sh'
 alias snownews='konsole_title snownews'
 alias sqlplus='konsole_title sqlplus'
 alias ssh='konsole_title ssh'
@@ -96,6 +97,8 @@ alias tail='konsole_title tail'
 alias multitail='konsole_title multitail'
 alias telnet='konsole_title telnet'
 alias vim='konsole_title vim'
+alias watp='watch --differences=permanent -n'
+alias watc='watch --differences=cumulative -n'
 alias wget='konsole_title wget'
 alias xset-fast-keyboard='xset r rate 200 36'
 
@@ -125,7 +128,6 @@ export HISTFILESIZE=50000
 export HISTSIZE=50000
 export HISTTIMEFORMAT="%Y-%m-%d--%H:%M"
 export SVKDIFF="/usr/bin/diff -u"
-export COLORIZE_NICEPROMPT=0
 export STATUSLINE_DELAY=10
 export USERNAME=$(whoami)
 
@@ -151,86 +153,17 @@ normalprompt() {
 	export PS1='\u@\h:\w> '
 }
 
-colorize_niceprompt_toggle() {
-	if [ $COLORIZE_NICEPROMPT -eq 1 ]; then
-		export COLORIZE_NICEPROMPT=0
-	else
-		export COLORIZE_NICEPROMPT=1
-	fi
-}
-
-
-bright_rainbowify() {
-	esc="\e"; boldon="${esc}[1m"; boldoff="${esc}[22m"; reset="${esc}[0m"
-	redf="${esc}[31m";  greenf="${esc}[32m";  yellowf="${esc}[33m";
-	bluef="${esc}[34m"; purplef="${esc}[35m"; cyanf="${esc}[36m";
-	redfb="${esc}[1m${esc}[31m${esc}[22m";  greenfb="${esc}[1m${esc}[32m";  yellowfb="${esc}[1m${esc}[33m";
-	bluefb="${esc}[1m${esc}[34m${esc}[22m"; purplefb="${esc}[1m${esc}[35m"; cyanfb="${esc}[1m${esc}[36m";
-  str="$1"
-  bright_rainbow[1]="$boldon$redf"
-  bright_rainbow[2]="$boldon$yellowf"
-  bright_rainbow[3]="$boldon$greenf"
-  bright_rainbow[4]="$boldon$cyanf"
-  bright_rainbow[5]="$boldon$bluef"
-  bright_rainbow[6]="$boldon$purplef"
-  total=${#bright_rainbow[*]}
-  #echo "[$str]"
-  length=$(echo "$str" | wc -c)
-  for i in {1..6}; do
-    start=$(( (i-1)*length/total+1))
-    end=$(( i*length/total ))
-    #echo "i = $i, start = $start, end = $end"
-    substr=$(echo "$str" | cut -b "$start-$end")
-    #echo -n "$substr "
-    echo -en "${bright_rainbow[i]}${substr}"
-  done
-  echo -e $reset
-}
-
-rainbowify() {
-	esc="\e"; boldon="${esc}[1m"; boldoff="${esc}[22m"; reset="${esc}[0m"
-	redf="${esc}[31m";  greenf="${esc}[32m";  yellowf="${esc}[33m";
-	bluef="${esc}[34m"; purplef="${esc}[35m"; cyanf="${esc}[36m";
-	redfb="${esc}[1m${esc}[31m${esc}[22m";  greenfb="${esc}[1m${esc}[32m";  yellowfb="${esc}[1m${esc}[33m";
-	bluefb="${esc}[1m${esc}[34m${esc}[22m"; purplefb="${esc}[1m${esc}[35m"; cyanfb="${esc}[1m${esc}[36m";
-  str="$1"
-  rainbow[1]="$boldoff$redf"
-  rainbow[2]="$boldon$redf"
-  rainbow[3]="$boldoff$yellowf"
-  rainbow[4]="$boldon$yellowf"
-  rainbow[5]="$boldoff$greenf"
-  rainbow[6]="$boldon$greenf"
-  rainbow[7]="$boldoff$cyanf"
-  rainbow[8]="$boldon$cyanf"
-  rainbow[9]="$boldon$bluef"
-  rainbow[10]="$boldoff$bluef"
-  rainbow[11]="$boldon$purplef"
-  rainbow[12]="$boldoff$purplef"
-  total=${#rainbow[*]}
-  #echo "[$str]"
-  length=$(echo "$str" | wc -c)
-  for i in {1..12}; do
-    start=$(( (i-1)*length/total+1))
-    end=$(( i*length/total ))
-    #echo "i = $i, start = $start, end = $end"
-    substr=$(echo "$str" | cut -b "$start-$end")
-    #echo -n "$substr "
-    echo -en "${rainbow[i]}${substr}"
-  done
-  echo -e $reset
-}
-
 # The preexec stuff here allows you to set a variable
 # before a command starts. I use it to set a timestamp
 # so we can calc how long a command ran.
 preexec () { 
 	# Show system info only after first command has finished.
-	if [ "$BASH_SHOW_SYSINFO" = "0" ]; then
-		BASH_SHOW_SYSINFO=1
-	elif [ "$BASH_SHOW_SYSINFO" = "1" ]; then
-		echo "$(system_info)" "${dist_info}"
-		BASH_SHOW_SYSINFO=2
-	fi
+#	if [ "$BASH_SHOW_SYSINFO" = "0" ]; then
+#		BASH_SHOW_SYSINFO=1
+#	elif [ "$BASH_SHOW_SYSINFO" = "1" ]; then
+#		echo "$(system_info)" "${dist_info}"
+#		BASH_SHOW_SYSINFO=2
+#	fi
 	#echo "BASH_COMMAND_START=$BASH_COMMAND_START"
 	
 	# Flush history to disk (command might crash your shell or something you know)
@@ -252,10 +185,12 @@ prompt_command() {
   if [ $USERNAME = "root" -o "$UID" = 0 ]; then
 		usercolour="$redf"
 		indentcolour="$redf"
+		prompt_char='#'
   else
 		usercolour="$greenf"
+		prompt_char='$'
   fi;
-	PS1="\[${boldon}${indentcolour}\]#\[${reset}\] "
+	PS1="\[${boldon}${indentcolour}\]${prompt_char}\[${reset}\] "
 	echo -ne "${boldon}${indentcolour}┌"
 	i=2
 	while [ $i -lt $COLUMNS ]; do
@@ -329,13 +264,6 @@ prompt_command() {
 	echo -e "${boldon}${indentcolour}${indent}${reset}"
 
 	#echo -ne "${boldon}${cyanf}${indent}${reset} "
-	#if [ $COLORIZE_NICEPROMPT -eq 1 ]; then
-	#	bright_rainbowify "${dist_info}"
-	#	echo
-	#else
-	#	echo "${dist_info}"
-	#fi
-	#echo -ne "${boldon}${cyanf}${indent}${reset} "
   #system_info
   #echo
 	echo -ne "${boldon}${indentcolour}${indent}${reset} "
@@ -347,7 +275,8 @@ prompt_command() {
 	echo -en "\E[6n"; read -sdR CURPOS; CURPOS=${CURPOS#*;}
 	SPACELEFT=$((COLUMNS-CURPOS))
 	#echo SPACELEFT = $SPACELEFT
-	MOREINFO="`get_default_if`"
+	default_if_info=`get_default_if`
+	MOREINFO="$os_icon $os_release | $default_if_info"
 	#echo MARK
 	#echo MOREINFO = $MOREINFO
 	MOREINFOLENGTH=${#MOREINFO}
@@ -357,7 +286,7 @@ prompt_command() {
 		i=$((i+1))
 		echo -ne " "
 	done
-	echo -e "${MOREINFO} ${boldon}${indentcolour}${indent}${reset}"
+	echo -e "${os_color}$os_icon $os_release${reset} | $default_if_info ${boldon}${indentcolour}${indent}${reset}"
 }
 
 ip_info() {
@@ -392,7 +321,9 @@ niceprompt() {
 # Now launch the statusline in the background
 	#statusline &
 	#write_statusline "[...gathering system information...]"
-	dist_info=$(get_basic_dist_info)
+	#dist_info=$(get_basic_dist_info)
+	get_basic_dist_info
+
 	tty=$(tty | sed -e 's#^/dev/##')
 	COLUMNS=${COLUMNS:-80}
   HOSTNAME=$(echo ${HOSTNAME%%\.*} | tr A-Z a-z)

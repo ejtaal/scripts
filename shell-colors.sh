@@ -6,28 +6,6 @@
 #    colors (f = foreground, b = background), and use the 'off'
 #    feature for anything you turn on.
 
-initializeANSI()
-{
-  esc="\e"
-
-  blackf="${esc}[30m"   
-  redf="${esc}[31m"   
-  greenf="${esc}[32m"
-  yellowf="${esc}[33m";   bluef="${esc}[34m";   purplef="${esc}[35m"
-  cyanf="${esc}[36m";    whitef="${esc}[37m"
-  
-  blackb="${esc}[40m";   redb="${esc}[41m";    greenb="${esc}[42m"
-  yellowb="${esc}[43m"   blueb="${esc}[44m";   purpleb="${esc}[45m"
-  cyanb="${esc}[46m";    whiteb="${esc}[47m"
-
-  boldon="${esc}[1m";    boldoff="${esc}[22m"
-  italicson="${esc}[3m"; italicsoff="${esc}[23m"
-  ulon="${esc}[4m";      uloff="${esc}[24m"
-  invon="${esc}[7m";     invoff="${esc}[27m"
-
-  reset="${esc}[0m"
-}
-
 rainbowify() {
 	str="$1"
 	rainbow[1]="$boldoff$redf"
@@ -78,6 +56,29 @@ bright_rainbowify() {
   echo -e $reset
 }
 
+initializeANSI()
+{
+  esc="\e"
+
+  blackf="${esc}[30m"   
+  redf="${esc}[31m"   
+  greenf="${esc}[32m"
+  yellowf="${esc}[33m";   bluef="${esc}[34m";   purplef="${esc}[35m"
+  cyanf="${esc}[36m";    whitef="${esc}[37m"
+  
+  blackb="${esc}[40m";   redb="${esc}[41m";    greenb="${esc}[42m"
+  yellowb="${esc}[43m"   blueb="${esc}[44m";   purpleb="${esc}[45m"
+  cyanb="${esc}[46m";    whiteb="${esc}[47m"
+
+  boldon="${esc}[1m";    boldoff="${esc}[22m"
+  italicson="${esc}[3m"; italicsoff="${esc}[23m"
+  ulon="${esc}[4m";      uloff="${esc}[24m"
+  invon="${esc}[7m";     invoff="${esc}[27m"
+
+  reset="${esc}[0m"
+}
+
+
 # note in this first use that switching colors doesn't require a reset
 # first - the new color overrides the old one.
 
@@ -95,34 +96,35 @@ echo -e "${italicson}This is italics${italicsoff} and this is not"
 echo -e "${ulon}This is ul${uloff} and this is not"
 echo -e "${invon}This is inv${invoff} and this is not"
 echo -e "${yellowf}${redb}Warning I${yellowb}${redf}Warning II${reset}"
+echo -e "${blackf}${redb}${invon}Black on red?"
 rainbowify "This is a long test string"
 rainbowify "SOMEWHERE OVER THE RAINBOW"
 rainbowify "SOMEWHERE OVER THE RAINBOW SOMEWHERE OVER THE RAINBOW SOMEWHERE OVER THE RAINBOW "
-rainbowify "|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
-rainbowify "================================================================================="
-rainbowify "_________________________________________________________________________________"
-rainbowify "---------------------------------------------------------------------------------"
-rainbowify "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"
-rainbowify "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
-rainbowify "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-rainbowify "................................................................................."
-rainbowify ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-rainbowify "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-bright_rainbowify "This is a long test string"
-bright_rainbowify "SOMEWHERE OVER THE RAINBOW"
-bright_rainbowify "SOMEWHERE OVER THE RAINBOW SOMEWHERE OVER THE RAINBOW SOMEWHERE OVER THE RAINBOW "
-bright_rainbowify "|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
-bright_rainbowify "================================================================================="
-bright_rainbowify "_________________________________________________________________________________"
-bright_rainbowify "---------------------------------------------------------------------------------"
-bright_rainbowify "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"
-bright_rainbowify "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
-bright_rainbowify "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-bright_rainbowify "................................................................................."
-bright_rainbowify ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-bright_rainbowify "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+#rainbowify "|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
+#rainbowify "================================================================================="
+#rainbowify "_________________________________________________________________________________"
+#rainbowify "---------------------------------------------------------------------------------"
+#rainbowify "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"
+#rainbowify "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
+#rainbowify "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+#rainbowify "................................................................................."
+#rainbowify ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+#rainbowify "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+#bright_rainbowify "This is a long test string"
+#bright_rainbowify "SOMEWHERE OVER THE RAINBOW"
+#bright_rainbowify "SOMEWHERE OVER THE RAINBOW SOMEWHERE OVER THE RAINBOW SOMEWHERE OVER THE RAINBOW "
+#bright_rainbowify "|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
+#bright_rainbowify "================================================================================="
+#bright_rainbowify "_________________________________________________________________________________"
+#bright_rainbowify "---------------------------------------------------------------------------------"
+#bright_rainbowify "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"
+#bright_rainbowify "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
+#bright_rainbowify "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+#bright_rainbowify "................................................................................."
+#bright_rainbowify ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+#bright_rainbowify "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 
-for a in {4..80}; do
+for a in {4..10}; do
 	s=""
 	b=0
 	while [ $b -le $a ]; do
