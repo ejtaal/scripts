@@ -186,6 +186,15 @@ vm_check() {
 	echo "$VM_TYPE"
 }
 
+hexwordtostring(){
+	#echo printf "%c %c %c %c" 0x${1:0:2} 0x${1:6:2} 0x${1:4:2} 0x${1:2:2} 
+	echo -e "\x${1:0:2}\x${1:2:2}\x${1:4:2}\x${1:6:2}"
+}
+
+iptohex(){
+	printf '%02X' ${1//./ }; echo
+}
+
 hexToIp(){
 	k=$2
 	printf -v $1 "%d.%d.%d.%d" 0x${k:6:2} 0x${k:4:2} 0x${k:2:2} 0x${k:0:2}
@@ -214,3 +223,5 @@ intToIp() {
 	local	iIp=$2
 	printf -v $1 "%s.%s.%s.%s" $(($iIp>>24)) $(($iIp>>16&255)) $(($iIp>>8&255)) $(($iIp&255))
 }
+
+
