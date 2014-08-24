@@ -8,10 +8,15 @@
 
 # Define some useful colour names
 esc="\e"; boldon="${esc}[1m"; boldoff="${esc}[22m"; reset="${esc}[0m"
+blackb="${esc}[40m";   redb="${esc}[41m";    greenb="${esc}[42m"
+yellowb="${esc}[43m"   blueb="${esc}[44m";   purpleb="${esc}[45m"
+cyanb="${esc}[46m";    whiteb="${esc}[47m"
+italicson="${esc}[3m"; italicsoff="${esc}[23m"
+ulon="${esc}[4m";      uloff="${esc}[24m"
 redf="${esc}[31m";  greenf="${esc}[32m";  yellowf="${esc}[33m";
 bluef="${esc}[34m"; purplef="${esc}[35m"; cyanf="${esc}[36m";
-redfb="${esc}[1m${esc}[31m${esc}[22m";  greenfb="${esc}[1m${esc}[32m";  yellowfb="${esc}[1m${esc}[33m";
-bluefb="${esc}[1m${esc}[34m${esc}[22m"; purplefb="${esc}[1m${esc}[35m"; cyanfb="${esc}[1m${esc}[36m";
+redfb="${esc}[1m${esc}[31m";  greenfb="${esc}[1m${esc}[32m";  yellowfb="${esc}[1m${esc}[33m";
+bluefb="${esc}[1m${esc}[34m"; purplefb="${esc}[1m${esc}[35m"; cyanfb="${esc}[1m${esc}[36m";
 
 get_basic_dist_info() {
 	system_type=$(uname)
@@ -51,6 +56,10 @@ get_basic_dist_info() {
 				os_info=$(head -1 /etc/issue | sed -e 's/ \\.*//')
 				os_icon="U"
 				os_color="$purplefb"
+			elif head -1 /etc/issue | grep -qi kali; then
+				os_icon="Kali"
+				os_color="${blackb}${redfb}"
+				os_release=$(head -1 /etc/issue | sed -e 's/[^0-9.]//g')
 			elif head -1 /etc/issue | grep -qi centos; then
 				os_info=$(head -1 /etc/issue | sed -e 's# release##' -e 's/ (.*//')
 				os_icon="COS"
@@ -178,21 +187,13 @@ vm_check() {
   VM_TYPE=""
   if grep -qi "QEMU Virtual CPU" /proc/cpuinfo; then
     VM_TYPE="QEMU"
-	elif grep -q "^hd.: VBOX " /var/log/dmesg; then
+	elif grep -q VirtualBox /proc/bus/input/devices -o \
+		grep -q "^hd.: VBOX " /var/log/dmesg; then
     VM_TYPE="VBOX"
-	elif grep -qi "VMware" /proc/scsi/scsi; then
+	elif test -f /proc/scsi/scsi && grep -qi "VMware" /proc/scsi/scsi; then
     VM_TYPE="VMware"
 	fi
 	echo "$VM_TYPE"
-}
-
-hexwordtostring(){
-	#echo printf "%c %c %c %c" 0x${1:0:2} 0x${1:6:2} 0x${1:4:2} 0x${1:2:2} 
-	echo -e "\x${1:0:2}\x${1:2:2}\x${1:4:2}\x${1:6:2}"
-}
-
-iptohex(){
-	printf '%02X' ${1//./ }; echo
 }
 
 hexToIp(){
@@ -223,5 +224,3 @@ intToIp() {
 	local	iIp=$2
 	printf -v $1 "%s.%s.%s.%s" $(($iIp>>24)) $(($iIp>>16&255)) $(($iIp>>8&255)) $(($iIp&255))
 }
-
-

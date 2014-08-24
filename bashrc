@@ -231,32 +231,42 @@ prompt_command() {
   
 	indent="│"
 	echo -ne "${boldon}${indentcolour}${indent}${reset} "
+	line2="${indent} "
 	echo -n -e ${boldon}
-  # If last command was successful
-  if [ $LASTEXIT -eq 0 ]; then
-    echo -n -e "${greenf}:)${reset}"
-  else
-    echo -n -e "${redf}:(${reset}"
+  # Be optimistic :D
+	smiley=":)"
+	smiley_color="${greenf}"
+	if [ $LASTEXIT -ne 0 ]; then
+  	# If last command was successful
+    smiley=":("
+		smiley_color="${redf}"
   fi
-  # Echo numeric exit code + pwd, leave out -n as we want a new line now
-	echo -n -e " $LASTEXIT | ";
+  # Echo smiley in appropiate color + numeric exit code
+	echo -ne "${boldon}${smiley_color}${smiley}${reset} $LASTEXIT | ";
+	line2="${line2}${smiley} $LASTEXIT | "
 	
 	BASH_COMMAND_END=$(date +"%s%3N")
 	BASH_COMMAND_RAN=`human_time $BASH_COMMAND_START $BASH_COMMAND_END`
 	
 	echo -n "${BASH_COMMAND_RAN} | "
+	line2="${line2}${BASH_COMMAND_RAN} | "
 	export BASH_COMMAND_START=""
 	#echo
   
-	echo -n "$(date +'%Y/%m/%d, %a, %H:%M:%S') | "
+	cur_date="$(date +'%Y/%m/%d, %a, %H:%M:%S')"
+	echo -n "${cur_date} | "
+	line2="${line2}${cur_date} | "
 
 	#echo -ne "${boldon}${cyanf}${indent}${reset} "
-	echo -n "$(uptime | sed -e 's/^.*up */+/' -e 's/ days*, */d:/g' -e 's/ users*.*/u/') | "
-	read l1 l2 l3 rest < /proc/loadavg
-	echo -n "$l1 $l2 $l3"
-	echo -en "\E[6n"; read -sdR CURPOS; CURPOS=${CURPOS#*;}
+	#echo MARK
+	#uptime_etc="$(uptime | sed -e 's/^.*up */+/' -e 's/ days*, */d:/g' -e 's/[ \t]*users*.*/u/')"
+	uptime_etc="$(uptime | sed -e 's/^.*up */+/' -e 's/ days*, */d:/g' -e 's/[ \t]\([0-9]*\)* users,/\1u/' -e 's/ load average:/|/' -e 's/ \([0-9]*\.[0-9]\)[0-9],*/ \1/g')"
+	echo -n "${uptime_etc}"
+	line2="${line2}${uptime_etc}"
+	CURPOS=${#line2}
+
 	SPACELEFT=$((COLUMNS-CURPOS))
-	i=0
+	i=1
 	while [ $i -lt $SPACELEFT ]; do
 		i=$((i+1))
 		echo -ne " "
@@ -267,12 +277,11 @@ prompt_command() {
   #system_info
   #echo
 	echo -ne "${boldon}${indentcolour}${indent}${reset} "
+	line3="${indent} "
   # Echo ' username[tty]@hostname(uname) | time | '
-  HOST_COLOR="${yellowf}"
-  [ -n "$RUNNING_IN_VM" ] && HOST_COLOR="${cyanf}"
   echo -n -e "$boldon$usercolour$USERNAME${reset}@${boldon}${HOST_COLOR}$HOSTNAME${reset}:$PROMPTDIR "
-	# Get current column so we know how much space is left to print more info:
-	echo -en "\E[6n"; read -sdR CURPOS; CURPOS=${CURPOS#*;}
+	line3="${line3}$USERNAME@$HOSTNAME:$PROMPTDIR "
+	CURPOS=${#line3}
 	SPACELEFT=$((COLUMNS-CURPOS))
 	#echo SPACELEFT = $SPACELEFT
 	default_if_info=`get_default_if`
@@ -281,7 +290,7 @@ prompt_command() {
 	#echo MOREINFO = $MOREINFO
 	MOREINFOLENGTH=${#MOREINFO}
 	FILLERSPACE=$((SPACELEFT-MOREINFOLENGTH))
-	i=1
+	i=2
 	while [ $i -lt $FILLERSPACE ]; do
 		i=$((i+1))
 		echo -ne " "
@@ -327,13 +336,11 @@ niceprompt() {
 	tty=$(tty | sed -e 's#^/dev/##')
 	COLUMNS=${COLUMNS:-80}
   HOSTNAME=$(echo ${HOSTNAME%%\.*} | tr A-Z a-z)
-  RUNNING_IN_VM=""
-	# Do some quick and dirty checks to see if we're running virtual:
-  grep -qi "QEMU Virtual CPU" /proc/cpuinfo && \
-    RUNNING_IN_VM="QEMU"
-	grep -q "^hd.: VBOX " /var/log/dmesg && \
-    RUNNING_IN_VM="VBOX"
-  
+  HOST_COLOR="${yellowf}"
+	if [ -n "$VM_TYPE" ]; then
+  	HOST_COLOR="${cyanf}"
+	fi
+	
 	export PROMPT_COMMAND="prompt_command"
 	export PS1="> "
 	export PS2='...> '
