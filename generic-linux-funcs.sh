@@ -187,8 +187,8 @@ vm_check() {
   VM_TYPE=""
   if grep -qi "QEMU Virtual CPU" /proc/cpuinfo; then
     VM_TYPE="QEMU"
-	elif grep -q VirtualBox /proc/bus/input/devices -o \
-		grep -q "^hd.: VBOX " /var/log/dmesg; then
+	elif test -f /proc/bus/input/devices && grep -q VirtualBox /proc/bus/input/devices \
+		|| grep -q "^hd.: VBOX " /var/log/dmesg; then
     VM_TYPE="VBOX"
 	elif test -f /proc/scsi/scsi && grep -qi "VMware" /proc/scsi/scsi; then
     VM_TYPE="VMware"

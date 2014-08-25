@@ -181,6 +181,9 @@ preexec_invoke_exec () {
 trap 'preexec_invoke_exec' DEBUG
 
 prompt_command() {
+  # First get the last exit code to display later
+  LASTEXIT=$?
+
 	indentcolour="$cyanf"
   if [ $USERNAME = "root" -o "$UID" = 0 ]; then
 		usercolour="$redf"
@@ -200,8 +203,6 @@ prompt_command() {
 	echo -e "┐${reset}"
 	# Ph34r |\/|y l33t B45h |-|A<k3r Pr0|\/|p7 ;)
 
-  # First get the last exit code to display later
-  LASTEXIT=$?
 
 	# Load current history:
 	# Disabled now since actually this is annoying as often i want 
