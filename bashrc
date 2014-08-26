@@ -392,6 +392,11 @@ find_ssh_agent() {
 	fi
 }
 
+ctd() {
+	sudo tcpdump "$@" \
+		| perl /home/taal/scripts/tcpdump-colorize.pl
+}
+
 vdiff() {
 	TMPDIFF="/tmp/vdiff-$USER-diff.$$"
 	R=
