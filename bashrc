@@ -1,6 +1,6 @@
 # My .bashrc full of magical bash wizardry...well sort of.
 # Depends on: generic-linux-funcs.sh
-# Copyright 
+# (c) Copyright: me
 
 # If not running interactively, don't do anything
 [ -z "$PS1" ] && return
@@ -13,7 +13,6 @@ fi
 if [ -f ~/scripts/generic-linux-funcs.sh ]; then
 	. ~/scripts/generic-linux-funcs.sh
 fi
-
 
 # User specific aliases and functions
 umask 022
@@ -50,10 +49,12 @@ alias mp3i='mp3info -x -ra -p "%-30F %6k kb  %02mm:%02ss  %.1r kbs  %q kHz  %o  
 alias mv='mv -vi'
 alias onp='opera -newpage'
 #alias psf='ps auxwww --forest | less -S'
-alias psf='ps -eo user,pid,%cpu,%mem,vsz,tty,stat,lstart,time,args --forest | less -S'
+alias psf='ps -eo user,pid,ni,%cpu,%mem,vsz,tty,stat,lstart,time,args --forest | less -S'
 alias rm='rm -vi'
 alias rpma='rpm -qa --qf "%{n}-%{v}-%{r}.%{arch}\n"'
+alias rlsql='/usr/local/wmfs/scripts/rlsql.sh'
 alias sagi="sudo apt-get install"
+alias sf='start-firefox.sh'
 alias smbmplayer='mplayer -cache 10000 -framedrop'
 # This is getting more and more in the way:
 #alias su='su -m'
@@ -67,7 +68,11 @@ alias supernice='ionice -c 3 nice'
 alias vanish="kill -9 $$"
 alias vimhtml='vim -c ":se ft=html"'
 alias vimphp='vim -c ":se ft=php"'
+alias watp='watch --differences=permanent -n'
+alias watc='watch --differences=cumulative -n'
 alias x='startx'
+alias xset-fast-keyboard='xset r rate 200 36'
+
 # konsole_title aliases
 alias bt='konsole_title bt'
 alias btupload='konsole_title bt --minport 6901 --maxport 6910 --max_upload_rate 20'
@@ -88,7 +93,6 @@ alias ping='konsole_title ping'
 alias rtorrent='konsole_title rtorrent'
 alias scp='konsole_title scp'
 alias screen='konsole_title screen'
-alias sf='start-firefox.sh'
 alias snownews='konsole_title snownews'
 alias sqlplus='konsole_title sqlplus'
 alias ssh='konsole_title ssh'
@@ -97,10 +101,7 @@ alias tail='konsole_title tail'
 alias multitail='konsole_title multitail'
 alias telnet='konsole_title telnet'
 alias vim='konsole_title vim'
-alias watp='watch --differences=permanent -n'
-alias watc='watch --differences=cumulative -n'
 alias wget='konsole_title wget'
-alias xset-fast-keyboard='xset r rate 200 36'
 
 # Please no ugly colours from ls:
 alias ls > /dev/null 2>&1 && unalias ls
@@ -185,17 +186,17 @@ prompt_command() {
   # First get the last exit code to display later
   LASTEXIT=$?
 
-	indentcolour="$cyanf"
+	indentcolour="$boldon$cyanf"
   if [ $USERNAME = "root" -o "$UID" = 0 ]; then
-		usercolour="$redf"
-		indentcolour="$redf"
+		usercolour="$boldon$redf"
+		indentcolour="$boldon$redf"
 		prompt_char='#'
   else
-		usercolour="$greenf"
+		usercolour="$boldon$greenf"
 		prompt_char='$'
   fi;
-	PS1="\[${boldon}${indentcolour}\]${prompt_char}\[${reset}\] "
-	echo -ne "${boldon}${indentcolour}┌"
+	PS1="\[${indentcolour}\]${prompt_char}\[${reset}\] "
+	echo -ne "${indentcolour}┌"
 	i=2
 	while [ $i -lt $COLUMNS ]; do
 		i=$((i+1))
@@ -232,19 +233,20 @@ prompt_command() {
   fi
   
 	indent="│"
-	echo -ne "${boldon}${indentcolour}${indent}${reset} "
+	coloured_indent="${indentcolour}${indent}${reset}"
+	echo -ne "${coloured_indent} "
 	line2="${indent} "
 	echo -n -e ${boldon}
   # Be optimistic :D
 	smiley=":)"
-	smiley_color="${greenf}"
+	smiley_color="${boldon}${greenf}"
 	if [ $LASTEXIT -ne 0 ]; then
   	# If last command was successful
     smiley=":("
-		smiley_color="${redf}"
+		smiley_color="${boldon}${redf}"
   fi
   # Echo smiley in appropiate color + numeric exit code
-	echo -ne "${boldon}${smiley_color}${smiley}${reset} $LASTEXIT | ";
+	echo -ne "${smiley_color}${smiley}${reset} $LASTEXIT | ";
 	line2="${line2}${smiley} $LASTEXIT | "
 	
 	BASH_COMMAND_END=$(date +"%s%3N")
@@ -262,7 +264,14 @@ prompt_command() {
 	#echo -ne "${boldon}${cyanf}${indent}${reset} "
 	#echo MARK
 	#uptime_etc="$(uptime | sed -e 's/^.*up */+/' -e 's/ days*, */d:/g' -e 's/[ \t]*users*.*/u/')"
-	uptime_etc="$(uptime | sed -e 's/^.*up */+/' -e 's/ days*, */d:/g' -e 's/[ \t]\([0-9]*\)* users,/\1u/' -e 's/ load average:/|/' -e 's/ \([0-9]*\.[0-9]\)[0-9],*/ \1/g')"
+	uptime_etc="$(uptime | sed \
+		-e 's/^.*up */+/' \
+		-e 's/ days*, */d:/g' \
+		-e 's/ mins*,/m /g' \
+		-e 's/[ \t]\([0-9]*\)* users*,/\1u/' \
+		-e 's/ load average:/|/' \
+		-e 's/ \([0-9]*\.[0-9]\)[0-9],*/ \1/g'
+	)"
 	echo -n "${uptime_etc}"
 	line2="${line2}${uptime_etc}"
 	CURPOS=${#line2}
@@ -273,12 +282,8 @@ prompt_command() {
 		i=$((i+1))
 		echo -ne " "
 	done
-	echo -e "${boldon}${indentcolour}${indent}${reset}"
-
-	#echo -ne "${boldon}${cyanf}${indent}${reset} "
-  #system_info
-  #echo
-	echo -ne "${boldon}${indentcolour}${indent}${reset} "
+	echo -e "${coloured_indent}"
+	echo -ne "${coloured_indent} "
 	line3="${indent} "
   # Echo ' username[tty]@hostname(uname) | time | '
   echo -n -e "$boldon$usercolour$USERNAME${reset}@${boldon}${HOST_COLOR}$HOSTNAME${reset}:$PROMPTDIR "
@@ -287,7 +292,12 @@ prompt_command() {
 	SPACELEFT=$((COLUMNS-CURPOS))
 	#echo SPACELEFT = $SPACELEFT
 	default_if_info=`get_default_if`
-	MOREINFO="$os_icon $os_release | $default_if_info"
+	MOREINFO="$os_icon $os_release $default_if_info"
+	XINFO=""
+	if [ -n "$DISPLAY" ]; then
+		MOREINFO="$MOREINFO X"
+		XINFO=" $boldon${yellowf}X$reset"
+	fi
 	#echo MARK
 	#echo MOREINFO = $MOREINFO
 	MOREINFOLENGTH=${#MOREINFO}
@@ -297,7 +307,7 @@ prompt_command() {
 		i=$((i+1))
 		echo -ne " "
 	done
-	echo -e "${os_color}$os_icon $os_release${reset} | $default_if_info ${boldon}${indentcolour}${indent}${reset}"
+	echo -e "${os_color}$os_icon $os_release${reset} $default_if_info${XINFO} ${coloured_indent}"
 }
 
 ip_info() {
@@ -395,7 +405,7 @@ find_ssh_agent() {
 
 ctd() {
 	sudo tcpdump "$@" \
-		| perl /home/taal/scripts/tcpdump-colorize.pl
+		| tcpdump-colorize.pl
 }
 
 vdiff() {
@@ -447,9 +457,6 @@ wakeup() {
 	case "$1" in
 		plex)
 			$WAKE 10.0.2.255 00:06:5b:70:d2:66
-			;;
-		rashiq|cherry)
-			$WAKE 10.0.2.255 00:d0:59:cf:98:91
 			;;
 		berry)
 			$WAKE 10.0.2.255 00:14:C2:D7:DB:6A
@@ -586,9 +593,8 @@ add-ssh-pubkey() {
 
 ### End of subroutines ###
 
-
-# Lets try the fancy shell out shall we
-niceprompt
+# Set up ssh keys if present
+find_ssh_agent
 
 ### Part 5. Host specific stuff ###
 
@@ -596,43 +602,5 @@ if [ -f $HOME/.bashrc.local ]; then
 	. $HOME/.bashrc.local
 fi
 
-THISHOST=`hostname`
-case "$THISHOST" in
-	plex|openplex)
-		export TERM=linux
-		;;
-esac
-
-case "$THISHOST" in
-	openplex)
-		export TERM=linux
-		# OpenBSD doens't support -v option for mv, cp and rm
-		# Except when my openbsd-vflag patch has been applied ;)
-		#alias cp='cp -i'
-		#alias mv='mv -i'
-		#alias rm='rm -i'
-		# This is because the standard 64 file descriptors are too little for bittorrent
-		ulimit -n 1024
-		;;
-	wombat|vpn|berry|plex|grape|koala)
-		find_ssh_agent
-#		# 
-#		# Check for any available ssh-agents that contains keys:
-#		for agent in /tmp/ssh-*/agent.*; do
-#			export SSH_AUTH_SOCK=$agent
-#			ssh-add -l | grep -q " [0-9][0-9]:" && break
-#			SSH_AUTH_SOCK=
-#		done
-#		# If no suitable agent was found then run the ssh-agent 
-#		# and add my ssh-key(s), but only if we're on a tty (to
-#		# stop this popping up before logging in to KDE
-#		if tty > /dev/null 2>&1; then
-#			if [ -z "$SSH_AUTH_SOCK" -a -d "$HOME/.ssh/" ]; then
-#				eval $(ssh-agent) > /dev/null
-#				unset SSH_ASKPASS
-#				loadsshkeys
-#			fi
-#		fi
-		;;
-esac
-
+# Lets try the fancy shell out shall we
+niceprompt
