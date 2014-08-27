@@ -45,10 +45,20 @@ get_basic_dist_info() {
 		proc_info=$(uname -m)
 		if [ -f /etc/lsb-release ]; then
 			. /etc/lsb-release
-			if [ $DISTRIB_ID = "Ubuntu" ]; then
-				os_icon=U
-				os_color="$purplefb"
-				os_release="$DISTRIB_RELEASE"
+		fi
+		if [ "$DISTRIB_ID" = "Ubuntu" ]; then
+			os_icon=U
+			os_color="$purplefb"
+			os_release="$DISTRIB_RELEASE"
+		elif [ -f /etc/redhat-release ]; then
+			if head -1 /etc/redhat-release | grep -qi 'Red Hat Enterprise Linux'; then
+				os_icon="RHEL"
+				os_release=$(head -1 /etc/redhat-release | sed -e 's/[^0-9\.]//g')
+				os_color="$boldon$redf"
+			elif head -1 /etc/redhat-release | grep -qi 'CentOS'; then
+				os_icon="CentOS"
+				os_release=$(head -1 /etc/redhat-release | sed -e 's/[^0-9\.]//g')
+				os_color="$boldon$greenf"
 			fi
 		elif [ -f /etc/issue ]; then
 			if head -1 /etc/issue | grep -qi ubuntu; then
@@ -208,12 +218,19 @@ get_default_if() {
 			#echo $netInt
 			#echo "addrLine = [$addrLine]"
 			last_2_digits=${default_gateway#[0-9]*.[0-9]*.}
+			last_digit=${default_gateway#[0-9]*.[0-9]*.[0-9]*.}
 			device=${rtLine[0]}
 			break
 		fi
 	done < /proc/net/route
 	if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}')
-	echo "${if_ip} ->${last_2_digits}"
+	first_3_if_ip=${if_ip%.[0-9]*}
+	first_3_gateway=${default_gateway%.[0-9]*}
+	if [ "$first_3_if_ip" = "$first_3_gateway" ]; then
+		if_gateway_info="${if_ip} >${last_digit}"
+	else
+		if_gateway_info="${if_ip} >${last_2_digits}"
+	fi
 }
 
 hexToInt() {

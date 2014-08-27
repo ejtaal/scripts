@@ -1,6 +1,5 @@
 # My .bashrc full of magical bash wizardry...well sort of.
 # Depends on: generic-linux-funcs.sh
-# (c) Copyright: me
 
 # If not running interactively, don't do anything
 [ -z "$PS1" ] && return
@@ -291,8 +290,9 @@ prompt_command() {
 	CURPOS=${#line3}
 	SPACELEFT=$((COLUMNS-CURPOS))
 	#echo SPACELEFT = $SPACELEFT
-	default_if_info=`get_default_if`
-	MOREINFO="$os_icon $os_release $default_if_info"
+	# this sets $if_gateway_info
+	get_default_if
+	MOREINFO="$os_icon $os_release $if_gateway_info"
 	XINFO=""
 	if [ -n "$DISPLAY" ]; then
 		MOREINFO="$MOREINFO X"
@@ -307,11 +307,7 @@ prompt_command() {
 		i=$((i+1))
 		echo -ne " "
 	done
-	echo -e "${os_color}$os_icon $os_release${reset} $default_if_info${XINFO} ${coloured_indent}"
-}
-
-ip_info() {
-	default_route=$(get_default_if)
+	echo -e "${os_color}$os_icon $os_release${reset} $if_gateway_info${XINFO} ${coloured_indent}"
 }
 
 statusline() {
