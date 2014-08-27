@@ -130,6 +130,7 @@ export HISTTIMEFORMAT="%Y-%m-%d--%H:%M"
 export SVKDIFF="/usr/bin/diff -u"
 export STATUSLINE_DELAY=10
 export USERNAME=$(whoami)
+export SUDO_EDITOR='rvim'
 
 shopt -s histappend
 shopt -s checkwinsize
