@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 
+
 =pod
 tcpdump-colorize 2.0
 
@@ -13,7 +14,8 @@ Nicolas Martyanoff <khaelin@gmail.com>
 This script is in the public domain.
 =cut
 
-# I do need this lib installed please:
+# I do need this lib installed please: 
+# If it's not in apt-cache or yum then do from the terminal: cpan> install String::CRC::Cksum
 use String::CRC::Cksum qw(cksum);
 use strict;
 use warnings;
@@ -170,10 +172,62 @@ my $ipv6_rev = qr/(?:(?:$hex\.){31}$hex)/;
    $ipv6_addr = qr/(?:$ipv6_addr|$ipv6_rev)/;
 my $port = qr/(?:\d{1,5}|[a-z\d\-\.]+)/;
 
+#my $rfc = qr/(?:\d{1,5}|[a-z\d\-\.]+)/;
+
+# This reads in all our own inet4/6 and MAC addresses, to be used in make_local_left()
+my @own_addresses = `ip addr | egrep "(inet|ether)" | sed -e 's/\\/[0-9].*//' | awk '{ print \$2 }'`;
+print "List of my own ip4/6/MAC addresses:\n****\n";
+print @own_addresses;
+print "****\nThese will be placed on the left if possible.\n";
+chomp @own_addresses;
+my %own_addresses_hash = map { $_ => 1 } @own_addresses;
+
+my $DEBUG = 0;
+
+sub arp_make_local_left {
+	my $left = shift;
+	my $tell = shift;
+	my $right = shift;
+	if ( exists( $own_addresses_hash{$right}) ) {
+		return "$right: $left";
+	} else {
+		return "$left$tell$right";
+	}
+}
+
+sub make_local_left {
+	my $left = shift;
+	my $right = shift;
+	my $left_port = shift;
+	my $right_port = shift;
+	#print "left = $left, right = $right, lport = $left_port, rport = $right_port\n";
+	if ($left_port) {
+		$left_port = ".$left_port";
+		$right_port = ".$right_port";
+	} else {
+		$left_port = "";
+		$right_port = "";
+	}
+
+	my $swapped = "";
+	my $dir = "->";
+
+	if ( exists( $own_addresses_hash{$right}) and not exists( $own_addresses_hash{$left}) ) {
+		# Swap values around, as I want traffic to look like: local > far awar
+		($left, $right) = ($right, $left);
+		($left_port, $right_port) = ($right_port, $left_port);
+		#$swapped = "SWAPPED: ";
+		$dir = "<-"
+	}
+	return "$swapped$left$left_port $dir $right$right_port";
+}
 
 while (<STDIN>) {
-		#print "___\n";
-		#print $_;
+		if ( $DEBUG) {
+		print "___\n";
+		print $_;
+		}
+
     if (m/^((?:[\d\-]+\s)?[\d:\.]+ )?([A-Z0-9]{2,}(?: \d+\.[\da-z]+(?=,))?)([ ,].*)/) {
         my $timestamp = $1;
         my $protocol = $2;
@@ -182,6 +236,10 @@ while (<STDIN>) {
         print $whitef.$timestamp.$reset if $timestamp;
         print cs_color( $protocol);
     }
+		
+		# First shift things to the left before making it colourful
+		s/(Request who-has .*)(tell )($ipv4_addr)/arp_make_local_left( $1, $2, $3)/ge;
+    s/ (?<lip>$ipv4_addr)\.(?<lport>$port) > (?<rip>$ipv4_addr)\.(?<rport>$port)/" ".make_local_left( $+{lip}, $+{rip}, $+{lport}, $+{rport} )/ge;
 
 
     # Numeric IPV6 address and port
@@ -190,8 +248,10 @@ while (<STDIN>) {
 
     # Numeric IPV4 address and port
     #s/ ($ipv4_addr)\.($port)([ :,])?/print " ".cs_color($1).".".cs_color($2).$3/ge;
-    s/ ($ipv4_addr)\.($port)([ :,])?/" ".cs_color($1).".".cs_color($2).$3/ge;
-    s/ ($ipv4_addr)([ ,])/" ".cs_color($1).$2/ge;
+    s/ ($ipv4_addr) > ($ipv4_addr)/" ".make_local_left( $1, $2)/ge;
+
+    s/ ($ipv4_addr)\.($port)([ :,]){1}/" ".cs_color($1).".".cs_color($2).$3/ge;
+    s/ ($ipv4_addr)([ ,:])/" ".cs_color($1).$2/ge;
     #s/ ($ipv4_addr)(\.$port) > ($ipv4_addr)(\.$port)([ :,])?/" ".fix_dir( $1, $2, $3, $4).$5/ge;
     #s/ $ipv4_addr\.\K$port(?=[ :,])?/cs_color($&)/ge;
     #s/(?<= )$ipv4_addr(?=[ :,])?/cs_color($&)/ge;
@@ -216,15 +276,15 @@ while (<STDIN>) {
 		s/( Flags )(\[S\.\])/$1$boldon$greenf$2$reset/;
 		s/( Flags )(\[R\.\])/$1$redf$2$reset/;
 		
-		s/ (ICMP)/$boldon$bluef$1$reset/;
-		s/(udp port \d+ unreachable)/$redf$1$reset/;
+		s/ (ICMP)/ $boldon$bluef$1$reset/;
+		s/(udp port )(\d+)( unreachable)/"$redf$1$reset".cs_color($2)."$redf$3$reset"/e;
 		s/(echo request)/$greenf$1$reset/;
 		s/(echo reply)/$boldon$greenf$1$reset/;
 		
-		s/ (Request who-has)/ $greenf$1$reset/;
-		s/ (Reply) / $boldon$greenf$1$reset /;
+		s/ (Request [\w-]+)/ $greenf$1$reset/;
+		s/ (Reply)/ $boldon$greenf$1$reset/;
 		s/ (tcp \d+)/ $boldon$redf$1$reset/;
-		s/ (UDP,.*)/ $boldon$greenf$1$reset,/;
+		s/ (UDP)/ $boldon$greenf$1$reset/;
 
     print;
 }
