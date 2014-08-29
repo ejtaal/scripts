@@ -11,7 +11,7 @@ openvasmd --migrate
 openvasmd --rebuild
 openvas-scapdata-sync
 openvas-certdata-sync
-test -e /var/lib/openvas/users/admin || openvasad -c adduser -n admin -r Admin
+test -e /var/lib/openvas/users/admin || openvasad -c add_user -u admin -w admin -r Admin
 killall openvassd
 sleep 15
 service openvas-scanner start

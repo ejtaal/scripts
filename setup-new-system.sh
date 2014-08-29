@@ -13,13 +13,13 @@ fi
 echo "New bash installed"
 
 
-
+COMMONPKGS="vim nmap htop git gitk screen"
 if [ -x /usr/bin/yum ]; then
-	PKGS="vim htop nmap git gitk system-config-lvm ionice"
+	PKGS="$COMMONPKGS system-config-lvm ionice"
 	CMD=yum
 fi
 if [ -x /usr/bin/apt-get ]; then
-	PKGS="gnome-system-monitor vim nmap htop aircrack-ng openvas-client openvas-plugins-base openvas-plugins-dfsg openvas-server ettercap-graphical nmap git-gui gitk wine gdb screen"
+	PKGS="$COMMONPKGS gnome-system-monitor aircrack-ng openvas-client openvas-plugins-base openvas-plugins-dfsg openvas-server ettercap-graphical git-gui wine gdb dkms autofs cifs-utils libdigest-crc-perl libstring-crc32-perl libcpan-checksums-perl sysfsutils"
 	CMD=apt-get
 fi
 echo "Installing some useful packages: $PKGS"
