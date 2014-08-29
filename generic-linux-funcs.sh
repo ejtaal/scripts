@@ -50,6 +50,10 @@ get_basic_dist_info() {
 			os_icon=U
 			os_color="$purplefb"
 			os_release="$DISTRIB_RELEASE"
+		elif [ "$DISTRIB_ID" = "LinuxMint" ]; then
+			os_icon=Mint
+			os_color="$boldon$greenf"
+			os_release="$DISTRIB_RELEASE"
 		elif [ -f /etc/redhat-release ]; then
 			if head -1 /etc/redhat-release | grep -qi 'Red Hat Enterprise Linux'; then
 				os_icon="RHEL"
@@ -61,6 +65,7 @@ get_basic_dist_info() {
 				os_color="$boldon$greenf"
 			fi
 		elif [ -f /etc/issue ]; then
+			# Alas, LSB was of no use
 			if head -1 /etc/issue | grep -qi ubuntu; then
 				# Maybe could also use /etc/lsb-release in future?
 				os_info=$(head -1 /etc/issue | sed -e 's/ \\.*//')
@@ -226,10 +231,12 @@ get_default_if() {
 	if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}')
 	first_3_if_ip=${if_ip%.[0-9]*}
 	first_3_gateway=${default_gateway%.[0-9]*}
+	#arrow=">"
+	arrow="→"
 	if [ "$first_3_if_ip" = "$first_3_gateway" ]; then
-		if_gateway_info="${if_ip} >${last_digit}"
+		if_gateway_info="${if_ip} $arrow${last_digit}"
 	else
-		if_gateway_info="${if_ip} >${last_2_digits}"
+		if_gateway_info="${if_ip} $arrow${last_2_digits}"
 	fi
 }
 
