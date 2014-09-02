@@ -271,13 +271,15 @@ while (<STDIN>) {
     s/\[bad udp cksum[^\]]*\]/\e[31m$&\e[0m/;
 
 		# tcp/udp/icmp
-		#s/( seq | ack )(\d+)/ $1.cs_color($2)/ge;
+		s/( seq )(\d+)/ $1.cs_color($2)/ge;
+		s/( ack )(\d+)/ $1.cs_color($2-1)/ge;
 		s/( Flags )(\[S\])/$1$greenf$2$reset/;
 		s/( Flags )(\[S\.\])/$1$boldon$greenf$2$reset/;
 		s/( Flags )(\[R\.\])/$1$redf$2$reset/;
 		
 		s/ (ICMP)/ $boldon$bluef$1$reset/;
 		s/(udp port )(\d+)( unreachable)/"$redf$1$reset".cs_color($2)."$redf$3$reset"/e;
+		s/(unreachable)/$redf$1$reset/;
 		s/(echo request)/$greenf$1$reset/;
 		s/(echo reply)/$boldon$greenf$1$reset/;
 		
