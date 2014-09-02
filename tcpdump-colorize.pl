@@ -153,9 +153,11 @@ foreach $a ( @test_strings) {
 # Assign a colour to a string depending on its CRC
 sub cs_color {
 	my $s = shift;
+	my $color_only = shift;
 	my $cs = cksum( $s) % $no_colors;
 	#print "value of s: [$s]".", crc: $cs, therefore: [".$nice_colors[$cs].$s.$reset."]\n";
-	return $nice_colors[$cs].$s.$reset;
+	if ( $color_only) { return $nice_colors[$cs]; }
+	else { return $nice_colors[$cs].$s.$reset; }
 	#return $boldon.$redf.$s.$reset;
 }
 
@@ -164,7 +166,7 @@ sub cs_color {
 
 my $hex = qr/[0-9a-f]/;
 my $fqdn = qr/(?:[A-Za-z\d\-\.]+\.[a-z]+)/;
-my $ipv4_addr = qr/(?:(?:\d{1,3}\.){3}\d{1,3})/;
+#my $ipv4_addr = qr/(?:(?:\d{1,3}\.){3}\d{1,3})/;
 my $ipv4_addr = qr/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/;
 my $ipv6_grp = qr/$hex{1,4}/;
 my $ipv6_addr = qr/(?:::)?(?:${ipv6_grp}::?)+${ipv6_grp}(?:::)?/;
@@ -271,8 +273,13 @@ while (<STDIN>) {
     s/\[bad udp cksum[^\]]*\]/\e[31m$&\e[0m/;
 
 		# tcp/udp/icmp
-		s/( seq )(\d+)/ $1.cs_color($2)/ge;
-		s/( ack )(\d+)/ $1.cs_color($2-1)/ge;
+		s/( seq )(\d+):(\d+)/ $1.cs_color($2).":".cs_color($3)/ge;
+		s/( seq )(\d+),/ $1.cs_color($2)/ge;
+		s/(\], ack )(\d+)/ $1.cs_color($2-1, 1).$2.$reset/ge;
+		s/(([\d\s]|[\]],) ack )(\d+)/ $1.cs_color($2, 1).$2.$reset/ge;
+		# Need to study seq and ack more
+		#s/( seq )(\d+)/ $1.cs_color($2)/ge;
+		#s/( ack )(\d+)/ $1.cs_color($2-1)/ge;
 		s/( Flags )(\[S\])/$1$greenf$2$reset/;
 		s/( Flags )(\[S\.\])/$1$boldon$greenf$2$reset/;
 		s/( Flags )(\[R\.\])/$1$redf$2$reset/;
