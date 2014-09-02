@@ -277,12 +277,16 @@ while (<STDIN>) {
 		s/( seq )(\d+),/ $1.cs_color($2)/ge;
 		s/(\], ack )(\d+)/ $1.cs_color($2-1, 1).$2.$reset/ge;
 		s/(([\d\s]|[\]],) ack )(\d+)/ $1.cs_color($2, 1).$2.$reset/ge;
+		# Need to study seq and ack more
+		#s/( seq )(\d+)/ $1.cs_color($2)/ge;
+		#s/( ack )(\d+)/ $1.cs_color($2-1)/ge;
 		s/( Flags )(\[S\])/$1$greenf$2$reset/;
 		s/( Flags )(\[S\.\])/$1$boldon$greenf$2$reset/;
 		s/( Flags )(\[R\.\])/$1$redf$2$reset/;
 		
 		s/ (ICMP)/ $boldon$bluef$1$reset/;
 		s/(udp port )(\d+)( unreachable)/"$redf$1$reset".cs_color($2)."$redf$3$reset"/e;
+		s/(unreachable)/$redf$1$reset/;
 		s/(echo request)/$greenf$1$reset/;
 		s/(echo reply)/$boldon$greenf$1$reset/;
 		
