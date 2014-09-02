@@ -13,7 +13,7 @@ fi
 echo "New bash installed"
 
 
-COMMONPKGS="vim nmap htop git gitk screen lynx links elinks libreoffice httrack okular kdm kate gedit"
+COMMONPKGS="vim nmap htop git gitk screen lynx links elinks libreoffice httrack okular kdm kate gedit sshpass"
 if [ -x /usr/bin/yum ]; then
 	PKGS="$COMMONPKGS system-config-lvm ionice"
 	CMD=yum
