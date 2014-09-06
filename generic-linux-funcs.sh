@@ -218,17 +218,21 @@ hexToIp(){
 
 get_default_if() {
 	while read -a rtLine ;do
+		# In case there's no gateway configured, just grab any configured device
+		# Alternatively, maybe look at /proc/net/arp?
+		device=${rtLine[0]}
   	if [ ${rtLine[1]} == "00000000" ] && [ ${rtLine[7]} == "00000000" ] ;then
       hexToIp default_gateway ${rtLine[2]}
 			#echo $netInt
 			#echo "addrLine = [$addrLine]"
 			last_2_digits=${default_gateway#[0-9]*.[0-9]*.}
 			last_digit=${default_gateway#[0-9]*.[0-9]*.[0-9]*.}
-			device=${rtLine[0]}
+			#device=${rtLine[0]}
 			break
 		fi
 	done < /proc/net/route
-	if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}')
+	#echo default_gateway = $default_gateway device = $device
+	if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3;exit}')
 	first_3_if_ip=${if_ip%.[0-9]*}
 	first_3_gateway=${default_gateway%.[0-9]*}
 	#arrow=">"
@@ -236,6 +240,10 @@ get_default_if() {
 	if [ "$first_3_if_ip" = "$first_3_gateway" ]; then
 		if_gateway_info="${if_ip} $arrow${last_digit}"
 	else
+		# Could be none found:
+		if [ -z "${last_2_digits}" ]; then
+			last_2_digits='_'
+		fi
 		if_gateway_info="${if_ip} $arrow${last_2_digits}"
 	fi
 }
@@ -247,4 +255,24 @@ hexToInt() {
 intToIp() {
 	local	iIp=$2
 	printf -v $1 "%s.%s.%s.%s" $(($iIp>>24)) $(($iIp>>16&255)) $(($iIp>>8&255)) $(($iIp&255))
+}
+
+urlencode() {
+    # urlencode <string>
+
+    local length="${#1}"
+    for (( i = 0; i < length; i++ )); do
+        local c="${1:i:1}"
+        case $c in
+            [a-zA-Z0-9.~_-]) printf "$c" ;;
+            *) printf '%%%02X' "'$c"
+        esac
+    done
+}
+
+urldecode() {
+    # urldecode <string>
+
+    local url_encoded="${1//+/ }"
+    printf '%b' "${url_encoded//%/\x}"
 }
