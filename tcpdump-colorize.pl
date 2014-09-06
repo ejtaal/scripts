@@ -113,7 +113,7 @@ $blackb.$boldon.$whitef,
 );
 my $no_colors = scalar @nice_colors;
 
-print "Size: ",scalar @nice_colors,"\n";
+#print "Size: ",scalar @nice_colors,"\n";
 
 foreach $a ( @nice_colors) {
 	#print "value of a: $a"."Test string$reset\n";
@@ -194,10 +194,12 @@ my $port = qr/(?:\d{1,5}|[a-z\d\-\.]+)/;
 
 # This reads in all our own inet4/6 and MAC addresses, to be used in make_local_left()
 my @own_addresses = `ip addr | egrep "(inet|ether)" | sed -e 's/\\/[0-9].*//' | awk '{ print \$2 }'`;
-print "List of my own ip4/6/MAC addresses:\n****\n";
-print @own_addresses;
-print "****\nThese will be placed on the left if possible.\n";
 chomp @own_addresses;
+print $boldon.$greenf."[*]$cyanf List of this machine's ip4/6/MAC addresses:$reset\n";
+foreach $a ( @own_addresses) { print cs_color( $a)."\n"; }
+#print @own_addresses;
+print $boldon.$greenf."[*]$cyanf These will be placed on the left if possible.$reset\n";
+
 my %own_addresses_hash = map { $_ => 1 } @own_addresses;
 
 my $DEBUG = 0;
