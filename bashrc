@@ -421,19 +421,6 @@ vdiff() {
 		"$TMPDIFF"
 }
 
-oenv() {
-	export ORACLE_SID=${1:-*}
-	export ORACLE_HOME=$(grep "^$ORACLE_SID" /etc/oratab | cut -d: -f 2)
-	if [ -z "$ORACLE_HOME" ]; then
-		echo "Warning: couldn't find ORACLE_HOME for ORACLE_SID: $ORACLE_SID"
-	else
-		export PATH="$ORACLE_HOME/bin:$PATH"
-	fi
-	if [ "$USER" != "oracle" ]; then
-		echo "Warning: you're not user 'oracle'"
-	fi
-}
-
 wakeup() {
 	# Get wol from:
 	# wget http://www.gcd.org/sengoku/docs/wol.c
