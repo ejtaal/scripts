@@ -60,7 +60,7 @@ get_basic_dist_info() {
 				os_release=$(head -1 /etc/redhat-release | sed -e 's/[^0-9\.]//g')
 				os_color="$boldon$redf"
 			elif head -1 /etc/redhat-release | grep -qi 'CentOS'; then
-				os_icon="CentOS"
+				os_icon="COS"
 				os_release=$(head -1 /etc/redhat-release | sed -e 's/[^0-9\.]//g')
 				os_color="$boldon$greenf"
 			fi
@@ -232,8 +232,24 @@ get_default_if() {
 		fi
 	done < /proc/net/route
 	#echo default_gateway = $default_gateway device = $device
-	if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3;exit}')
+	#if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3;exit}')
+	# Read them all in an array, if more than 1
+	if_ips=($(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}'))
+	if_ip=${if_ips[0]}
+	#if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}')
 	first_3_if_ip=${if_ip%.[0-9]*}
+	
+	if [ ${#if_ips[@]} -gt 1 ]; then
+		for (( i=1; i<${#if_ips[@]}; i++ )); do
+			alt_ip=${if_ips[$i]}
+			first_3_alt_ip=${if_ip%.[0-9]*}
+			last_digit_alt_ip=${alt_ip#[0-9]*.[0-9]*.[0-9]*.}
+			if [ "$first_3_if_ip" = "$first_3_alt_ip" ]; then
+				if_ip="$if_ip +${last_digit_alt_ip}"
+			fi
+		done
+	fi
+	
 	first_3_gateway=${default_gateway%.[0-9]*}
 	#arrow=">"
 	arrow="→"
