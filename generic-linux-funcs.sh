@@ -6,6 +6,8 @@
 # It returns the information in a terse format, mainly for use in my
 # super fancy mega ultra bash prompt :), see bashrc for that.
 
+PATH="/sbin:$PATH"
+
 # Define some useful colour names
 esc="\e"; boldon="${esc}[1m"; boldoff="${esc}[22m"; reset="${esc}[0m"
 blackb="${esc}[40m";   redb="${esc}[41m";    greenb="${esc}[42m"
@@ -17,6 +19,14 @@ redf="${esc}[31m";  greenf="${esc}[32m";  yellowf="${esc}[33m";
 bluef="${esc}[34m"; purplef="${esc}[35m"; cyanf="${esc}[36m";
 redfb="${esc}[1m${esc}[31m";  greenfb="${esc}[1m${esc}[32m";  yellowfb="${esc}[1m${esc}[33m";
 bluefb="${esc}[1m${esc}[34m"; purplefb="${esc}[1m${esc}[35m"; cyanfb="${esc}[1m${esc}[36m";
+
+# Check printf -v
+printf -v RanDomVar "%s" testing123 2> /dev/null
+if [ "$RanDomVar" != 'testing123' ]; then
+	PRINTF_V_DUFF=y
+else
+	unset RanDomVar
+fi
 
 get_basic_dist_info() {
 	system_type=$(uname)
@@ -60,7 +70,7 @@ get_basic_dist_info() {
 				os_release=$(head -1 /etc/redhat-release | sed -e 's/[^0-9\.]//g')
 				os_color="$boldon$redf"
 			elif head -1 /etc/redhat-release | grep -qi 'CentOS'; then
-				os_icon="COS"
+				os_icon="CentOS"
 				os_release=$(head -1 /etc/redhat-release | sed -e 's/[^0-9\.]//g')
 				os_color="$boldon$greenf"
 			fi
@@ -213,7 +223,11 @@ vm_check() {
 
 hexToIp(){
 	k=$2
-	printf -v $1 "%d.%d.%d.%d" 0x${k:6:2} 0x${k:4:2} 0x${k:2:2} 0x${k:0:2}
+	if [ "$PRINTF_V_DUFF" = y ]; then
+		eval $1=$(printf "%d.%d.%d.%d" 0x${k:6:2} 0x${k:4:2} 0x${k:2:2} 0x${k:0:2})
+	else
+		printf -v $1 "%d.%d.%d.%d" 0x${k:6:2} 0x${k:4:2} 0x${k:2:2} 0x${k:0:2}
+	fi
 }
 
 get_default_if() {
@@ -265,10 +279,12 @@ get_default_if() {
 }
 
 hexToInt() {
+	#check PRINTF_V_DUFF?
     printf -v $1 "%d\n" 0x${2:6:2}${2:4:2}${2:2:2}${2:0:2}
 }
 
 intToIp() {
+	#check PRINTF_V_DUFF?
 	local	iIp=$2
 	printf -v $1 "%s.%s.%s.%s" $(($iIp>>24)) $(($iIp>>16&255)) $(($iIp>>8&255)) $(($iIp&255))
 }

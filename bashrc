@@ -287,8 +287,8 @@ prompt_command() {
 	echo -ne "${coloured_indent} "
 	line3="${indent} "
   # Echo ' username[tty]@hostname(uname) | time | '
-  echo -n -e "$boldon$usercolour$USERNAME${reset}@${boldon}${HOST_COLOR}$HOSTNAME${reset} $PROMPTDIR "
-	line3="${line3}$USERNAME@$HOSTNAME $PROMPTDIR "
+  echo -n -e "$boldon$usercolour$USERNAME${reset}@${boldon}${HOST_COLOR}$HOSTNAME${reset}:$PROMPTDIR "
+	line3="${line3}$USERNAME@$HOSTNAME:$PROMPTDIR "
 	CURPOS=${#line3}
 	SPACELEFT=$((COLUMNS-CURPOS))
 	#echo SPACELEFT = $SPACELEFT
@@ -527,10 +527,20 @@ persistcommand() {
 
 human_time() {
 	#echo human_time "[$*]"
-	# Convert a number of seconds to something more readable by hoo-maans
-	if [ "${#1}" = 13 ]; then
+	# Convert a number of (milli)seconds to something more readable by hoo-maans
+	START=$1
+	END=$2
+	if [ "${#START}" = 19 ]; then
+		# This is a duff version of date which gives %3N as 9 figures >_<
+		# I.e. 1430387434000000374 i.s.o. 1430387434374, doh!
+		# Remove the extra 6 zeros
+		START=${START/000000/}
+		END=${END/000000/}
+	fi
+
+	if [ "${#START}" = 13 ]; then
 		# We've been given millisecs (length of 10 - 7 = 3)
-		seconds=$(($2-$1))
+		seconds=$(($END-$START))
 		msecs="$((seconds%1000))"
 		#echo "seconds $seconds"
 		if [ $msecs -lt 100 ]; then pad='0'; fi
@@ -538,7 +548,7 @@ human_time() {
 		msecs=".${pad}$((seconds%1000))"
 		seconds=$(( seconds / 1000))
 	else
-		seconds="$1"
+		seconds="$START"
 	fi
 	#echo "seconds $seconds msecs $msecs"
 	days=$((seconds / 86400))
