@@ -272,8 +272,9 @@ prompt_command() {
 		-e 's/ \([0-9]*\.[0-9]\)[0-9],*/ \1/g'
 	)"
 	echo -n "${uptime_etc}"
+	batno=0
 	for i in /sys/class/power_supply/BAT*; do
-		
+		batno=$((batno+1))
 		bat=$(basename $i)
 		#full=$(cat $i/charge_full)
 		#now=$(cat $i/charge_now)
@@ -291,7 +292,7 @@ prompt_command() {
 		else
 			bat_color="${greenf}"
 		fi
-		if [ "$bat" = 'BAT1' ]; then
+		if [ "$batno" = '1' ]; then
 			echo -n ' | '
 			line2="${line2} | "
 		fi
@@ -311,8 +312,8 @@ prompt_command() {
 	echo -ne "${coloured_indent} "
 	line3="${indent} "
   # Echo ' username[tty]@hostname(uname) | time | '
-  echo -n -e "$boldon$usercolour$USERNAME${reset}@${boldon}${HOST_COLOR}$HOSTNAME${reset}:$PROMPTDIR "
-	line3="${line3}$USERNAME@$HOSTNAME:$PROMPTDIR "
+  echo -n -e "$boldon$usercolour$USERNAME${reset}@${boldon}${HOST_COLOR}$HOSTNAME${reset} $PROMPTDIR "
+	line3="${line3}$USERNAME@$HOSTNAME $PROMPTDIR "
 	CURPOS=${#line3}
 	SPACELEFT=$((COLUMNS-CURPOS))
 	#echo SPACELEFT = $SPACELEFT
