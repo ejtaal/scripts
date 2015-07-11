@@ -225,8 +225,6 @@ prompt_command() {
 	#  PROMPTDIR="$(echo "$MYPWD" | cut -b -$((COLUMNSLEFT/2-2)))...$(echo "$MYPWD" | cut -b $((PWDLENGTH-(COLUMNSLEFT/2)+2))-)"
 	#fi
   # Set a nicer window title for screen
-  SCREENTITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/');
-  echo "$TERMCAP" | grep -q 'screen' && echo -n -e "\033k$SCREENTITLE\033\134";
   # If we are in konsole, ssh or xterm
   if [ -n "$SSH_CLIENT" -o -n "$KONSOLE_DCOP" -o "$TERM" = "xterm" -o "$TERM" = "xterm-color" ]; then
     # Set konsole window title
@@ -274,6 +272,32 @@ prompt_command() {
 		-e 's/ \([0-9]*\.[0-9]\)[0-9],*/ \1/g'
 	)"
 	echo -n "${uptime_etc}"
+	for i in /sys/class/power_supply/BAT*; do
+		
+		bat=$(basename $i)
+		#full=$(cat $i/charge_full)
+		#now=$(cat $i/charge_now)
+		#model=$(cat $i/model_name)
+		#tech=$(cat $i/technology)
+		current=$(cat $i/current_now)
+		status=$(cat $i/status)
+		#perc=$((current*100/full))
+		cap=$(cat $i/capacity)
+		if [ "$status" = 'Discharging' ]; then
+			bat_color="${yellowf}"
+			if [ "${cap}" -le 20 ]; then
+				bat_color="${redf}"
+			fi
+		else
+			bat_color="${greenf}"
+		fi
+		if [ "$bat" = 'BAT1' ]; then
+			echo -n ' | '
+			line2="${line2} | "
+		fi
+		echo -ne "${boldon}${bat_color}${cap}%${reset} "
+		line2="${line2} ${cap}%"
+	done
 	line2="${line2}${uptime_etc}"
 	CURPOS=${#line2}
 
@@ -310,6 +334,12 @@ prompt_command() {
 		echo -ne " "
 	done
 	echo -e "${os_color}$os_icon $os_release${reset} $if_gateway_info${XINFO} ${coloured_indent}"
+
+	if [ "$INSIDE_SCREEN" = 'y' ]; then
+		SCREENTITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/')
+  	#echo -ne "\033k$SCREENTITLE\033\134";
+  	echo -ne "\033k$SCREENTITLE\033\\";
+	fi
 }
 
 statusline() {
@@ -349,6 +379,11 @@ niceprompt() {
   HOST_COLOR="${yellowf}"
 	if [ -n "$VM_TYPE" ]; then
   	HOST_COLOR="${cyanf}"
+	fi
+
+	INSIDE_SCREEN=n
+  if echo "$TERMCAP" | grep -q 'screen'; then
+		INSIDE_SCREEN=y
 	fi
 	
 	export PROMPT_COMMAND="prompt_command"
