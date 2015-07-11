@@ -456,19 +456,6 @@ vdiff() {
 		"$TMPDIFF"
 }
 
-oenv() {
-	export ORACLE_SID=${1:-*}
-	export ORACLE_HOME=$(grep "^$ORACLE_SID" /etc/oratab | cut -d: -f 2)
-	if [ -z "$ORACLE_HOME" ]; then
-		echo "Warning: couldn't find ORACLE_HOME for ORACLE_SID: $ORACLE_SID"
-	else
-		export PATH="$ORACLE_HOME/bin:$PATH"
-	fi
-	if [ "$USER" != "oracle" ]; then
-		echo "Warning: you're not user 'oracle'"
-	fi
-}
-
 wakeup() {
 	# Get wol from:
 	# wget http://www.gcd.org/sengoku/docs/wol.c
@@ -575,10 +562,20 @@ persistcommand() {
 
 human_time() {
 	#echo human_time "[$*]"
-	# Convert a number of seconds to something more readable by hoo-maans
-	if [ "${#1}" = 13 ]; then
+	# Convert a number of (milli)seconds to something more readable by hoo-maans
+	START=$1
+	END=$2
+	if [ "${#START}" = 19 ]; then
+		# This is a duff version of date which gives %3N as 9 figures >_<
+		# I.e. 1430387434000000374 i.s.o. 1430387434374, doh!
+		# Remove the extra 6 zeros
+		START=${START/000000/}
+		END=${END/000000/}
+	fi
+
+	if [ "${#START}" = 13 ]; then
 		# We've been given millisecs (length of 10 - 7 = 3)
-		seconds=$(($2-$1))
+		seconds=$(($END-$START))
 		msecs="$((seconds%1000))"
 		#echo "seconds $seconds"
 		if [ $msecs -lt 100 ]; then pad='0'; fi
@@ -586,7 +583,7 @@ human_time() {
 		msecs=".${pad}$((seconds%1000))"
 		seconds=$(( seconds / 1000))
 	else
-		seconds="$1"
+		seconds="$START"
 	fi
 	#echo "seconds $seconds msecs $msecs"
 	days=$((seconds / 86400))

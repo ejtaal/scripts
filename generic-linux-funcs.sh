@@ -6,6 +6,8 @@
 # It returns the information in a terse format, mainly for use in my
 # super fancy mega ultra bash prompt :), see bashrc for that.
 
+PATH="/sbin:$PATH"
+
 # Define some useful colour names
 esc="\e"; boldon="${esc}[1m"; boldoff="${esc}[22m"; reset="${esc}[0m"
 blackb="${esc}[40m";   redb="${esc}[41m";    greenb="${esc}[42m"
@@ -17,6 +19,14 @@ redf="${esc}[31m";  greenf="${esc}[32m";  yellowf="${esc}[33m";
 bluef="${esc}[34m"; purplef="${esc}[35m"; cyanf="${esc}[36m";
 redfb="${esc}[1m${esc}[31m";  greenfb="${esc}[1m${esc}[32m";  yellowfb="${esc}[1m${esc}[33m";
 bluefb="${esc}[1m${esc}[34m"; purplefb="${esc}[1m${esc}[35m"; cyanfb="${esc}[1m${esc}[36m";
+
+# Check printf -v
+printf -v RanDomVar "%s" testing123 2> /dev/null
+if [ "$RanDomVar" != 'testing123' ]; then
+	PRINTF_V_DUFF=y
+else
+	unset RanDomVar
+fi
 
 get_basic_dist_info() {
 	system_type=$(uname)
@@ -213,38 +223,88 @@ vm_check() {
 
 hexToIp(){
 	k=$2
-	printf -v $1 "%d.%d.%d.%d" 0x${k:6:2} 0x${k:4:2} 0x${k:2:2} 0x${k:0:2}
+	if [ "$PRINTF_V_DUFF" = y ]; then
+		eval $1=$(printf "%d.%d.%d.%d" 0x${k:6:2} 0x${k:4:2} 0x${k:2:2} 0x${k:0:2})
+	else
+		printf -v $1 "%d.%d.%d.%d" 0x${k:6:2} 0x${k:4:2} 0x${k:2:2} 0x${k:0:2}
+	fi
 }
 
 get_default_if() {
 	while read -a rtLine ;do
+		# In case there's no gateway configured, just grab any configured device
+		# Alternatively, maybe look at /proc/net/arp?
+		device=${rtLine[0]}
   	if [ ${rtLine[1]} == "00000000" ] && [ ${rtLine[7]} == "00000000" ] ;then
       hexToIp default_gateway ${rtLine[2]}
 			#echo $netInt
 			#echo "addrLine = [$addrLine]"
 			last_2_digits=${default_gateway#[0-9]*.[0-9]*.}
 			last_digit=${default_gateway#[0-9]*.[0-9]*.[0-9]*.}
-			device=${rtLine[0]}
+			#device=${rtLine[0]}
 			break
 		fi
 	done < /proc/net/route
-	if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}')
+	#echo default_gateway = $default_gateway device = $device
+	#if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3;exit}')
+	# Read them all in an array, if more than 1
+	if_ips=($(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}'))
+	if_ip=${if_ips[0]}
+	#if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}')
 	first_3_if_ip=${if_ip%.[0-9]*}
+	
+	if [ ${#if_ips[@]} -gt 1 ]; then
+		for (( i=1; i<${#if_ips[@]}; i++ )); do
+			alt_ip=${if_ips[$i]}
+			first_3_alt_ip=${if_ip%.[0-9]*}
+			last_digit_alt_ip=${alt_ip#[0-9]*.[0-9]*.[0-9]*.}
+			if [ "$first_3_if_ip" = "$first_3_alt_ip" ]; then
+				if_ip="$if_ip +${last_digit_alt_ip}"
+			fi
+		done
+	fi
+	
 	first_3_gateway=${default_gateway%.[0-9]*}
 	#arrow=">"
 	arrow="→"
 	if [ "$first_3_if_ip" = "$first_3_gateway" ]; then
 		if_gateway_info="${if_ip} $arrow${last_digit}"
 	else
+		# Could be none found:
+		if [ -z "${last_2_digits}" ]; then
+			last_2_digits='_'
+		fi
 		if_gateway_info="${if_ip} $arrow${last_2_digits}"
 	fi
 }
 
 hexToInt() {
+	#check PRINTF_V_DUFF?
     printf -v $1 "%d\n" 0x${2:6:2}${2:4:2}${2:2:2}${2:0:2}
 }
 
 intToIp() {
+	#check PRINTF_V_DUFF?
 	local	iIp=$2
 	printf -v $1 "%s.%s.%s.%s" $(($iIp>>24)) $(($iIp>>16&255)) $(($iIp>>8&255)) $(($iIp&255))
+}
+
+urlencode() {
+    # urlencode <string>
+
+    local length="${#1}"
+    for (( i = 0; i < length; i++ )); do
+        local c="${1:i:1}"
+        case $c in
+            [a-zA-Z0-9.~_-]) printf "$c" ;;
+            *) printf '%%%02X' "'$c"
+        esac
+    done
+}
+
+urldecode() {
+    # urldecode <string>
+
+    local url_encoded="${1//+/ }"
+    printf '%b' "${url_encoded//%/\x}"
 }

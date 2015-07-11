@@ -14,9 +14,25 @@ Nicolas Martyanoff <khaelin@gmail.com>
 This script is in the public domain.
 =cut
 
-# I do need this lib installed please: 
-# If it's not in apt-cache or yum then do from the terminal: cpan> install String::CRC::Cksum
+# I do need these libs installed please:
+# If it's not in apt-cache or yum then do from the terminal:
+# cpan> install String::CRC::Cksum
+# cpan> install Geo::IP
 use String::CRC::Cksum qw(cksum);
+use Geo::IP;
+my $gi = Geo::IP->new(GEOIP_MEMORY_CACHE);
+print "country = $country\n";
+print $gi->country_code_by_addr("10.0.0.1");
+print $gi->country_code_by_addr("11.1.8.1");
+print $gi->country_code_by_addr("22.2.7.1");
+print $gi->country_code_by_addr("33.3.6.1");
+print $gi->country_code_by_addr("44.4.5.1");
+print $gi->country_code_by_addr("55.5.4.1");
+print $gi->country_code_by_addr("66.6.3.1");
+print $gi->country_code_by_addr("77.7.2.1");
+print $gi->country_code_by_addr("88.8.1.1");
+#print $gi->city_by_addr('10.0.0.1');
+
 use strict;
 use warnings;
 
@@ -97,10 +113,10 @@ $blackb.$boldon.$whitef,
 );
 my $no_colors = scalar @nice_colors;
 
-print "Size: ",scalar @nice_colors,"\n";
+#print "Size: ",scalar @nice_colors,"\n";
 
 foreach $a ( @nice_colors) {
-	print "value of a: $a"."Test string$reset\n";
+	#print "value of a: $a"."Test string$reset\n";
 }
 
 my @test_strings = (
@@ -139,23 +155,25 @@ my @test_strings = (
 #use String::CRC;
 #use Digest::MD5 qw(md5_hex);
 
-foreach $a ( @test_strings) {
-	#my $checksum = crc( $a, 32) % $no_colors;
-	my $checksum = cksum( $a) % $no_colors;
-	#print "value of a: $a".", crc: $crc_small\n";
-	#my $checksum = unpack("%32W*", $a) % $no_colors;
-	#my $checksum = unpack("%64A*", $a) % $no_colors;
-	print "value of a: $a".", crc: $checksum, therefore: ".$nice_colors[$checksum].$a.$reset."\n";
-}
+#foreach $a ( @test_strings) {
+#	#my $checksum = crc( $a, 32) % $no_colors;
+#	my $checksum = cksum( $a) % $no_colors;
+#	#print "value of a: $a".", crc: $crc_small\n";
+#	#my $checksum = unpack("%32W*", $a) % $no_colors;
+#	#my $checksum = unpack("%64A*", $a) % $no_colors;
+#	print "value of a: $a".", crc: $checksum, therefore: ".$nice_colors[$checksum].$a.$reset."\n";
+#}
 
 #exit 99;
 
 # Assign a colour to a string depending on its CRC
 sub cs_color {
 	my $s = shift;
+	my $color_only = shift;
 	my $cs = cksum( $s) % $no_colors;
 	#print "value of s: [$s]".", crc: $cs, therefore: [".$nice_colors[$cs].$s.$reset."]\n";
-	return $nice_colors[$cs].$s.$reset;
+	if ( $color_only) { return $nice_colors[$cs]; }
+	else { return $nice_colors[$cs].$s.$reset; }
 	#return $boldon.$redf.$s.$reset;
 }
 
@@ -164,7 +182,7 @@ sub cs_color {
 
 my $hex = qr/[0-9a-f]/;
 my $fqdn = qr/(?:[A-Za-z\d\-\.]+\.[a-z]+)/;
-my $ipv4_addr = qr/(?:(?:\d{1,3}\.){3}\d{1,3})/;
+#my $ipv4_addr = qr/(?:(?:\d{1,3}\.){3}\d{1,3})/;
 my $ipv4_addr = qr/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/;
 my $ipv6_grp = qr/$hex{1,4}/;
 my $ipv6_addr = qr/(?:::)?(?:${ipv6_grp}::?)+${ipv6_grp}(?:::)?/;
@@ -176,10 +194,12 @@ my $port = qr/(?:\d{1,5}|[a-z\d\-\.]+)/;
 
 # This reads in all our own inet4/6 and MAC addresses, to be used in make_local_left()
 my @own_addresses = `ip addr | egrep "(inet|ether)" | sed -e 's/\\/[0-9].*//' | awk '{ print \$2 }'`;
-print "List of my own ip4/6/MAC addresses:\n****\n";
-print @own_addresses;
-print "****\nThese will be placed on the left if possible.\n";
 chomp @own_addresses;
+print $boldon.$greenf."[*]$cyanf List of this machine's ip4/6/MAC addresses:$reset\n";
+foreach $a ( @own_addresses) { print cs_color( $a)."\n"; }
+#print @own_addresses;
+print $boldon.$greenf."[*]$cyanf These will be placed on the left if possible.$reset\n";
+
 my %own_addresses_hash = map { $_ => 1 } @own_addresses;
 
 my $DEBUG = 0;
@@ -196,11 +216,11 @@ sub arp_make_local_left {
 }
 
 sub make_local_left {
-	my $left = shift;
-	my $right = shift;
+	my $left_ip = shift;
+	my $right_ip = shift;
 	my $left_port = shift;
 	my $right_port = shift;
-	#print "left = $left, right = $right, lport = $left_port, rport = $right_port\n";
+	#print "left = $left_ip, right = $right_ip, lport = $left_port, rport = $right_port\n";
 	if ($left_port) {
 		$left_port = ".$left_port";
 		$right_port = ".$right_port";
@@ -212,14 +232,21 @@ sub make_local_left {
 	my $swapped = "";
 	my $dir = "->";
 
-	if ( exists( $own_addresses_hash{$right}) and not exists( $own_addresses_hash{$left}) ) {
+	if ( exists( $own_addresses_hash{$right_ip}) and not exists( $own_addresses_hash{$left_ip}) ) {
+		# Swap values around, as I want traffic to look like:
+		# local -> far_away
+		# local <- far_away
 		# Swap values around, as I want traffic to look like: local > far awar
-		($left, $right) = ($right, $left);
+		($left_ip, $right_ip) = ($right_ip, $left_ip);
 		($left_port, $right_port) = ($right_port, $left_port);
 		#$swapped = "SWAPPED: ";
 		$dir = "<-"
 	}
-	return "$swapped$left$left_port $dir $right$right_port";
+	# Insert country info:
+	my $country = $gi->country_code_by_addr( $right_ip);
+	if ( $country) { $country = " (".cs_color($country).") " }
+	else { $country = "" }
+	return "$swapped$left_ip$left_port $dir $right_ip$right_port$country";
 }
 
 while (<STDIN>) {
@@ -271,8 +298,13 @@ while (<STDIN>) {
     s/\[bad udp cksum[^\]]*\]/\e[31m$&\e[0m/;
 
 		# tcp/udp/icmp
-		s/( seq )(\d+)/ $1.cs_color($2)/ge;
-		s/( ack )(\d+)/ $1.cs_color($2-1)/ge;
+		s/( seq )(\d+):(\d+)/ $1.cs_color($2).":".cs_color($3)/ge;
+		s/( seq )(\d+),/ $1.cs_color($2)/ge;
+		s/(\], ack )(\d+)/ $1.cs_color($2-1, 1).$2.$reset/ge;
+		s/(([\d\s]|[\]],) ack )(\d+)/ $1.cs_color($2, 1).$2.$reset/ge;
+		# Need to study seq and ack more
+		#s/( seq )(\d+)/ $1.cs_color($2)/ge;
+		#s/( ack )(\d+)/ $1.cs_color($2-1)/ge;
 		s/( Flags )(\[S\])/$1$greenf$2$reset/;
 		s/( Flags )(\[S\.\])/$1$boldon$greenf$2$reset/;
 		s/( Flags )(\[R\.\])/$1$redf$2$reset/;
