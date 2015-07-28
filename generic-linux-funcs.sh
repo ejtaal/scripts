@@ -60,6 +60,10 @@ get_basic_dist_info() {
 			os_icon=U
 			os_color="$purplefb"
 			os_release="$DISTRIB_RELEASE"
+			os_release_better=$(echo ${DISTRIB_DESCRIPTION} | sed -e 's/[^0-9\.]//g')
+			if [ -n "$os_release_better" ]; then
+				os_release=$os_release_better
+			fi
 		elif [ "$DISTRIB_ID" = "LinuxMint" ]; then
 			os_icon=Mint
 			os_color="$boldon$greenf"
