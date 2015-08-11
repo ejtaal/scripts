@@ -287,8 +287,8 @@ prompt_command() {
 	echo -ne "${coloured_indent} "
 	line3="${indent} "
   # Echo ' username[tty]@hostname(uname) | time | '
-  echo -n -e "$boldon$usercolour$USERNAME${reset}@${boldon}${HOST_COLOR}$HOSTNAME${reset}:$PROMPTDIR "
-	line3="${line3}$USERNAME@$HOSTNAME:$PROMPTDIR "
+  echo -n -e "$boldon$usercolour$USERNAME${reset}@${boldon}${HOST_COLOR}$HOSTNAME${reset} $PROMPTDIR "
+	line3="${line3}$USERNAME@$HOSTNAME $PROMPTDIR "
 	CURPOS=${#line3}
 	SPACELEFT=$((COLUMNS-CURPOS))
 	#echo SPACELEFT = $SPACELEFT
