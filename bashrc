@@ -274,6 +274,9 @@ prompt_command() {
 	echo -n "${uptime_etc}"
 	batno=0
 	for i in /sys/class/power_supply/BAT*; do
+		if [ ! -f "$i" ]; then
+			continue
+		fi
 		batno=$((batno+1))
 		bat=$(basename $i)
 		#full=$(cat $i/charge_full)
