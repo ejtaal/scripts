@@ -283,7 +283,7 @@ prompt_command() {
 		#now=$(cat $i/charge_now)
 		#model=$(cat $i/model_name)
 		#tech=$(cat $i/technology)
-		current=$(cat $i/current_now)
+		#current=$(cat $i/current_now)
 		status=$(cat $i/status)
 		#perc=$((current*100/full))
 		cap=$(cat $i/capacity)
