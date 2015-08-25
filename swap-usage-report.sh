@@ -13,7 +13,8 @@ COLUMNS=$(tput cols)
 		swapused_meg=$((swapused/1024))
 		swapused_meg_total=$((swapused_meg_total+swapused_meg))
     #/bin/echo -e "${swapused_meg} M\t$(cat ${PROCESS}/cmdline)"
-    printf "%.${COLUMNS}s\n" "${swapused_meg} M  ${pid}  $(cat /proc/${pid}/cmdline)"
+    #echo "%.${COLUMNS}s\n" "${swapused_meg} M  ${pid}  $(cat /proc/${pid}/cmdline)"
+    printf "%.${COLUMNS}s\n" "${swapused_meg} M  ${pid}  $(tr '\0' ' ' < /proc/${pid}/cmdline)"
   fi
 done 
 /bin/echo -e "${swapused_meg_total} M  All procs combined."

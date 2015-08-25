@@ -15,7 +15,7 @@
 # Then use the following to mount it
 
 set -e
-if [[ $(mount | grep ${2%%/} | wc -l) -gt 0 ]]; then
+if [[ $(mount | grep "${2%%/} " | wc -l) -gt 0 ]]; then
   echo "Path $2 is already mounted!" >&2
   exit 9
 else
