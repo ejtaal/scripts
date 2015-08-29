@@ -14,24 +14,14 @@ Nicolas Martyanoff <khaelin@gmail.com>
 This script is in the public domain.
 =cut
 
-# I do need these libs installed please:
+# This script does need these libs installed please:
+# apt-get install libstring-crc-cksum-perl libgeo-ip-perl
 # If it's not in apt-cache or yum then do from the terminal:
 # cpan> install String::CRC::Cksum
 # cpan> install Geo::IP
 use String::CRC::Cksum qw(cksum);
 use Geo::IP;
 my $gi = Geo::IP->new(GEOIP_MEMORY_CACHE);
-print "country = $country\n";
-print $gi->country_code_by_addr("10.0.0.1");
-print $gi->country_code_by_addr("11.1.8.1");
-print $gi->country_code_by_addr("22.2.7.1");
-print $gi->country_code_by_addr("33.3.6.1");
-print $gi->country_code_by_addr("44.4.5.1");
-print $gi->country_code_by_addr("55.5.4.1");
-print $gi->country_code_by_addr("66.6.3.1");
-print $gi->country_code_by_addr("77.7.2.1");
-print $gi->country_code_by_addr("88.8.1.1");
-#print $gi->city_by_addr('10.0.0.1');
 
 use strict;
 use warnings;
@@ -76,13 +66,11 @@ $whiteb.$purplef,
 #$whiteb.$boldon.$bluef,
 
 $yellowb.$redf,
-$yellowb.$greenf,
 $yellowb.$bluef,
 $yellowb.$purplef,
 $yellowb.$cyanf,
 $yellowb.$whitef,
 $yellowb.$boldon.$yellowf,
-$yellowb.$boldon.$cyanf,
 $yellowb.$boldon.$whitef,
 
 $redb.$greenf,
@@ -120,6 +108,18 @@ foreach $a ( @nice_colors) {
 }
 
 my @test_strings = (
+"10.0.0.1",
+"66.36.3.1",
+"77.27.2.1",
+"88.18.1.1",
+"11.81.8.1",
+"122.72.7.1",
+"133.63.6.1",
+"144.54.5.1",
+"155.45.4.1",
+"166.36.3.1",
+"177.27.2.1",
+"188.18.1.1",
 "10.18.0.119",
 "10.18.0.118",
 "10.18.0.116",
@@ -155,14 +155,17 @@ my @test_strings = (
 #use String::CRC;
 #use Digest::MD5 qw(md5_hex);
 
-#foreach $a ( @test_strings) {
+foreach $a ( @test_strings) {
+	my $country = $gi->country_code_by_addr( $a);
+	if ( ! $country) { $country = "__"; }
+	#print cs_color($a)."(".cs_color($country).")\n";
 #	#my $checksum = crc( $a, 32) % $no_colors;
 #	my $checksum = cksum( $a) % $no_colors;
 #	#print "value of a: $a".", crc: $crc_small\n";
 #	#my $checksum = unpack("%32W*", $a) % $no_colors;
 #	#my $checksum = unpack("%64A*", $a) % $no_colors;
 #	print "value of a: $a".", crc: $checksum, therefore: ".$nice_colors[$checksum].$a.$reset."\n";
-#}
+}
 
 #exit 99;
 
