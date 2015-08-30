@@ -4,6 +4,14 @@
 =pod
 tcpdump-colorize 2.0
 
+Usage: Run it like this:
+
+tcpdump -qln | tcpdump-colorize.pl
+
+Test command:
+
+for i in cnn.com baidu.cn www.gov.au; do ping -q -c 1 $i > /dev/null; done
+
 Colorize ip and port number consistently, so it's easier for humans to track
 who is talking to who (plus it looks really cool! :) )
 Erik Taal <ejtaal@gmail.com>

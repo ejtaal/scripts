@@ -3,7 +3,9 @@
 echo "Setting up your new system, just sit back and relax..."
 
 cd
-git clone https://github.com/ejtaal/scripts
+if [ ! -d scripts ]; then
+	git clone https://github.com/ejtaal/scripts
+fi
 
 if [ -f ~/.bashrc.bak ]; then
 	echo "Bashrc seems already installed"
@@ -22,7 +24,7 @@ if [ -x /usr/bin/yum ]; then
 	CMD=yum
 fi
 if [ -x /usr/bin/apt-get ]; then
-	PKGS="$COMMONPKGS gnome-system-monitor aircrack-ng openvas-cli openvas-scanner openvas-manager ettercap-graphical git-gui wine gdb dkms autofs cifs-utils libdigest-crc-perl libstring-crc32-perl libcpan-checksums-perl sysfsutils uswsusp apmd veil-evasion fbreader libstring-crc-cksum-perl libgeo-ip-perl"
+	PKGS="$COMMONPKGS gnome-system-monitor aircrack-ng openvas-cli openvas-scanner openvas-manager ettercap-graphical git-gui wine gdb dkms autofs cifs-utils libdigest-crc-perl libstring-crc32-perl libcpan-checksums-perl sysfsutils uswsusp apmd veil-evasion fbreader libstring-crc-cksum-perl libgeo-ip-perl linux-headers-`uname -r`"
 	FOUND_PKGS=""
 	for i in $PKGS; do
 		if apt-cache show $i; then
