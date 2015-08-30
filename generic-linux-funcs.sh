@@ -312,3 +312,7 @@ urldecode() {
     local url_encoded="${1//+/ }"
     printf '%b' "${url_encoded//%/\x}"
 }
+
+get_external_ip() {
+	dig +short myip.opendns.com @resolver1.opendns.com
+}

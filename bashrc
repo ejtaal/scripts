@@ -274,13 +274,17 @@ prompt_command() {
 	echo -n "${uptime_etc}"
 	batno=0
 	for i in /sys/class/power_supply/BAT*; do
+		#echo $i
+		if [ ! -d "$i" ]; then
+			continue
+		fi
 		batno=$((batno+1))
 		bat=$(basename $i)
 		#full=$(cat $i/charge_full)
 		#now=$(cat $i/charge_now)
 		#model=$(cat $i/model_name)
 		#tech=$(cat $i/technology)
-		current=$(cat $i/current_now)
+		#current=$(cat $i/current_now)
 		status=$(cat $i/status)
 		#perc=$((current*100/full))
 		cap=$(cat $i/capacity)
