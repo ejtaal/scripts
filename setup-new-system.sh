@@ -26,7 +26,7 @@ if [ -x /usr/bin/yum ]; then
 	CMD=yum
 fi
 if [ -x /usr/bin/apt-get ]; then
-	PKGS="$COMMONPKGS gnome-system-monitor aircrack-ng openvas-server openvas-cli openvas-scanner openvas-manager ettercap-graphical git-gui wine gdb dkms autofs cifs-utils libdigest-crc-perl libstring-crc32-perl libcpan-checksums-perl sysfsutils uswsusp apmd veil-evasion fbreader libstring-crc-cksum-perl libgeo-ip-perl linux-headers-`uname -r` iptraf-ng openssh-blacklist openssh-blacklist-extra mosh"
+	PKGS="$COMMONPKGS gnome-system-monitor aircrack-ng openvas-server openvas-cli openvas-client openvas-manager ettercap-graphical git-gui wine gdb dkms autofs cifs-utils libdigest-crc-perl libstring-crc32-perl libcpan-checksums-perl sysfsutils uswsusp apmd veil-evasion fbreader libstring-crc-cksum-perl libgeo-ip-perl linux-headers-`uname -r` iptraf-ng openssh-blacklist openssh-blacklist-extra mosh"
 	FOUND_PKGS=""
 	for i in $PKGS; do
 		if apt-cache show $i; then
