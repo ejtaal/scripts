@@ -1,6 +1,13 @@
 #!/bin/sh
 
+# wget -O - https://github.com/ejtaal/scripts/raw/master/setup-new-system.sh | sh
+
 echo "Setting up your new system, just sit back and relax..."
+
+cd
+if [ ! -d scripts ]; then
+	git clone https://github.com/ejtaal/scripts
+fi
 
 if [ -f ~/.bashrc.bak ]; then
 	echo "Bashrc seems already installed"
@@ -19,8 +26,16 @@ if [ -x /usr/bin/yum ]; then
 	CMD=yum
 fi
 if [ -x /usr/bin/apt-get ]; then
-	#PKGS="$COMMONPKGS gnome-system-monitor aircrack-ng openvas-cli openvas-scanner openvas-manager ettercap-graphical git-gui wine gdb dkms autofs cifs-utils libdigest-crc-perl libstring-crc32-perl libcpan-checksums-perl sysfsutils uswsusp apmd"
-	PKGS="$COMMONPKGS openvas-server openvas-client gnome-system-monitor aircrack-ng ettercap-graphical git-gui wine gdb dkms autofs cifs-utils libdigest-crc-perl libstring-crc32-perl libcpan-checksums-perl sysfsutils uswsusp apmd"
+	PKGS="$COMMONPKGS gnome-system-monitor aircrack-ng openvas-server openvas-cli openvas-scanner openvas-manager ettercap-graphical git-gui wine gdb dkms autofs cifs-utils libdigest-crc-perl libstring-crc32-perl libcpan-checksums-perl sysfsutils uswsusp apmd veil-evasion fbreader libstring-crc-cksum-perl libgeo-ip-perl linux-headers-`uname -r` iptraf-ng openssh-blacklist openssh-blacklist-extra mosh"
+	FOUND_PKGS=""
+	for i in $PKGS; do
+		if apt-cache show $i; then
+			FOUND_PKGS="$FOUND_PKGS $i"
+		else
+			echo package ''$i'' not found.
+		fi
+	done
+	PKGS="$FOUND_PKGS"
 	CMD=apt-get
 fi
 echo "Installing some useful packages: $PKGS"
