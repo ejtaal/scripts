@@ -272,6 +272,14 @@ prompt_command() {
 		-e 's/ \([0-9]*\.[0-9]\)[0-9],*/ \1/g'
 	)"
 	echo -n "${uptime_etc}"
+	line2="${line2}${uptime_etc}"
+	CURPOS=${#line2}
+	SPACELEFT=$((COLUMNS-CURPOS))
+
+	# Right justify battery and VMs info:
+	right1_info=
+	right1_bare=
+
 	batno=0
 	for i in /sys/class/power_supply/BAT*; do
 		#echo $i
@@ -296,22 +304,35 @@ prompt_command() {
 		else
 			bat_color="${greenf}"
 		fi
-		if [ "$batno" = '1' ]; then
-			echo -n ' | '
-			line2="${line2} | "
-		fi
-		echo -ne "${boldon}${bat_color}${cap}%${reset} "
-		line2="${line2} ${cap}%"
+		#if [ "$batno" = '1' ]; then
+			#right1_info=' | '
+			#right1_bare=' | '
+			#line2="${line2} | "
+		#fi
+		right1_info="${right1_info}${boldon}${bat_color}${cap}%${reset}"
+		right1_bare="${right1_bare}${cap}%"
+		#line2="${line2} ${cap}%"
 	done
-	line2="${line2}${uptime_etc}"
-	CURPOS=${#line2}
 
-	SPACELEFT=$((COLUMNS-CURPOS))
-	i=1
+	NUM_VMS=$(pgrep -f "(vmware-vmx|VirtualBox.*startvm|qemu-kvm)" | wc -l)
+	if [ "$NUM_VMS" -gt 0 ]; then
+		if [ -n "${right1_info}" ]; then
+			right1_info="${right1_info} | "
+			right1_bare="${right1_bare} | "
+		fi
+		right1_info="${right1_info}${boldon}${cyanf}$NUM_VMS${reset}"
+		right1_bare="${right1_bare}$NUM_VMS"
+	fi
+
+	SPACELEFT=$((SPACELEFT-${#right1_bare}))
+	#echo "${right1_bare}" ${#right1_bare}
+
+	i=2
 	while [ $i -lt $SPACELEFT ]; do
 		i=$((i+1))
 		echo -ne " "
 	done
+	echo -en "$right1_info "
 	echo -e "${coloured_indent}"
 	echo -ne "${coloured_indent} "
 	line3="${indent} "
