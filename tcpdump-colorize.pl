@@ -192,6 +192,11 @@ my $ipv6_addr = qr/(?:::)?(?:${ipv6_grp}::?)+${ipv6_grp}(?:::)?/;
 my $ipv6_rev = qr/(?:(?:$hex\.){31}$hex)/;
    $ipv6_addr = qr/(?:$ipv6_addr|$ipv6_rev)/;
 my $port = qr/(?:\d{1,5}|[a-z\d\-\.]+)/;
+my $last_line_was_hex = 0;
+my $incoming_packet = 0;
+my $protocol = '';
+my $ip_proto = '';
+my $printhex = 0;
 
 #my $rfc = qr/(?:\d{1,5}|[a-z\d\-\.]+)/;
 
@@ -205,7 +210,6 @@ print $boldon.$greenf."[*]$cyanf These will be placed on the left if possible.$r
 
 my %own_addresses_hash = map { $_ => 1 } @own_addresses;
 
-my $DEBUG = 0;
 
 sub arp_make_local_left {
 	my $left = shift;
@@ -216,6 +220,44 @@ sub arp_make_local_left {
 	} else {
 		return "$left$tell$right";
 	}
+}
+
+sub handle_hex {
+	chomp;
+	my $line = $_;
+	#print "HANDLING IT: [$line]\n";
+	$last_line_was_hex = 1;
+	my $data = "";
+	my $data_ascii = "";
+	#0x0030:  04c9 0534 3536 340d 0a41 6374 6976 6520  ...4564..Active.
+	if ( $line =~ /^\s+0x[0-9a-fA-F]+0:\s\s(.*?)\s\s/ ) { 
+		$data = $1;
+		$data =~ s/ //g;
+	}
+	if ( $ip_proto eq 'udp' && $line =~ /^\s+0x0020/ ) {
+		#print "Got 0030: data:"; print length( $data);
+		if ( length( $data) > 20) { 
+			$data =~ s/^.{20}//; 
+			$printhex = 1;
+		}
+	}
+	if ( $ip_proto eq 'tcp' && $line =~ /^\s+0x0030/ ) {
+		#print "Got 0030: data:"; print length( $data);
+		if ( length( $data) > 8) { 
+			$data =~ s/^.{8}//; 
+			$printhex = 1;
+		}
+	}
+	if ( $printhex) {
+		$data_ascii = $data;
+		$data_ascii =~ s/([0-9a-fA-F]{2})/chr(hex($1))/ge;
+		#print "data: [$data]\n";
+		#print "data_ascii: [$data_ascii]\n";
+		#print length( $data);
+		my $color = "$boldon$yellowf";
+		if ( $incoming_packet == 1) { $color = "$boldon$greenf"; }
+		print "$color$data_ascii";
+	} else { return "" }
 }
 
 sub make_local_left {
@@ -233,8 +275,9 @@ sub make_local_left {
 	}
 
 	my $swapped = "";
-	my $dir = "->";
+	my $dir = "$boldon$yellowf"."->$reset";
 
+	$incoming_packet = 0;
 	if ( exists( $own_addresses_hash{$right_ip}) and not exists( $own_addresses_hash{$left_ip}) ) {
 		# Swap values around, as I want traffic to look like:
 		# local -> far_away
@@ -243,7 +286,8 @@ sub make_local_left {
 		($left_ip, $right_ip) = ($right_ip, $left_ip);
 		($left_port, $right_port) = ($right_port, $left_port);
 		#$swapped = "SWAPPED: ";
-		$dir = "<-"
+		$dir = "$boldon$greenf"."<-$reset";
+		$incoming_packet = 1;
 	}
 	# Insert country info:
 	my $country = $gi->country_code_by_addr( $right_ip);
@@ -252,53 +296,73 @@ sub make_local_left {
 	return "$swapped$left_ip$left_port $dir $right_ip$right_port$country";
 }
 
+# Force line buffer flush
+$| = 0;
+
+my $DEBUG = 0;
 while (<STDIN>) {
-		if ( $DEBUG) {
-		print "___\n";
-		print $_;
+	if ( $DEBUG) {
+		print "[".$_."]";
+	}
+
+	#x m: 22:03:01.016311 IP 192.168.0.5.42565 > 194.168.4.100.53: UDP, length 70
+	#v m: 22:03:01.033744 IP 192.168.0.5.45625 > 194.168.4.100.53: UDP, length 59
+	# This regexp fails on perl startup, but then works afterwards??
+	if (m/^((?:[\d\-]+\s)?[\d:\.]+ )?([A-Z0-9]{2,}(?: \d+\.[\da-z]+(?=,))?)([ ,].*)/) {
+		my $timestamp = $1;
+		$protocol = $2;
+		$_ = "$3\n";
+
+		my $prefix = '';
+		if ( $last_line_was_hex == 1) { 
+			#print "last_line_was_hex $last_line_was_hex, printhex $printhex";
+			$last_line_was_hex = 0;
+			# New packet just arrived
+			if ( $printhex == 1) { $prefix = "$reset\n"; }
+			else { $prefix = "$reset"; }
+			$printhex = 0;
+			#print " NE".$reset."W:\n"; 
 		}
 
-    if (m/^((?:[\d\-]+\s)?[\d:\.]+ )?([A-Z0-9]{2,}(?: \d+\.[\da-z]+(?=,))?)([ ,].*)/) {
-        my $timestamp = $1;
-        my $protocol = $2;
-        $_ = "$3\n";
-
-        print $whitef.$timestamp.$reset if $timestamp;
-        print cs_color( $protocol);
-    }
+		print $prefix.$whitef.$timestamp.$reset if $timestamp;
+		print cs_color( $protocol);
 		
+		if (m/tcp \d+/) { $ip_proto = 'tcp' }
+		elsif (m/ UDP/) { $ip_proto = 'udp' }
+		else { $ip_proto = '' } # not sure yet
+
 		# First shift things to the left before making it colourful
 		s/(Request who-has .*)(tell )($ipv4_addr)/arp_make_local_left( $1, $2, $3)/ge;
-    s/ (?<lip>$ipv4_addr)\.(?<lport>$port) > (?<rip>$ipv4_addr)\.(?<rport>$port)/" ".make_local_left( $+{lip}, $+{rip}, $+{lport}, $+{rport} )/ge;
+		s/ (?<lip>$ipv4_addr)\.(?<lport>$port) > (?<rip>$ipv4_addr)\.(?<rport>$port)/" ".make_local_left( $+{lip}, $+{rip}, $+{lport}, $+{rport} )/ge;
 
 
-    # Numeric IPV6 address and port
-    #s/ $ipv6_addr\.\K$port(?=[ :,])?/\e[36m$&\e[0m/g;
-    #s/(?<!seq) \K$ipv6_addr(?=[ :,])?/\e[34m$&\e[0m/g;
+		# Numeric IPV6 address and port
+		#s/ $ipv6_addr\.\K$port(?=[ :,])?/\e[36m$&\e[0m/g;
+		#s/(?<!seq) \K$ipv6_addr(?=[ :,])?/\e[34m$&\e[0m/g;
 
-    # Numeric IPV4 address and port
-    #s/ ($ipv4_addr)\.($port)([ :,])?/print " ".cs_color($1).".".cs_color($2).$3/ge;
-    s/ ($ipv4_addr) > ($ipv4_addr)/" ".make_local_left( $1, $2)/ge;
+		# Numeric IPV4 address and port
+		#s/ ($ipv4_addr)\.($port)([ :,])?/print " ".cs_color($1).".".cs_color($2).$3/ge;
 
-    s/ ($ipv4_addr)\.($port)([ :,]){1}/" ".cs_color($1).".".cs_color($2).$3/ge;
-    s/ ($ipv4_addr)([ ,:])/" ".cs_color($1).$2/ge;
-    #s/ ($ipv4_addr)(\.$port) > ($ipv4_addr)(\.$port)([ :,])?/" ".fix_dir( $1, $2, $3, $4).$5/ge;
-    #s/ $ipv4_addr\.\K$port(?=[ :,])?/cs_color($&)/ge;
-    #s/(?<= )$ipv4_addr(?=[ :,])?/cs_color($&)/ge;
+		s/ ($ipv4_addr) > ($ipv4_addr)/" ".make_local_left( $1, $2)/ge;
+		s/ ($ipv4_addr)\.($port)([ :,]){1}/" ".cs_color($1).".".cs_color($2).$3/ge;
+		s/ ($ipv4_addr)([ ,:])/" ".cs_color($1).$2/ge;
+		
+		#s/^(0x[0-9a-fA-F]+0\s+[0-9a-fA-F\s]+) .*$/handle_hex($1)/e;
+		#s/ ($ipv4_addr)(\.$port) > ($ipv4_addr)(\.$port)([ :,])?/" ".fix_dir( $1, $2, $3, $4).$5/ge;
+		#s/ $ipv4_addr\.\K$port(?=[ :,])?/cs_color($&)/ge;
+		#s/(?<= )$ipv4_addr(?=[ :,])?/cs_color($&)/ge;
 
-    # FQDN
-    #s/ $fqdn\.\K$port(?=[ :,])?/\e[36m$&\e[0m/g;
-    #s/(?<= )$fqdn(?=[ :,])?/\e[34m$&\e[0m/g;
+		# FQDN
+		#s/ $fqdn\.\K$port(?=[ :,])?/\e[36m$&\e[0m/g;
+		#s/(?<= )$fqdn(?=[ :,])?/\e[34m$&\e[0m/g;
 
-    # Bridge
-    #s/(?<= )($port)\.($ipv4_addr|$ipv6_addr)\.($port)(?=[ :,])/\e[36m$1\e[0m.\e[34m$2\e[0m.\e[36m$3\e[0m/g;
-    #s/(?<= )($port)\.($ipv4_addr|$ipv6_addr)(?=[ :,])/\e[36m$1\e[0m.\e[34m$2\e[0m/g;
+		# Bridge
+		#s/(?<= )($port)\.($ipv4_addr|$ipv6_addr)\.($port)(?=[ :,])/\e[36m$1\e[0m.\e[34m$2\e[0m.\e[36m$3\e[0m/g;
+		#s/(?<= )($port)\.($ipv4_addr|$ipv6_addr)(?=[ :,])/\e[36m$1\e[0m.\e[34m$2\e[0m/g;
 
-    # Packet data (tcpdump -x)
-    #s/\s+0x$hex+(?=:)/\e[35m$&\e[0m/;
 
-    # Warnings
-    s/\[bad udp cksum[^\]]*\]/\e[31m$&\e[0m/;
+		# Warnings
+		s/\[bad udp cksum[^\]]*\]/\e[31m$&\e[0m/;
 
 		# tcp/udp/icmp
 		s/( seq )(\d+):(\d+)/ $1.cs_color($2).":".cs_color($3)/ge;
@@ -320,8 +384,19 @@ while (<STDIN>) {
 		
 		s/ (Request [\w-]+)/ $greenf$1$reset/;
 		s/ (Reply)/ $boldon$greenf$1$reset/;
+		
+		s/ (UDP)/ $boldon$greenf$1$reset/;
 		s/ (tcp \d+)/ $boldon$redf$1$reset/;
 		s/ (UDP)/ $boldon$greenf$1$reset/;
-
-    print;
+		
+    if ( ! $last_line_was_hex ) { print };
+	
+  } else {
+		# Packet data (tcpdump -X)
+		#0x0030:  04c9 0534 3536 340d 0a41 6374 6976 6520  ...4564..Active.
+		if ( $ip_proto eq 'tcp' or $ip_proto eq 'udp') {
+			# TODO: add support for others?
+			s/^\s+(0x[0-9a-fA-F]+0:\s+[0-9a-fA-F\s]+) .*$/handle_hex($1)/e;
+		}
+	}
 }
