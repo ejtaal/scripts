@@ -41,4 +41,14 @@ perl -pi.bak -e "s/^Name=.*$/Name=${BROWSER_DIR}/" "${BROWSER_PATH}/.mozilla/fir
 
 echo "Launching firefox: HOME=${BROWSER_PATH} firefox -no-remote -P ${BROWSER_DIR}"
 
+if [ ! -L ${BROWSER_PATH}/Desktop ]; then
+	mv ${BROWSER_PATH}/Desktop ${BROWSER_PATH}/Desktop.bak
+	ln -s ~/Desktop ${BROWSER_PATH}/Desktop
+fi
+
+if [ ! -L ${BROWSER_PATH}/Downloads ]; then
+	mv ${BROWSER_PATH}/Downloads ${BROWSER_PATH}/Downloads.bak
+	ln -s ~/Downloads ${BROWSER_PATH}/Downloads
+fi
+
 HOME=${BROWSER_PATH} firefox -no-remote -P ${BROWSER_DIR}

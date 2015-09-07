@@ -40,7 +40,7 @@ elif [ -d "$HOME/.svk" ]; then
   COMMITCMD="svk commit"
   EDITOR="${VIMHACK} $TMPDIFF"
 elif [ -f "$HOME/.gitconfig" ]; then
-  DIFFCMD="git diff"
+  DIFFCMD="git diff HEAD"
   COMMITCMD="git commit -a"
   EDITOR="${VIMHACK} $TMPDIFF"
 fi

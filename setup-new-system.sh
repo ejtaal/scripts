@@ -1,41 +1,59 @@
 #!/bin/sh
 
+# wget -O - https://github.com/ejtaal/scripts/raw/master/setup-new-system.sh | sh
+
 echo "Setting up your new system, just sit back and relax..."
 
 cd
-git clone https://github.com/ejtaal/scripts
+if [ ! -d scripts ]; then
+	git clone https://github.com/ejtaal/scripts
+fi
 
-if [ -f ~/.bashrc.bak ]; then
-	echo "Bashrc seems already installed"
+if [ -L ~/.bashrc ]; then
+	echo "Bashrc seems already installed:"
+	ls -l ~/.bashrc
 else
 	mv -v ~/.bashrc ~/.bashrc.bak
 	ln -s ~/scripts/bashrc ~/.bashrc
 	echo "New bashrc installed"
 fi
 
-echo "New bash installed"
+PKGS="vim nmap htop git gitk screen lynx links elinks libreoffice 
+httrack okular kate gedit sshpass lftp mtr iotop krusader vlc xine-ui 
+smplayer mc system-config-lvm ionice gnome-system-monitor 
+aircrack-ng openvas-server openvas-cli openvas-client openvas-manager 
+ettercap-graphical git-gui wine gdb dkms autofs cifs-utils 
+libdigest-crc-perl libstring-crc32-perl libcpan-checksums-perl 
+sysfsutils uswsusp apmd veil-evasion fbreader 
+libstring-crc-cksum-perl libgeo-ip-perl pv
+linux-headers-`uname -r` iptraf-ng openssh-blacklist openssh-blacklist-extra 
+mosh bmon iftop nethogs libimage-exiftool-perl
+edb ddd
+"
 
+FOUND_PKGS=
 
-COMMONPKGS="vim nmap htop git gitk screen lynx links elinks libreoffice httrack okular kdm kate gedit sshpass lftp mtr iotop krusader"
 if [ -x /usr/bin/yum ]; then
-	PKGS="$COMMONPKGS system-config-lvm ionice"
+	#yum makecache
+	CHECK_CMD="yum -q -C list"
 	CMD=yum
 fi
 if [ -x /usr/bin/apt-get ]; then
-	PKGS="$COMMONPKGS gnome-system-monitor aircrack-ng openvas-cli openvas-scanner openvas-manager ettercap-graphical git-gui wine gdb dkms autofs cifs-utils libdigest-crc-perl libstring-crc32-perl libcpan-checksums-perl sysfsutils uswsusp apmd veil-evasion fbreader libstring-crc-cksum-perl libgeo-ip-perl"
-	FOUND_PKGS=""
-	for i in $PKGS; do
-		if apt-cache show $i; then
-			FOUND_PKGS="$FOUND_PKGS $i"
-		else
-			echo package ''$i'' not found.
-		fi
-	done
-	PKGS="$FOUND_PKGS"
+	CHECK_CMD="apt-cache show"
 	CMD=apt-get
 fi
-echo "Installing some useful packages: $PKGS"
-sudo $CMD install $PKGS
+
+for i in $PKGS; do
+	if $CHECK_CMD $i >/dev/null 2>&1; then
+		echo "v $i"
+		FOUND_PKGS="$FOUND_PKGS $i"
+	else
+		echo "- $i"
+	fi
+done
+
+echo "Found following useful packages:" $FOUND_PKGS
+sudo $CMD install $FOUND_PKGS
 
 if [ -f /etc/apt/sources.list ]; then
 	. /etc/lsb-release

@@ -1,16 +1,20 @@
 #!/usr/bin/perl
-
-
 =pod
-tcpdump-colorize 2.0
+Usage: Run it like this:
+
+sudo tcpdump -qln | tcpdump-colorize.pl
+
+Test command:
+
+for i in cnn.com baidu.cn www.gov.au; do ping -q -c 1 $i > /dev/null; done
 
 Colorize ip and port number consistently, so it's easier for humans to track
 who is talking to who (plus it looks really cool! :) )
-Erik Taal <ejtaal@gmail.com>
+
+tcpdump-colorize 2.0 - Erik Taal <ejtaal@gmail.com>
 
 Based on:
-tcpdump-colorize 1.0
-Nicolas Martyanoff <khaelin@gmail.com>
+tcpdump-colorize 1.0 - Nicolas Martyanoff <khaelin@gmail.com>
 This script is in the public domain.
 =cut
 
@@ -158,16 +162,7 @@ my @test_strings = (
 foreach $a ( @test_strings) {
 	my $country = $gi->country_code_by_addr( $a);
 	if ( ! $country) { $country = "__"; }
-	#print cs_color($a)."(".cs_color($country).")\n";
-#	#my $checksum = crc( $a, 32) % $no_colors;
-#	my $checksum = cksum( $a) % $no_colors;
-#	#print "value of a: $a".", crc: $crc_small\n";
-#	#my $checksum = unpack("%32W*", $a) % $no_colors;
-#	#my $checksum = unpack("%64A*", $a) % $no_colors;
-#	print "value of a: $a".", crc: $checksum, therefore: ".$nice_colors[$checksum].$a.$reset."\n";
 }
-
-#exit 99;
 
 # Assign a colour to a string depending on its CRC
 sub cs_color {
@@ -180,8 +175,7 @@ sub cs_color {
 	#return $boldon.$redf.$s.$reset;
 }
 
-# Assign left to RFC1918 adds?
-
+# Assign left to RFC1918 adds? Hmm.
 
 my $hex = qr/[0-9a-f]/;
 my $fqdn = qr/(?:[A-Za-z\d\-\.]+\.[a-z]+)/;
