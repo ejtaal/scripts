@@ -70,7 +70,8 @@ alias vimphp='vim -c ":se ft=php"'
 alias watp='watch --differences=permanent -n'
 alias watc='watch --differences=cumulative -n'
 alias x='startx'
-alias xset-fast-keyboard='xset r rate 200 36'
+#alias xset-fast-keyboard='xset r rate 200 36'
+alias xset-fast-keyboard="for i in old c new; do [ \$i = c ] && xset r rate 200 37 || xset q | grep 'repeat delay' | xargs echo \$i; done"
 
 # konsole_title aliases
 alias bt='konsole_title bt'
