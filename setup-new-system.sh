@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# wget -O - https://github.com/ejtaal/scripts/raw/master/setup-new-system.sh | sh
+
 echo "Setting up your new system, just sit back and relax..."
 
 cd
@@ -18,13 +20,13 @@ fi
 echo "New bash installed"
 
 
-COMMONPKGS="vim nmap htop git gitk screen lynx links elinks libreoffice httrack okular kdm kate gedit sshpass lftp mtr iotop krusader"
+COMMONPKGS="vim nmap htop git gitk screen lynx links elinks libreoffice httrack okular kate gedit sshpass lftp mtr iotop krusader vlc xine-ui smplayer mc"
 if [ -x /usr/bin/yum ]; then
 	PKGS="$COMMONPKGS system-config-lvm ionice"
 	CMD=yum
 fi
 if [ -x /usr/bin/apt-get ]; then
-	PKGS="$COMMONPKGS gnome-system-monitor aircrack-ng openvas-cli openvas-client openvas-manager ettercap-graphical git-gui wine gdb dkms autofs cifs-utils libdigest-crc-perl libstring-crc32-perl libcpan-checksums-perl sysfsutils uswsusp apmd veil-evasion fbreader libstring-crc-cksum-perl libgeo-ip-perl linux-headers-`uname -r`"
+	PKGS="$COMMONPKGS gnome-system-monitor aircrack-ng openvas-server openvas-cli openvas-client openvas-manager ettercap-graphical git-gui wine gdb dkms autofs cifs-utils libdigest-crc-perl libstring-crc32-perl libcpan-checksums-perl sysfsutils uswsusp apmd veil-evasion fbreader libstring-crc-cksum-perl libgeo-ip-perl linux-headers-`uname -r` iptraf-ng openssh-blacklist openssh-blacklist-extra mosh"
 	FOUND_PKGS=""
 	for i in $PKGS; do
 		if apt-cache show $i; then
