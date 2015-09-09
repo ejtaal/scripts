@@ -25,7 +25,7 @@ aircrack-ng openvas-server openvas-cli openvas-client openvas-manager
 ettercap-graphical git-gui wine gdb dkms autofs cifs-utils 
 libdigest-crc-perl libstring-crc32-perl libcpan-checksums-perl 
 sysfsutils uswsusp apmd veil-evasion fbreader 
-libstring-crc-cksum-perl libgeo-ip-perl 
+libstring-crc-cksum-perl libgeo-ip-perl pv
 linux-headers-`uname -r` iptraf-ng openssh-blacklist openssh-blacklist-extra 
 mosh
 "
