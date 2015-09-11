@@ -304,13 +304,20 @@ urlencode() {
             *) printf '%%%02X' "'$c"
         esac
     done
+		# Or:
+    # urldecode <string>
+		#$ alias urldecode='python -c "import sys, urllib as ul; \
+		#    print ul.unquote_plus(sys.argv[1])"'
 }
 
 urldecode() {
-    # urldecode <string>
-
     local url_encoded="${1//+/ }"
-    printf '%b' "${url_encoded//%/\x}"
+    printf '%b' "${url_encoded//%/\\x}"
+		
+		# Or:
+		#		$ alias urlencode='python2 -c "import sys, urllib as ul; \
+		#		    print ul.quote_plus(sys.argv[1])"'
+		# decoded_url=$(python3 -c 'import sys, urllib.parse; print(urllib.parse.unquote(sys.argv[1]))' "$encoded_url")
 }
 
 get_external_ip() {

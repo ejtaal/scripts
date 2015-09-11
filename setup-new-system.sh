@@ -27,7 +27,8 @@ libdigest-crc-perl libstring-crc32-perl libcpan-checksums-perl
 sysfsutils uswsusp apmd veil-evasion fbreader 
 libstring-crc-cksum-perl libgeo-ip-perl pv
 linux-headers-`uname -r` iptraf-ng openssh-blacklist openssh-blacklist-extra 
-mosh
+mosh bmon iftop nethogs libimage-exiftool-perl
+edb ddd
 "
 
 FOUND_PKGS=
