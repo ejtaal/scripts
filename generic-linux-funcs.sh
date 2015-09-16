@@ -257,7 +257,7 @@ get_default_if() {
 	#echo default_gateway = $default_gateway device = $device
 	#if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3;exit}')
 	# Read them all in an array, if more than 1
-	if_ips=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}')
+	if_ips=($(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}'))
 	if_ip=${if_ips[0]}
 	#if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}')
 	first_3_if_ip=${if_ip%.[0-9]*}
