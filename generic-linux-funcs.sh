@@ -252,7 +252,7 @@ get_default_if() {
 	#echo default_gateway = $default_gateway device = $device
 	#if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3;exit}')
 	# Read them all in an array, if more than 1
-	if_ips=($(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}'))
+	if_ips=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}')
 	if_ip=${if_ips[0]}
 	#if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}')
 	first_3_if_ip=${if_ip%.[0-9]*}
@@ -322,4 +322,43 @@ urldecode() {
 
 get_external_ip() {
 	dig +short myip.opendns.com @resolver1.opendns.com
+}
+
+hm() {
+	# Display a hacker message. Lame, I know :-/
+	color="$greenfb"
+	icon="$1"
+	case "$icon" in
+		'!') color="$redfb";;
+		'-') color="$yellowfb";;
+		'+') color="$greenfb";;
+		'*') color="$cyanfb";;
+	esac
+	echo -e "${color}[${icon}] $@"
+	
+}
+
+modify_file() {
+  # This modifies a conf file and replaces specific wmfs lines
+  # with input to this function
+  filename="$1"
+  shift
+  if [ ! -f "${filename}" ]; then
+    hm - "Couldn't find ${filename}"
+		touch "${filename}"
+	else
+  	cp -pf "${filename}" "${filename}.old"
+  fi
+  filename="$1"
+  sed -n '/start-my-conf/,/end-my-conf/!p' "${filename}" \
+    > "${filename}.new"
+  echo "### start-my-conf - You better don't be messing with these lines, fool!!" >> "${filename}.new"
+  for string in "$@"; do
+    echo -e "$string" >> "${filename}.new"
+  done
+  echo "### end-my-conf - I told you not to mess with the lines above, fool!!" >> "${filename}.new"
+  chmod --reference="${filename}" "${filename}.new"
+  chown --reference="${filename}" "${filename}.new"
+  mv -f "${filename}.new" "${filename}"
+	hm + "Updated $filename"
 }
