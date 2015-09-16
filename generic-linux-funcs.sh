@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Some very useful (to me anyway) generic linux funcs.
 # These mainly gather information about running processing, detecting
@@ -357,7 +357,8 @@ hm() {
 		'+') color="$greenfb";;
 		'*') color="$cyanfb";;
 	esac
-	echo -e "${color}[${icon}] $@"
+	shift
+	echo -e "${color}[${icon}] $@${reset}"
 	
 }
 
@@ -369,10 +370,15 @@ modify_file() {
   if [ ! -f "${filename}" ]; then
     hm - "Couldn't find ${filename}"
 		touch "${filename}"
+	fi
+	if [ ! -w "${filename}" ]; then
+    hm ! "Can't write to ${filename}"
+		filename="/tmp/$(basename "$filename")"
+		hm + "Writing contents instead to: $filename"
+		touch "${filename}"
 	else
   	cp -pf "${filename}" "${filename}.old"
   fi
-  filename="$1"
   sed -n '/start-my-conf/,/end-my-conf/!p' "${filename}" \
     > "${filename}.new"
   echo "### start-my-conf - You better don't be messing with these lines, fool!!" >> "${filename}.new"
