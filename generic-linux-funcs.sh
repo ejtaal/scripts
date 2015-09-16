@@ -213,14 +213,19 @@ system_info() {
 # of the type of VM host used.
 #
 vm_check() {
+	# Quick n dirty checks to see if we're running virtual
   VM_TYPE=""
   if grep -qi "QEMU Virtual CPU" /proc/cpuinfo; then
     VM_TYPE="QEMU"
 	elif test -f /proc/bus/input/devices && grep -q VirtualBox /proc/bus/input/devices \
 		|| grep -q "^hd.: VBOX " /var/log/dmesg; then
     VM_TYPE="VBOX"
-	elif test -f /proc/scsi/scsi && grep -qi "VMware" /proc/scsi/scsi; then
-    VM_TYPE="VMware"
+	else
+		for i in /sys/devices/virtual/dmi/id/product_name /proc/scsi/scsi; do
+			if [ -f $i ] && grep -qi "VMware" $i; then
+    		VM_TYPE="VMware"
+			fi
+		done
 	fi
 	echo "$VM_TYPE"
 }
@@ -260,10 +265,13 @@ get_default_if() {
 	if [ ${#if_ips[@]} -gt 1 ]; then
 		for (( i=1; i<${#if_ips[@]}; i++ )); do
 			alt_ip=${if_ips[$i]}
-			first_3_alt_ip=${if_ip%.[0-9]*}
+			first_3_alt_ip=${if_ips[$i]%.[0-9]*}
 			last_digit_alt_ip=${alt_ip#[0-9]*.[0-9]*.[0-9]*.}
+			#mydebug alt_ip first_3_alt_ip last_digit_alt_ip first_3_if_ip
 			if [ "$first_3_if_ip" = "$first_3_alt_ip" ]; then
 				if_ip="$if_ip +${last_digit_alt_ip}"
+			else
+				if_ip="$if_ip $alt_ip"
 			fi
 		done
 	fi
@@ -280,6 +288,21 @@ get_default_if() {
 		fi
 		if_gateway_info="${if_ip} $arrow${last_2_digits}"
 	fi
+
+	# Other ips active:
+	other_ips=$(ip addr show  | egrep -v "($device|127.0.0.1)" | awk -F'[ /]*' '/inet /{print $3}' | xargs echo -n)
+	if [ -n "$other_ips" ]; then
+		if_gateway_info="$other_ips / $if_gateway_info"
+	fi
+	if_gateway_info="| $if_gateway_info"
+}
+
+mydebug() {
+	echo -n "DEBUG: "
+	for i in "$@"; do
+		eval echo -n " $i = [\$$i] "
+	done
+	echo
 }
 
 hexToInt() {

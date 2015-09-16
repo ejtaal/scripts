@@ -73,37 +73,37 @@ alias x='startx'
 #alias xset-fast-keyboard='xset r rate 200 36'
 alias xset-fast-keyboard="for i in old c new; do [ \$i = c ] && xset r rate 200 37 || xset q | grep 'repeat delay' | xargs echo \$i; done"
 
-# konsole_title aliases
-alias bt='konsole_title bt'
-alias btupload='konsole_title bt --minport 6901 --maxport 6910 --max_upload_rate 20'
-alias emerge='konsole_title emerge'
-alias esniper='konsole_title esniper'
-alias finch='konsole_title finch'
-alias htop='konsole_title htop'
-alias irssi='konsole_title irssi'
-alias less='konsole_title less'
-alias links='konsole_title links'
-alias make='konsole_title make'
-alias man='konsole_title man'
-alias mc='konsole_title mc'
-alias mplayer='konsole_title mplayer'
-alias msfconsole='konsole_title msfconsole'
-alias mutt='konsole_title mutt'
-alias ncdu='konsole_title ncdu'
-alias ping='konsole_title ping'
-alias psql='konsole_title psql'
-alias rtorrent='konsole_title rtorrent'
-alias scp='konsole_title scp'
-alias screen='konsole_title screen'
-alias snownews='konsole_title snownews'
-alias sqlplus='konsole_title sqlplus'
-alias ssh='konsole_title ssh'
-alias sudo='konsole_title sudo'
-alias tail='konsole_title tail'
-alias multitail='konsole_title multitail'
-alias telnet='konsole_title telnet'
-alias vim='konsole_title vim'
-alias wget='konsole_title wget'
+# konsole_title aliases (Should no longer be needed with pre_exec bash routine in place)
+#alias bt='konsole_title bt'
+#alias btupload='konsole_title bt --minport 6901 --maxport 6910 --max_upload_rate 20'
+#alias emerge='konsole_title emerge'
+#alias esniper='konsole_title esniper'
+#alias finch='konsole_title finch'
+#alias htop='konsole_title htop'
+#alias irssi='konsole_title irssi'
+#alias less='konsole_title less'
+#alias links='konsole_title links'
+#alias make='konsole_title make'
+#alias man='konsole_title man'
+#alias mc='konsole_title mc'
+#alias mplayer='konsole_title mplayer'
+#alias msfconsole='konsole_title msfconsole'
+#alias mutt='konsole_title mutt'
+#alias ncdu='konsole_title ncdu'
+#alias ping='konsole_title ping'
+#alias psql='konsole_title psql'
+#alias rtorrent='konsole_title rtorrent'
+#alias scp='konsole_title scp'
+#alias screen='konsole_title screen'
+#alias snownews='konsole_title snownews'
+#alias sqlplus='konsole_title sqlplus'
+#alias ssh='konsole_title ssh'
+#alias sudo='konsole_title sudo'
+#alias tail='konsole_title tail'
+#alias multitail='konsole_title multitail'
+#alias telnet='konsole_title telnet'
+#alias vim='konsole_title vim'
+#alias wget='konsole_title wget'
 
 # Please no ugly colours from ls:
 alias ls > /dev/null 2>&1 && unalias ls
@@ -112,7 +112,7 @@ alias ls > /dev/null 2>&1 && unalias ls
 ### Part 2. Variables ###
 
 # Dynamically build path:
-ADDPATH="/sbin:/usr/sbin:/usr/local/sbin:/usr/X11R6/bin:/usr/local/bin:$HOME/bin:$HOME/scripts"
+ADDPATH="/sbin:/usr/sbin:/usr/local/sbin:/usr/X11R6/bin:/usr/local/bin:$HOME/bin:$HOME/scripts:$HOME/quiver/scripts"
 #if [ -d "${HOME}/scripts/" ]; then
 #  for dir in `find "${HOME}/scripts/" -type d -regex "[^.]*"`; do
 #    ADDPATH="${ADDPATH}:$dir"
@@ -129,7 +129,7 @@ unset LS_COLORS
 #export HISTCONTROL="ignoredups:"
 export HISTFILESIZE=50000
 export HISTSIZE=50000
-export HISTTIMEFORMAT="%Y-%m-%d--%H:%M"
+export HISTTIMEFORMAT="%Y-%m-%d--%H:%M "
 export SVKDIFF="/usr/bin/diff -u"
 export STATUSLINE_DELAY=10
 export USERNAME=$(whoami)
@@ -137,6 +137,9 @@ export SUDO_EDITOR='rvim'
 
 shopt -s histappend
 shopt -s checkwinsize
+
+# Fixes tab completion for: $ coolcmd --first-opt=/a/file/name<TAB>
+complete -D -o default
 
 # make less more friendly for non-text input files, see lesspipe(1)
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
@@ -172,13 +175,19 @@ preexec () {
 	
 	# Flush history to disk (command might crash your shell or something you know)
 	history -a
+
+	CMD="${1%% *}"
+	if [ -n "$CMD" ]; then
+		SCREENTITLE=$(echo "$@" | sed -e "s# $HOME# ~#" | sed -e 's/^\(............\).*/\1/');
+		echo "$TERM" | grep -q 'screen' && echo -e "\ek${SCREENTITLE}\e\\"
+	fi
 	
 	[ -z "$BASH_COMMAND_START" ] && export BASH_COMMAND_START=$(date +"%s%3N")
 }
 
 preexec_invoke_exec () {
     [ -n "$COMP_LINE" ] && return  # do nothing if completing
-    local this_command=`history 1 | sed -e "s/^[ ]*[0-9]*[ ]*//g"`;
+    local this_command=`history 1 | sed -e "s/^[ ]*[0-9]*[ ]*[0-9:\-]*[ ]*//g"`;
     preexec "$this_command"
 		
 }
@@ -419,6 +428,7 @@ niceprompt() {
 }
 
 konsole_title() {
+	# TODO: This can be made without sed right?
 	# Prepare nice directory
 	CURDIR=$(pwd | sed -e 's#\(/[^\/]*/[^\/]*\)/.*/\([^\/]*/[^\/]*\)\$#\1...\2#g');  
 	# If we are in konsole or ssh
@@ -620,7 +630,7 @@ human_time() {
 	mins=$((seconds / 60))
 	if [ $days -gt 0 ]; then final="${days}d:"; fi
 	if [ $hours -gt 0 ]; then final="${final}${hours}h:"; fi
-	if [ $mins -gt 0 ]; then final="${final}${mins}m"; msecs=; fi
+	if [ $mins -gt 0 ]; then final="${final}${mins}m:"; msecs=; fi
 	secondsleft="$((seconds % 60))${msecs}s"
 	echo "${final}${secondsleft}"
 }
