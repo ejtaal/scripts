@@ -27,6 +27,7 @@ fi
 source ~/.bashrc
 
 PKGS="vim nmap htop git gitk screen lynx links elinks libreoffice 
+tidy knockd cpulimit
 httrack okular kate gedit sshpass lftp mtr iotop krusader vlc xine-ui 
 smplayer mc system-config-lvm ionice gnome-system-monitor 
 aircrack-ng openvas-server openvas-cli openvas-client openvas-manager 
@@ -37,18 +38,18 @@ libstring-crc-cksum-perl libgeo-ip-perl pv
 linux-headers-`uname -r` iptraf-ng openssh-blacklist openssh-blacklist-extra 
 mosh bmon iftop nethogs libimage-exiftool-perl
 edb ddd konsole sslscan ssldump gadmin-openvpn-client ike-qtgui openvpn
+ltrace strace sshfs
 "
 
 FOUND_PKGS=
 
 if [ -x /usr/bin/yum ]; then
-	#yum makecache
+	yum makecache
 	CHECK_CMD="yum -q -C list"
 	CMD=yum
-fi
-if [ -x /usr/bin/apt-get ]; then
+elif [ -x /usr/bin/apt-get ]; then
 	CHECK_CMD="apt-cache show"
-	CMD=apt-get
+	CMD="apt-get -mV --ignore-missing"
 fi
 
 hm "*" "Finding packages to install..."
