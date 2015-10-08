@@ -27,7 +27,7 @@ fi
 source ~/.bashrc
 
 PKGS="vim nmap htop git gitk screen lynx links elinks libreoffice 
-tidy knockd cpulimit
+tidy knockd cpulimit x11vnc
 httrack okular kate gedit sshpass lftp mtr iotop krusader vlc xine-ui 
 smplayer mc system-config-lvm ionice gnome-system-monitor 
 aircrack-ng openvas-server openvas-cli openvas-client openvas-manager 

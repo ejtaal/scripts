@@ -25,7 +25,7 @@ alias ags='apt-get install $(apt-show-versions -u -b | grep security)'
 alias acs="apt-cache search"
 alias as="aptitude show"
 alias bzless='{ bzcat | less; } <'
-alias c='for ((i = 1; i < $LINES; i++)) do echo; done; clear'
+alias c='for i in {1..$LINES}; do echo; done; clear'
 alias cls='cd; for ((i = 1; i < $LINES; i++)) do echo; done; clear'
 alias cp='cp -vip'
 alias d='du -csk -- * .[^.]*'
@@ -73,38 +73,6 @@ alias x='startx'
 #alias xset-fast-keyboard='xset r rate 200 36'
 alias xset-fast-keyboard="for i in old c new; do [ \$i = c ] && xset r rate 200 37 || xset q | grep 'repeat delay' | xargs echo \$i; done"
 
-# konsole_title aliases (Should no longer be needed with pre_exec bash routine in place)
-#alias bt='konsole_title bt'
-#alias btupload='konsole_title bt --minport 6901 --maxport 6910 --max_upload_rate 20'
-#alias emerge='konsole_title emerge'
-#alias esniper='konsole_title esniper'
-#alias finch='konsole_title finch'
-#alias htop='konsole_title htop'
-#alias irssi='konsole_title irssi'
-#alias less='konsole_title less'
-#alias links='konsole_title links'
-#alias make='konsole_title make'
-#alias man='konsole_title man'
-#alias mc='konsole_title mc'
-#alias mplayer='konsole_title mplayer'
-#alias msfconsole='konsole_title msfconsole'
-#alias mutt='konsole_title mutt'
-#alias ncdu='konsole_title ncdu'
-#alias ping='konsole_title ping'
-#alias psql='konsole_title psql'
-#alias rtorrent='konsole_title rtorrent'
-#alias scp='konsole_title scp'
-#alias screen='konsole_title screen'
-#alias snownews='konsole_title snownews'
-#alias sqlplus='konsole_title sqlplus'
-#alias ssh='konsole_title ssh'
-#alias sudo='konsole_title sudo'
-#alias tail='konsole_title tail'
-#alias multitail='konsole_title multitail'
-#alias telnet='konsole_title telnet'
-#alias vim='konsole_title vim'
-#alias wget='konsole_title wget'
-
 # Please no ugly colours from ls:
 alias ls > /dev/null 2>&1 && unalias ls
 ### End of aliases ###
@@ -138,7 +106,7 @@ export SUDO_EDITOR='rvim'
 shopt -s histappend
 shopt -s checkwinsize
 
-# Fixes tab completion for: $ coolcmd --first-opt=/a/file/name<TAB>
+# Fixes tab completion for: $ coolcmd --first-opt=/a/file/name<TAB> -- Hmm not really
 complete -D -o default
 
 # make less more friendly for non-text input files, see lesspipe(1)
@@ -152,8 +120,6 @@ fi
 ### End of variables ###
 
 ### Part 3. Subroutines ###
-
-cu() { date '+cu start: %H:%M:%S %d-%b-%Y' && cvs -q update $@ | sed -e 's/^[UP]/[1;37;42m&[0m/' -e 's/^\?/[1;37;41m&[0m/' -e 's/^C/[1;37;45m&[0m/' -e 's/^[RMA]/[1;37;44m&[0m/'; date '+cu end:   %H:%M:%S %d-%b-%Y'; }
 
 normalprompt() {
 	export PROMPT_COMMAND=""
@@ -319,16 +285,16 @@ prompt_command() {
 			#right1_bare=' | '
 			#line2="${line2} | "
 		#fi
-		right1_info="${right1_info}${boldon}${bat_color}${cap}%${reset}"
-		right1_bare="${right1_bare}${cap}%"
+		right1_info="${right1_info}${boldon}${bat_color}${cap}%${reset} "
+		right1_bare="${right1_bare}${cap}% "
 		#line2="${line2} ${cap}%"
 	done
 
 	NUM_VMS=$(pgrep -f "(vmware-vmx|VirtualBox.*startvm|qemu-kvm)" | wc -l)
 	if [ "$NUM_VMS" -gt 0 ]; then
 		if [ -n "${right1_info}" ]; then
-			right1_info="${right1_info} | "
-			right1_bare="${right1_bare} | "
+			right1_info="${right1_info}| "
+			right1_bare="${right1_bare}| "
 		fi
 		right1_info="${right1_info}${boldon}${cyanf}$NUM_VMS${reset}"
 		right1_bare="${right1_bare}$NUM_VMS"
@@ -512,17 +478,8 @@ wakeup() {
 	fi
 	
 	case "$1" in
-		plex)
-			$WAKE 10.0.2.255 00:06:5b:70:d2:66
-			;;
-		berry)
-			$WAKE 10.0.2.255 00:14:C2:D7:DB:6A
-			;;
-		bluenova)
-			$WAKE 10.0.2.255 00:1e:8c:e6:2f:48
-			;;
-		wombat)
-			$WAKE 10.32.48.255 00:08:02:BD:EA:19
+		sr|stingray)
+			$WAKE 18:67:b0:30:e4:2a
 			;;
 		*)
 			echo "!! Host not recognized"
