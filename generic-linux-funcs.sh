@@ -343,6 +343,47 @@ urldecode() {
 		# decoded_url=$(python3 -c 'import sys, urllib.parse; print(urllib.parse.unquote(sys.argv[1]))' "$encoded_url")
 }
 
+string_morph(){
+	s=$1
+	echo "==>> string [$s]:"
+	echo -n "base64        : "
+	echo "$1" | base64
+	echo -n "base64 decoded: "
+	echo "$1" | base64 -d
+	echo
+	echo -n "hex           : "
+  local length="${#s}"
+  for (( i = 0; i < length; i++ )); do
+    local c="${s:i:1}"
+    printf '\\x%02X' "'$c"
+  done
+	echo
+	echo -n "numchars      : "
+  for (( i = 0; i < length; i++ )); do
+    local c="${1:i:1}"
+    printf '%d ' "'$c"
+  done
+	echo
+	echo -n "urlencode     : "
+  for (( i = 0; i < length; i++ )); do
+      local c="${1:i:1}"
+      case $c in
+          [a-zA-Z0-9.~_-]) printf "$c" ;;
+          *) printf '%%%02X' "'$c"
+      esac
+  done
+	echo
+	echo -n "urldecode     : "
+	python3 -c 'import sys, urllib.parse; print(urllib.parse.unquote(sys.argv[1]))' "$1"
+	echo
+	echo -n ",, forced     : "
+  for (( i = 0; i < length; i++ )); do
+    local c="${1:i:1}"
+    printf '%%%02X' "'$c"
+  done
+	echo
+}
+
 get_external_ip() {
 	dig +short myip.opendns.com @resolver1.opendns.com
 }
