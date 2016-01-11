@@ -27,7 +27,7 @@ fi
 source ~/.bashrc
 
 PKGS="vim nmap htop git gitk screen lynx links elinks libreoffice 
-tidy knockd cpulimit x11vnc
+tidy knockd cpulimit x11vnc supercat
 httrack okular kate gedit sshpass lftp mtr iotop krusader vlc xine-ui 
 smplayer mc system-config-lvm ionice gnome-system-monitor 
 aircrack-ng openvas-server openvas-cli openvas-client openvas-manager 
@@ -38,7 +38,7 @@ libstring-crc-cksum-perl libgeo-ip-perl pv
 linux-headers-`uname -r` iptraf-ng openssh-blacklist openssh-blacklist-extra 
 mosh bmon iftop nethogs libimage-exiftool-perl
 edb ddd konsole sslscan ssldump gadmin-openvpn-client ike-qtgui openvpn
-ltrace strace sshfs
+ltrace strace sshfs libtool  build-essential automake
 "
 
 FOUND_PKGS=
