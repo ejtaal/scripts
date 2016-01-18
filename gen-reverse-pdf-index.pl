@@ -49,6 +49,36 @@ my $reset=$e."[0m";
 # Force line buffer flush
 $| = 0;
 
+# 2 dim array, @[0] for even pages @[1] for odd ones
+# This needs to be either detected or sussed out beforehand and given
+# as a parameter somehow
+# Also, this obviously implies all even/odd pages of the index have roughly
+# the same layout.
+#my @column_left = ( [ 0, 54, 324, 594], [ 0, 81, 351, 621]);
+#my @column_left_old = ( [ 0, 54, 324, 594], [ 0, 81, 351, 621]);
+
+my $SPEC = $ARGV[0];
+my %config = {};
+if ( -f "$SPEC") { %config = do "$SPEC"; }
+elsif ( -f "$SPEC.pl") { %config = do "$SPEC.pl"; }
+else {
+	print "ARGV: @ARGV";
+	print "!! Cannot find $SPEC !\n";
+	exit 1;
+}
+
+print Dumper(%config);
+
+my @column_left = @{$config{column_left}};
+my $avg_indent  = $config{avg_indent};
+my $comma_index = $config{comma_index};;
+my $space_index = $config{space_index};
+my $trust_indent_guess_fully = $config{trust_indent_guess_fully};
+
+#print Dumper(\@column_left, \@column_left_old);
+#print "column_left: @column_left, avg_indent: $avg_indent\n";
+#exit 99;
+
 my $page_items;
 
 sub extract_page_numbers {
@@ -65,33 +95,92 @@ sub extract_page_numbers {
 	$s =~ s/[a-z]*\d+[a-z]*-[a-z]*\d+[a-z]*-[a-z\d-]+//g;
 
 	$s =~ s/[a-z]+\d+-[a-z\d-]*//g;
-	# remove page ranges
+	# remove page ranges (including alternative (unicode?) dash)
+	#$s =~ s/([\s,]+\d+)[a-z]*[\-–]\d[\d\w]+/$1/g;
 	$s =~ s/([\s,]+\d+)[a-z]*-\d[\d\w]+/$1/g;
 	# remove page suffixes (for tables, images etc)
 	$s =~ s/\s*(\d+)[a-z]/ $1/g;
-	if ( $s =~ m/^(.*?),\s*\d/) {
-		# Seems like a valid line
-		my $item = $1;
-		my $lastpageno = 0;
-		while ($s =~ /,\s*(\d+)/g) {
-			my $pageno = $1;
-			if ( $pageno == $lastpageno) { next; }
-			if ( $heading3 ne "") {
-				print "ITEM: $pageno, ($heading, $heading2, $heading3, $item)\n";
-				}
-			elsif ( $heading2 ne "") {
-				print "ITEM: $pageno, ($heading, $heading2, $item)\n";
-				}
-			elsif ( $heading ne "") {
-				print "ITEM: $pageno, ($heading, $item)\n";
-				}
-			else { print "ITEM: $pageno, $item\n" };
-			$lastpageno = $pageno;
-			$page_items++;
+	# Some books give comma first, then pageno, others a space, then pageno
+	if ($comma_index == 1) {
+		if ( $s =~ m/^(.*?),\s*\d/) {
+			# Seems like a valid line
+			my $item = $1;
+			my $lastpageno = 0;
+			while ($s =~ /,\s*(\d+)/g) {
+				my $pageno = $1;
+				if ( $pageno == $lastpageno) { next; }
+				if ( $heading3 ne "") {
+					print "ITEM: $pageno, ($heading, $heading2, $heading3, $item)\n";
+					}
+				elsif ( $heading2 ne "") {
+					print "ITEM: $pageno, ($heading, $heading2, $item)\n";
+					}
+				elsif ( $heading ne "") {
+					print "ITEM: $pageno, ($heading, $item)\n";
+					}
+				else { print "ITEM: $pageno, $item\n" };
+				$lastpageno = $pageno;
+				$page_items++;
+			}
+			return 0;
+		} else {
+			print "=> UNRECOGNIZED LINE: [$s]\n";
+			return 1;
 		}
-		return 0;
+	}
+	if ($space_index == 1) {
+		# remove page ranges (including alternative (unicode?) dash)
+		$s =~ s/(\d+)–\d+/$1/g;
+		if ( $s =~ m/^(.*?)\s+\d+,\s*\d/ or $s =~ m/^(.*[A-Za-z].*)\s+\d+[,\s]/ or $s =~ m/^(.*[A-Za-z].*)\s+\d+$/) {
+			# Seems like a valid line
+			my $item = $1;
+			my $lastpageno = 0;
+			# Make multiple pages listed match the while loop below
+			print "=> s: [$s]\n";
+			$s =~ s/^([^,]+)\s+(\d+)\s*,/$1, $2,/;
+			$s =~ s/(,\s*[^\d]+)\s+(\d+)\s*,/$1, $2,/;
+			$s =~ s/(,\s*[^\d]+)\s+(\d+)\s*$/$1, $2/;
+			print "=> s: [$s]\n";
+
+			if ( ($s =~ /^[^,]+\s(\d+)\s*$/g)) {
+				my $pageno = $1;
+				if ( $heading3 ne "") {
+					print "ITEMSINGLE: $pageno, ($heading, $heading2, $heading3, $item)\n";
+					}
+				elsif ( $heading2 ne "") {
+					print "ITEMSINGLE: $pageno, ($heading, $heading2, $item)\n";
+					}
+				elsif ( $heading ne "") {
+					print "ITEMSINGLE: $pageno, ($heading, $item)\n";
+					}
+				else { print "ITEMSINGLE: $pageno, $item\n" };
+				$lastpageno = $pageno;
+				$page_items++;
+			}
+			# Else, do the comma seperated way:
+			while ($s =~ /,\s*(\d+)/g) {
+				my $pageno = $1;
+				if ( $pageno == $lastpageno) { next; }
+				if ( $heading3 ne "") {
+					print "ITEM: $pageno, ($heading, $heading2, $heading3, $item)\n";
+					}
+				elsif ( $heading2 ne "") {
+					print "ITEM: $pageno, ($heading, $heading2, $item)\n";
+					}
+				elsif ( $heading ne "") {
+					print "ITEM: $pageno, ($heading, $item)\n";
+					}
+				else { print "ITEM: $pageno, $item\n" };
+				$lastpageno = $pageno;
+				$page_items++;
+			}
+			return 0;
+		} else {
+			print "=> UNRECOGNIZED LINE: [$s]\n";
+			return 1;
+		}
 	} else {
-		print "=> UNRECOGNIZED LINE: [$s]\n";
+		print "=> INVALID LINE: [$s]\n";
 		return 1;
 	}
 }
@@ -112,12 +201,8 @@ my $cur_page = 0; my $cur_page_line = 0; my $even_odd_page;
 my $page_non_garbage_line = 0;
 my $page_height; my $page_width;
 
-# 2 dim array, @[0] for even pages @[1] for odd ones
-# This needs to be either detected or sussed out beforehand and given
-# as a parameter somehow
-# Also, this obviously implies all even/odd pages of the index have roughly
-# the same layout.
-my @column_left = ( [ 0, 54, 324, 594], [ 0, 81, 351, 621]);
+
+
 
 my $cur_outline_indent = 0;
 my $outline_line = 0;
@@ -163,6 +248,7 @@ while (<STDIN>) {
 		my $text = $5;
 		$text =~ s/<\/text>//;
 		$text =~ s/<\/*(b|i)>//g;
+		$text =~ s/<a href=.*?>//g;
 		#print "=> cur_page_line: $cur_page_line, page_height * 0.05: ".($page_height * 0.05)."\n";
 		if ( $font > 6 or $text =~ m|^[\s,\.\(\)\[\]]*$|
 			or ( $cur_page_line < 20 && $left > 500)
@@ -176,7 +262,9 @@ while (<STDIN>) {
 		# if ( $lastleft < 0) { $lastleft = $left; $last_column_left = $left }
 
 		#print "Text detected, t: $top l: $left [$text]\n";
-		if ( $text =~ m|^(.*?),\s*\d| ) { $itemtext = $1; }
+		if    ( $comma_index == 1 and $text =~ m|^(.*?),\s*\d| ) { $itemtext = $1; }
+		elsif ( $space_index == 1 and $text =~ m|^(.*?)\s+\d+[-–\s,]| ) { $itemtext = $1; }
+		elsif ( $space_index == 1 and $text =~ m|^(.*?)\s+\d+[-–\s\d]+$| ) { $itemtext = $1; }
 		#if ( $text =~ m|^(.*?),\s*\d| ) { $itemtext = $1; }
 		else { $itemtext = $text; }
 
@@ -213,7 +301,9 @@ while (<STDIN>) {
 					# Possibly continuation of a subheading from previous column's end
 					# Don't reset indent etc.
 					print "=> CONTINUATION OF SUB/SUBSUB heading detected: $text\n";
-					if ( $isindent > 0 and $indent_guess > 0) {
+					# XXX
+					#if ( $isindent != $indent_guess ) {
+					if ( $trust_indent_guess_fully == 1 or ($isindent > 0 and $indent_guess > 0)) {
 						$isindent = $indent_guess;
 					}
 				}
