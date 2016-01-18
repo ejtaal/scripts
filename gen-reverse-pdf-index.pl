@@ -9,6 +9,8 @@ Usage:
 
 cat tweakedxmlfile.xml | gen-reverse-pdf-index.pl
 
+Post processing example to obtain a tab/semicolon seperated file:
+cat nelson.xml | ~/scripts/gen-reverse-pdf-index.pl | egrep "^ITEM|OUTLINE" | cut -f 2 -d':' | sort -n | uniq | perl -pi -e 's/(^\s+\d+),\s*(.*?)$/$2;\t$1/' | perl -pi -e 's/^\d{9} ==/==/' > nelson_neat_revindex_v1.tsv
 
 Test command:
 
@@ -55,8 +57,16 @@ sub extract_page_numbers {
 	my $heading = shift;
 	my $heading2 = shift;
 	my $heading3 = shift;
+	# remove weird codes
+	#$s =~ s/[a-z\d]+-[a-z\d]+-[a-z\d-]+//g;
+
+	# This is too radical?
+	#$s =~ s/[a-z]*\d[a-z]*-[a-z]*\d[a-z]*-[a-z\d-]+//g;
+	$s =~ s/[a-z]*\d+[a-z]*-[a-z]*\d+[a-z]*-[a-z\d-]+//g;
+
+	$s =~ s/[a-z]+\d+-[a-z\d-]*//g;
 	# remove page ranges
-	$s =~ s/(\d+)[a-z]*-\d[\d\w]+/$1/g;
+	$s =~ s/([\s,]+\d+)[a-z]*-\d[\d\w]+/$1/g;
 	# remove page suffixes (for tables, images etc)
 	$s =~ s/\s*(\d+)[a-z]/ $1/g;
 	if ( $s =~ m/^(.*?),\s*\d/) {
@@ -308,11 +318,12 @@ while (<STDIN>) {
 		print "=> INDENTS: $isindent, $itemheading, $itemheading2, $itemheading3\n";
 		
 		# Index alphabet headers
-		if ( $text =~ m|^[A-Z]$| ) { $isindent = 0; }
+		if ( $text =~ m|^[A-Z]$| ) { $isindent = 0; next; }
 		# Lone line of page number(s) for previous item
 		#if ( $text =~ m|^[,\s\d]+$| ) {
-		# Starts with numbers but that could also be part of the heading itself
-		if ( $text =~ m|^\d| and $text !~ m|[A-Za-z].*?,\s*\d|) {
+		# Starts with numbers but that could also be part of the heading itself, or molecule name
+		#    indent detected   starts w numbers    doesn't end with page no's        isn't name of molecule
+		if ( $isindent > 0 and $text =~ m|^\d| and $text !~ m|[A-Za-z]{2,}.*?,\s*\d| and $text !~ m|^\d+,\d+[A-Za-z]|) {
 			print "=> LONE PAGENO LINE: $text\n";
 			$isindent = $last_indent; 
 			$text = "$lasttext, $text";
@@ -360,6 +371,6 @@ while (<STDIN>) {
 		$outline_line++;
 		my $prefixed_num = sprintf( "%09d", $outline_line);
 		#print "OUTLINE: $target_page, ". "\t"x$cur_outline_indent ."$prefixed_num"."_"."$header\n";
-		print "OUTLINE: $target_page, $prefixed_num "."=="x$cur_outline_indent ."$header\n";
+		print "OUTLINE: $target_page, $prefixed_num "."--"x$cur_outline_indent ." $header\n";
 	}
 }
