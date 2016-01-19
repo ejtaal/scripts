@@ -12,6 +12,23 @@ cat tweakedxmlfile.xml | gen-reverse-pdf-index.pl
 Post processing example to obtain a tab/semicolon seperated file:
 cat nelson.xml | ~/scripts/gen-reverse-pdf-index.pl | egrep "^ITEM|OUTLINE" | cut -f 2 -d':' | sort -n | uniq | perl -pi -e 's/(^\s+\d+),\s*(.*?)$/$2;\t$1/' | perl -pi -e 's/^\d{9} ==/==/' > nelson_neat_revindex_v1.tsv
 
+To condense terms further (list all things on same page on the same line in the
+reverse index), try:
+
+{
+	cat s277/book2*xml | ~/scripts/gen-reverse-pdf-index.pl s277_book2.pl | egrep "^ITEM" | cut -f 2 -d':' | sort -n | uniq | while read num text; do if [ "$num" != "$lastnum" ]; then echo; echo -n "$num $text"; else echo -n " / $text"; fi; lastnum=$num; done;
+	cat s277/book2*xml | ~/scripts/gen-reverse-pdf-index.pl s277_book2.pl | egrep "OUTLINE" | cut -f 2 -d':' | sort -n; 
+} | sort -n | uniq | perl -pi -e 's/(^\s*\d+),\s*(.*?)$/$2\t$1/' | perl -pi -e 's/^\d{9} --/--/' > s277_neat_revindex_v3.csv
+
+
+
+If outline isn't present in the pdf, try to extract it, use Okular, "Table selection took",
+copy into spreadsheet, save as csv. Then convert to basic outline and append to the pdf
+xml:
+
+cat s277/book2.csv | sed 's/^\(CHAP.*\)/<\/outline>\n\1\n<outline>\n/' | sed 's/^\(.*\),\([0-9]*\)$/<item page="\2">\1<\/item>/' >> pdf_outline.xml
+Add an outline 
+
 Test command:
 
 Based on:
@@ -67,19 +84,23 @@ else {
 	exit 1;
 }
 
-print Dumper(%config);
+#print Dumper(%config);
 
 my @column_left = @{$config{column_left}};
 my $avg_indent  = $config{avg_indent};
 my $comma_index = $config{comma_index};;
 my $space_index = $config{space_index};
 my $trust_indent_guess_fully = $config{trust_indent_guess_fully};
+my @marked_lines = @{$config{marked_lines}};
+my @bad_lines = @{$config{bad_lines}};
 
-#print Dumper(\@column_left, \@column_left_old);
+print Dumper(\@marked_lines);
 #print "column_left: @column_left, avg_indent: $avg_indent\n";
 #exit 99;
 
 my $page_items;
+my $marked_line = 0;
+my $last_marked = 0;
 
 sub extract_page_numbers {
 	#print "1 = [$1]\n";
@@ -100,6 +121,10 @@ sub extract_page_numbers {
 	$s =~ s/([\s,]+\d+)[a-z]*-\d[\d\w]+/$1/g;
 	# remove page suffixes (for tables, images etc)
 	$s =~ s/\s*(\d+)[a-z]/ $1/g;
+
+	my $m = "";
+	if ( $marked_line == 1) { $m = "**"; }
+
 	# Some books give comma first, then pageno, others a space, then pageno
 	if ($comma_index == 1) {
 		if ( $s =~ m/^(.*?),\s*\d/) {
@@ -110,15 +135,15 @@ sub extract_page_numbers {
 				my $pageno = $1;
 				if ( $pageno == $lastpageno) { next; }
 				if ( $heading3 ne "") {
-					print "ITEM: $pageno, ($heading, $heading2, $heading3, $item)\n";
+					print "ITEM: $pageno, $m($heading, $heading2, $heading3, $item)$m\n";
 					}
 				elsif ( $heading2 ne "") {
-					print "ITEM: $pageno, ($heading, $heading2, $item)\n";
+					print "ITEM: $pageno, $m($heading, $heading2, $item)$m\n";
 					}
 				elsif ( $heading ne "") {
-					print "ITEM: $pageno, ($heading, $item)\n";
+					print "ITEM: $pageno, $m($heading, $item)$m\n";
 					}
-				else { print "ITEM: $pageno, $item\n" };
+				else { print "ITEM: $pageno, $m$item$m\n" };
 				$lastpageno = $pageno;
 				$page_items++;
 			}
@@ -145,15 +170,15 @@ sub extract_page_numbers {
 			if ( ($s =~ /^[^,]+\s(\d+)\s*$/g)) {
 				my $pageno = $1;
 				if ( $heading3 ne "") {
-					print "ITEMSINGLE: $pageno, ($heading, $heading2, $heading3, $item)\n";
+					print "ITEMSINGLE: $pageno, $m($heading, $heading2, $heading3, $item)$m\n";
 					}
 				elsif ( $heading2 ne "") {
-					print "ITEMSINGLE: $pageno, ($heading, $heading2, $item)\n";
+					print "ITEMSINGLE: $pageno, $m($heading, $heading2, $item)$m\n";
 					}
 				elsif ( $heading ne "") {
-					print "ITEMSINGLE: $pageno, ($heading, $item)\n";
+					print "ITEMSINGLE: $pageno, $m($heading, $item)$m\n";
 					}
-				else { print "ITEMSINGLE: $pageno, $item\n" };
+				else { print "ITEMSINGLE: $pageno, $m$item$m\n" };
 				$lastpageno = $pageno;
 				$page_items++;
 			}
@@ -162,15 +187,15 @@ sub extract_page_numbers {
 				my $pageno = $1;
 				if ( $pageno == $lastpageno) { next; }
 				if ( $heading3 ne "") {
-					print "ITEM: $pageno, ($heading, $heading2, $heading3, $item)\n";
+					print "ITEM: $pageno, $m($heading, $heading2, $heading3, $item)$m\n";
 					}
 				elsif ( $heading2 ne "") {
-					print "ITEM: $pageno, ($heading, $heading2, $item)\n";
+					print "ITEM: $pageno, $m($heading, $heading2, $item)$m\n";
 					}
 				elsif ( $heading ne "") {
-					print "ITEM: $pageno, ($heading, $item)\n";
+					print "ITEM: $pageno, $m($heading, $item)$m\n";
 					}
-				else { print "ITEM: $pageno, $item\n" };
+				else { print "ITEM: $pageno, $m$item$m\n" };
 				$lastpageno = $pageno;
 				$page_items++;
 			}
@@ -208,7 +233,7 @@ my $cur_outline_indent = 0;
 my $outline_line = 0;
 
 
-#use Math::round;
+use Math::Round;
 use Data::Dumper;
 
 while (<STDIN>) {
@@ -246,13 +271,29 @@ while (<STDIN>) {
 		my $width = $3;
 		my $font = $4;
 		my $text = $5;
+		$marked_line = 0;
+		foreach my $regex ( @marked_lines) {
+			if ( m|$regex|) {
+				print "=> MATCHES: '$regex'\n";
+				$marked_line = 1;
+			}
+		}
+		foreach my $regex ( @bad_lines) {
+			if ( m|$regex|) {
+				print "=> BAD LINE MATCH: '$regex', next!\n";
+				next;
+			}
+		}
 		$text =~ s/<\/text>//;
 		$text =~ s/<\/*(b|i)>//g;
 		$text =~ s/<a href=.*?>//g;
 		#print "=> cur_page_line: $cur_page_line, page_height * 0.05: ".($page_height * 0.05)."\n";
-		if ( $font > 6 or $text =~ m|^[\s,\.\(\)\[\]]*$|
+		#if (  $cur_page_line < 20 and ( $left < $column_left[ $even_odd_page][1] or $top < ($page_height * 0.05)) ) { print "BLAAAH\n"; }
+		if (  $cur_page_line < 20 and ( abs( $left - $column_left[ $even_odd_page][1]) > 10 or $top < ($page_height * 0.05)) ) { print "BLAAAH\n"; }
+
+		if ( $text =~ m|^[\s,\.\(\)\[\]]*$|
 			or ( $cur_page_line < 20 && $left > 500)
-			or ( $cur_page_line < 20 and ( $left < $column_left[ $even_odd_page][1] or $top < ($page_height * 0.05)) ) # don't trust stuff left from seen before or in top margin
+			or ( $cur_page_line < 20 and ( ($column_left[ $even_odd_page][1] - $left) > 10 or $top < ($page_height * 0.05)) ) # don't trust stuff left from seen before or in top margin
 			) { 
 			print "=> GARBAGE LINE, next!\n";
 			next;
@@ -284,7 +325,8 @@ while (<STDIN>) {
 				# New column
 				$cur_column++;
 				my $expected_left = $column_left[ $even_odd_page][ $cur_column];
-				my $indent_guess = sprintf( "%.0f", ($left - $expected_left) / $avg_indent);
+				#my $indent_guess = sprintf( "%.0f", ($left - $expected_left) / $avg_indent);
+				my $indent_guess = round( ($left - $expected_left) / $avg_indent);
 				print "=> NEW COLUMN (expected: $expected_left, actual: $left, indent_guess = $indent_guess): $text\n";
 				print "=> cur_column = $cur_column\n";
 
@@ -304,6 +346,7 @@ while (<STDIN>) {
 					# XXX
 					#if ( $isindent != $indent_guess ) {
 					if ( $trust_indent_guess_fully == 1 or ($isindent > 0 and $indent_guess > 0)) {
+						if ( $indent_guess < 0) { $indent_guess = 0; }
 						$isindent = $indent_guess;
 					}
 				}
@@ -385,7 +428,8 @@ while (<STDIN>) {
 			# Do same as LONE PAGENO below
 			$isindent = $last_indent; 
 			$text = "$lasttext $text";
-			print "=> Reverted to: $text\n";
+			print "=> REVERTED TO: $text\n";
+			$marked_line = $last_marked;
 			
 			# Fix all indent headers:
 			if ( $text =~ m|^(.*?),\s*\d| ) { $itemtext = $1; }
@@ -448,6 +492,7 @@ while (<STDIN>) {
 		$lasttext = $text;
 		$lastitemtext = $itemtext;
 		$last_indent = $isindent;
+		$last_marked = $marked_line;
 	}
 	elsif ( m|^</outline| ) {
 		$cur_outline_indent--;
