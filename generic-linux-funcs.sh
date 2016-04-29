@@ -217,6 +217,8 @@ vm_check() {
   VM_TYPE=""
   if grep -qi "QEMU Virtual CPU" /proc/cpuinfo; then
     VM_TYPE="QEMU"
+	elif grep -qi 'Clock Event Device: xen' /proc/timer_list; then
+    VM_TYPE="XEN"
 	elif test -f /proc/bus/input/devices && grep -q VirtualBox /proc/bus/input/devices \
 		|| grep -q "^hd.: VBOX " /var/log/dmesg; then
     VM_TYPE="VBOX"
