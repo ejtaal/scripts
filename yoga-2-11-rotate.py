@@ -1,5 +1,12 @@
 #!/usr/bin/env python2
 """
+Lenovo Yoga 2 11 auto rotate script for Ubuntu 16.04
+
+- Adjusted /sys/...accel filenames as I found them
+- Added notify support
+- Debugged accelerometer values
+
+Initial version based on:
 thinkpad-rotate.py
 
 Rotates any detected screen, wacom digitizers, touchscreens,
@@ -19,6 +26,7 @@ https://gist.githubusercontent.com/ei-grad/4d9d23b1463a99d24a8d/raw/rotate.py
 
 rotate_pens = False # Set false if your DE rotates pen for you
 disable_touchpads = False # Don't use in conjunction with tablet-mode
+disable_touchpads = True  # Do use it
 
 ### END Configurables
 
@@ -29,6 +37,13 @@ import sys
 from subprocess import check_call, check_output
 from glob import glob
 from os import environ
+import notify2
+
+def sendmessage(title, message):
+    notify2.init("Test")
+    notice = notify2.Notification(title, message)
+    notice.show()
+    return
 
 def bdopen(fname):
     return open(op.join(basedir, fname))
@@ -51,7 +66,7 @@ env = environ.copy()
 
 devices = check_output(['xinput', '--list', '--name-only'],env=env).splitlines()
 
-touchscreen_names = ['touchscreen', 'touch digitizer']
+touchscreen_names = ['touchscreen', 'touch digitizer','maXTouch']
 touchscreens = [i for i in devices if any(j in i.lower() for j in touchscreen_names)]
 
 wacoms = [i for i in devices if any(j in i.lower() for j in ['wacom'])]
@@ -61,17 +76,20 @@ touchpads = [i for i in devices if any(j in i.lower() for j in touchpad_names)]
 
 scale = float(read('in_accel_scale'))
 
-g = 7.0  # (m^2 / s) sensibility, gravity trigger
+# Values on this laptop oscillate strangely between 0-1000 and 64000-65535,
+#   kernel driver dependant?
+thres = 500
+thres2 = 65000
 
 STATES = [
     {'rot': 'normal', 'pen': 'none', 'coord': '1 0 0 0 1 0 0 0 1', 'touchpad': 'enable',
-     'check': lambda x, y: y <= -g},
+     'check': lambda x, y: x < thres and y > thres},
     {'rot': 'inverted', 'pen': 'half', 'coord': '-1 0 1 0 -1 1 0 0 1', 'touchpad': 'disable',
-     'check': lambda x, y: y >= g},
+     'check': lambda x, y: (x < thres or x > thres2) and y < 1000},
     {'rot': 'left', 'pen': 'ccw', 'coord': '0 -1 1 1 0 0 0 0 1', 'touchpad': 'disable',
-     'check': lambda x, y: x >= g},
+     'check': lambda x, y: x < 1000 and (y < thres or y > thres2)},
     {'rot': 'right', 'pen': 'cw', 'coord': '0 1 0 -1 0 1 0 0 1', 'touchpad': 'disable',
-     'check': lambda x, y: x <= -g},
+     'check': lambda x, y: x > 64000 and (y < thres or y > thres2)},
 ]
 
 
@@ -99,24 +117,27 @@ def read_accel(fp):
 
 if __name__ == '__main__':
 
-    accel_x = bdopen('in_accel_x_raw')
-    accel_y = bdopen('in_accel_y_raw')
-    accel_z = bdopen('in_accel_z_raw')
 
     current_state = None
 
     while True:
-        x = read_accel(accel_x)
-        y = read_accel(accel_y)
-        z = read_accel(accel_z)
+        x = int(read('in_accel_x_raw')) 
+        y = int(read('in_accel_y_raw'))
+        z = int(read('in_accel_z_raw'))
         print 'x/y/z = ' + str(x) + ' ' + str(y) + ' ' + str(z)
+        #print 'x/y = ' + str(x) + ' ' + str(y)
 	
         for i in range(4):
             if i == current_state:
                 continue
             if STATES[i]['check'](x, y):
-                current_state = i
-                print "changing state to " + str(i)
-                #rotate(i)
-                break
+	    	if z < thres2:
+                    # Screen is too flat down so don't change orientation
+                    print "Z axis prevented changing state to " + str(i)
+		else:
+		    sendmessage( "Auto rotate", "Changing to " +  STATES[i]['rot'])
+                    current_state = i
+                    #print "changing state to " + str(i)
+                    rotate(i)
+                    break
         sleep(1)
