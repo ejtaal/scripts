@@ -424,7 +424,7 @@ find_ssh_agent() {
 	# Check for any available ssh-agents that contains keys:
 	for agent in /tmp/ssh-*/agent.*; do
 		export SSH_AUTH_SOCK=$agent
-		ssh-add -l | grep -q " [0-9][0-9]:" && break
+		ssh-add -l | egrep -q "( |)[0-9][0-9]:" && break
 		SSH_AUTH_SOCK=
 	done
 	# If no suitable agent was found then run the ssh-agent 
