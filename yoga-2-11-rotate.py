@@ -36,7 +36,7 @@ from os import path as op
 import sys
 from subprocess import check_call, check_output
 from glob import glob
-from os import environ
+from os import environ, system
 import notify2
 
 def sendmessage(title, message):
@@ -110,6 +110,13 @@ def rotate(state):
         for dev in touchpads:
             check_call(['xinput', s['touchpad'], dev],env=env)
 
+    if s['touchpad'] == 'disable':
+        system('onboard &')
+    else:
+        check_call(['killall','onboard'],env=env)
+    sleep(10)
+    exit(0)
+
 def read_accel(fp):
     fp.seek(0)
     return float(fp.read()) * scale
@@ -120,7 +127,8 @@ if __name__ == '__main__':
 
     current_state = None
 
-    while True:
+    #while True:
+    for ii in range(4):
         x = int(read('in_accel_x_raw')) 
         y = int(read('in_accel_y_raw'))
         z = int(read('in_accel_z_raw'))
@@ -139,5 +147,5 @@ if __name__ == '__main__':
                     current_state = i
                     #print "changing state to " + str(i)
                     rotate(i)
-                    break
         sleep(1)
+    sleep(10)
