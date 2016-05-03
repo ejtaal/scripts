@@ -450,10 +450,16 @@ vdiff() {
 	if [ -d "$1" ]; then
 		R="-r"
 	fi
+	B=
+	if [ "$1" = "-b" ]; then
+		B="-b"
+		shift
+	fi
 
-	MINPLUS=$(diff -u ${R} "$1" "$2" | grep "^[-+]" | grep -v "^---\|^+++" | cut -b 1 | sort | uniq -c | xargs echo)
+	MINPLUS=$(diff -u ${R} ${B} "$1" "$2" | grep "^[-+]" | grep -v "^---\|^+++" | cut -b 1 | sort | uniq -c | xargs echo)
 	echo "# $MINPLUS" > "$TMPDIFF"
-	diff -u ${R} "$1" "$2" >> "$TMPDIFF"
+	echo "# diff -u ${R} ${B} " >> "$TMPDIFF"
+	diff -u ${R} ${B} "$1" "$2" >> "$TMPDIFF"
 	echo '# vim:ft=diff:syntax=diff' >> "$TMPDIFF"
 	vim -R -c 'se ts=2' -c 'se ft=diff ro nomod ic' -c 'nmap q :q!<CR>' \
 		"$TMPDIFF"

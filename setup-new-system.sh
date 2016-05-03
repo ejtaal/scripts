@@ -39,7 +39,7 @@ linux-headers-`uname -r` iptraf-ng openssh-blacklist openssh-blacklist-extra
 mosh bmon iftop nethogs libimage-exiftool-perl
 edb ddd konsole sslscan ssldump gadmin-openvpn-client ike-qtgui openvpn
 ltrace strace sshfs libtool  build-essential automake
-python-notify2 python3-notify2 partimage calibre openssh-server
+fatsort python-notify2 python3-notify2 partimage calibre openssh-server
 "
 
 FOUND_PKGS=
