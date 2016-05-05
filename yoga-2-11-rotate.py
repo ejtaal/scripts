@@ -112,8 +112,8 @@ def rotate(state):
 
     if s['touchpad'] == 'disable':
         system('onboard &')
-    else:
-        check_call(['killall','onboard'],env=env)
+    #else:
+    #    check_call(['killall','onboard'],env=env)
     sleep(10)
     exit(0)
 
@@ -123,12 +123,23 @@ def read_accel(fp):
 
 
 if __name__ == '__main__':
-
+    print len(sys.argv)
+    if len(sys.argv) > 1:
+	if sys.argv[1] == 'normal':
+            rotate(0)
+	elif sys.argv[1] == 'inverted':
+            rotate(1)
+	elif sys.argv[1] == 'left':
+            rotate(2)
+	elif sys.argv[1] == 'right':
+            rotate(3)
+        else:
+            print "Usage: yoga.py [ normal | inverted | left | right ]"
 
     current_state = None
 
     #while True:
-    for ii in range(4):
+    for ii in range(50):
         x = int(read('in_accel_x_raw')) 
         y = int(read('in_accel_y_raw'))
         z = int(read('in_accel_z_raw'))
@@ -147,5 +158,5 @@ if __name__ == '__main__':
                     current_state = i
                     #print "changing state to " + str(i)
                     rotate(i)
-        sleep(1)
+        sleep(0.2)
     sleep(10)
