@@ -85,6 +85,10 @@ get_basic_dist_info() {
 				os_info=$(head -1 /etc/issue | sed -e 's/ \\.*//')
 				os_icon="U"
 				os_color="$purplefb"
+			elif head -1 /etc/issue | grep -qi 'KDE neon'; then
+				os_icon="Neon"
+				os_color="${blackb}${cyanfb}"
+				os_release=$(head -1 /etc/issue | tr -Cd '0-9.')
 			elif head -1 /etc/issue | grep -qi kali; then
 				os_icon="Kali"
 				os_color="${blackb}${redfb}"
