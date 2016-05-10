@@ -415,7 +415,7 @@ loadsshkeys() {
 				echo -n "Key comment: "
 				awk '{ print $3 }' < "${key}.pub"
 			fi
-			ssh-add "$key" 2> /dev/null
+			ssh-add "$key" 2> /dev/null && echo "Key '$key' added OK"
 		fi
 	done
 }
@@ -437,6 +437,8 @@ find_ssh_agent() {
 			loadsshkeys
 		fi
 	fi
+	ssh-add -l | egrep -q "( |)[0-9][0-9]:" && \
+		{ echo "Connected to ssh agent $SSH_AUTH_SOCK (pid $SSH_AGENT_PID). Keys found:"; ssh-add -l | awk '{ print $3 }'; }
 }
 
 ctd() {

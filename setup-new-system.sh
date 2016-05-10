@@ -40,6 +40,7 @@ mosh bmon iftop nethogs libimage-exiftool-perl
 edb ddd konsole sslscan ssldump gadmin-openvpn-client ike-qtgui openvpn
 ltrace strace sshfs libtool  build-essential automake
 fatsort python-notify2 python3-notify2 partimage calibre openssh-server
+onboard
 "
 
 FOUND_PKGS=
@@ -95,3 +96,7 @@ nameserver 194.168.8.100
 search ejtaal.net
 "
 done
+
+hm '+' "=> Tablet additions:
+echo greeter-session=lightdm-gtk-greeter >> /etc/lightdm/lightdm.conf
+echo keyboard=onboard >> /etc/lightdm/lightdm-gtk-greeter.conf"
