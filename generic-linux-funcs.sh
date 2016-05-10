@@ -259,25 +259,30 @@ get_default_if() {
 	#echo default_gateway = $default_gateway device = $device
 	#if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3;exit}')
 	# Read them all in an array, if more than 1
-	if_ips=($(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}'))
-	if_ip=${if_ips[0]}
-	#if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}')
-	first_3_if_ip=${if_ip%.[0-9]*}
+	if [ "$device" = "Iface" ]; then
+		if_ip="x.x.x.x"
+		last_digit="x"
+	else
+		if_ips=($(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}'))
+		if_ip=${if_ips[0]}
+		#if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}')
+		first_3_if_ip=${if_ip%.[0-9]*}
+		
+		if [ ${#if_ips[@]} -gt 1 ]; then
+			for (( i=1; i<${#if_ips[@]}; i++ )); do
+				alt_ip=${if_ips[$i]}
+				first_3_alt_ip=${if_ips[$i]%.[0-9]*}
+				last_digit_alt_ip=${alt_ip#[0-9]*.[0-9]*.[0-9]*.}
+				#mydebug alt_ip first_3_alt_ip last_digit_alt_ip first_3_if_ip
+				if [ "$first_3_if_ip" = "$first_3_alt_ip" ]; then
+					if_ip="$if_ip +${last_digit_alt_ip}"
+				else
+					if_ip="$if_ip $alt_ip"
+				fi
+			done
+		fi
 	
-	if [ ${#if_ips[@]} -gt 1 ]; then
-		for (( i=1; i<${#if_ips[@]}; i++ )); do
-			alt_ip=${if_ips[$i]}
-			first_3_alt_ip=${if_ips[$i]%.[0-9]*}
-			last_digit_alt_ip=${alt_ip#[0-9]*.[0-9]*.[0-9]*.}
-			#mydebug alt_ip first_3_alt_ip last_digit_alt_ip first_3_if_ip
-			if [ "$first_3_if_ip" = "$first_3_alt_ip" ]; then
-				if_ip="$if_ip +${last_digit_alt_ip}"
-			else
-				if_ip="$if_ip $alt_ip"
-			fi
-		done
 	fi
-	
 	first_3_gateway=${default_gateway%.[0-9]*}
 	#arrow=">"
 	arrow="→"
