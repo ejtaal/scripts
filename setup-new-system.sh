@@ -39,6 +39,7 @@ linux-headers-`uname -r` iptraf-ng openssh-blacklist openssh-blacklist-extra
 mosh bmon iftop nethogs libimage-exiftool-perl
 edb ddd konsole sslscan ssldump gadmin-openvpn-client ike-qtgui openvpn
 ltrace strace sshfs libtool  build-essential automake
+mp3gain libsox-fmt-mp3 sox fdupes
 "
 
 FOUND_PKGS=
@@ -73,7 +74,17 @@ sudo add-apt-repository ppa:jaap.karssenberg/zim
 deb http://download.virtualbox.org/virtualbox/debian $DISTRIB_CODENAME contrib
 'wget -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | sudo apt-key add -'
 sudo apt-get update
-sudo apt-get install virtualbox-5.0 zim"
+sudo apt-get install virtualbox-5.0 zim
+
+mplayer/vlc etc
+sudo apt-add-repository ppa:strukturag/libde265
+sudo add-apt-repository ppa:videolan/stable-daily
+sudo add-apt-repository ppa:mc3man/mplayer-test
+sudo add-apt-repository ppa:rvm/smplayer
+sudo add-apt-repository ppa:mc3man/mpv-tests
+sudo apt-get update
+sudo apt-get install gstreamer0.10-libde265 gstreamer1.0-libde265 vlc vlc-plugin-libde265 mplayer mpv smplayer smtube smplayer-themes smplayer-skins youtube-dl
+"
 
 fi
 
