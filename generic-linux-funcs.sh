@@ -89,13 +89,17 @@ get_basic_dist_info() {
 				os_icon="Neon"
 				os_color="${blackb}${cyanfb}"
 				os_release=$(head -1 /etc/issue | tr -Cd '0-9.')
+			elif head -1 /etc/issue | grep -qi 'Mint'; then
+				os_icon="Mint"
+				os_color="${blackb}${greenfb}"
+				os_release=$(head -1 /etc/issue | tr -Cd '0-9.')
 			elif head -1 /etc/issue | grep -qi kali; then
 				os_icon="Kali"
 				os_color="${blackb}${redfb}"
 				os_release=$(head -1 /etc/issue | sed -e 's/[^0-9.]//g')
 			elif head -1 /etc/issue | grep -qi centos; then
 				os_info=$(head -1 /etc/issue | sed -e 's# release##' -e 's/ (.*//')
-				os_icon="COS"
+				os_icon="CentOS"
 				os_color="$greenfb"
 			elif head -1 /etc/issue | grep -qi ^red; then
 				os_info=$(head -1 /etc/issue | sed -e 's/Red Hat Linux/RH/' -e 's/Red Hat Enterprise Linux/RHEL/' -e 's# release##' -e 's# Server##' -e 's/ (.*//')
