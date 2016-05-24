@@ -36,10 +36,12 @@ alias er="extract-rpm.sh"
 alias ff="find . -name"
 alias fixbackspace='reset -e "^?"'
 alias fixbackspace2='stty erase `tput kbs`'
+alias gd='git diff --word-diff=color'
 alias htmltidy='tidy -mi -wrap 100'
 alias killdupes='fdupes -dr .'
 alias ks="dcop `echo $KONSOLE_DCOP_SESSION | sed 's/.*(\(.*\),\(.*\).*)/\1 \2/'` setSize"
 alias la='ls -alF'
+alias lac='ls -alF --color=auto'
 alias ll='ls -lF'
 alias l.='ls -dalF .[^.]*'
 alias lt='ls -lartF'
