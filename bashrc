@@ -387,7 +387,7 @@ niceprompt() {
 	fi
 
 	INSIDE_SCREEN=n
-  if echo "$TERMCAP" | grep -q 'screen'; then
+  if echo "$TERMCAP $TERM" | grep -q 'screen'; then
 		INSIDE_SCREEN=y
 	fi
 	
