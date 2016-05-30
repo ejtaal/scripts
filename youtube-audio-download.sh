@@ -11,12 +11,13 @@ read url
 echo "processing url '$url' ..."
 
 #youtube-dl --restrict-filenames --write-description --write-info-json \
+PREFIX=$(date | md5sum | cut -b 1-6)
 youtube-dl --restrict-filenames \
-	-o './AAA_%(title)s-%(id)s.%(ext)s' -x --audio-format mp3 --add-metadata \
+	-o "./${PREFIX}_%(title)s-%(id)s.%(ext)s" -x --audio-format mp3 --add-metadata \
 	"$url"
 
-INFILE=$(ls -1 AAA_*.mp3)
-MP3="${INFILE#AAA_}"
+INFILE=$(ls -1 ${PREFIX}_*.mp3)
+MP3="${INFILE#*_}"
 
 #avconv -i "$INFILE" -vn -b:a 64k "${MP3}"
 mv -vi "$INFILE" "${MP3}"
@@ -31,7 +32,7 @@ echo "Here's your new mp3:"
 ls -l "$MP3"
 
 THIS_DEVICE="$(df -h . | tail -1 | awk '{ print $1 }')"
-echo "If sorting is required, eject device but keep it plugged in,"
+echo "If sorting is required, 'eject' device but keep it plugged in,"
 echo "then run 'sudo fatsort $THIS_DEVICE'"
 
 echo "Bye bye :)"
