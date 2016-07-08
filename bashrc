@@ -39,10 +39,12 @@ alias er="extract-rpm.sh"
 alias ff="find . -name"
 alias fixbackspace='reset -e "^?"'
 alias fixbackspace2='stty erase `tput kbs`'
+alias gd='git diff --word-diff=color'
 alias htmltidy='tidy -mi -wrap 100'
 alias killdupes='fdupes -dr .'
 alias ks="dcop `echo $KONSOLE_DCOP_SESSION | sed 's/.*(\(.*\),\(.*\).*)/\1 \2/'` setSize"
 alias la='ls -alF'
+alias lac='ls -alF --color=auto'
 alias ll='ls -lF'
 alias l.='ls -dalF .[^.]*'
 alias lt='ls -lartF'
@@ -57,6 +59,7 @@ alias rm='rm -vi'
 alias rpma='rpm -qa --qf "%{n}-%{v}-%{r}.%{arch}\n"'
 alias rlsql='/usr/local/wmfs/scripts/rlsql.sh'
 alias sagi="sudo apt-get install"
+alias se='start-electrolysis.sh'
 alias sf='start-firefox.sh'
 alias smbmplayer='mplayer -cache 10000 -framedrop'
 # This is getting more and more in the way:
@@ -394,7 +397,7 @@ niceprompt() {
 	fi
 
 	INSIDE_SCREEN=n
-  if echo "$TERMCAP" | grep -q 'screen'; then
+  if echo "$TERMCAP $TERM" | grep -q 'screen'; then
 		INSIDE_SCREEN=y
 	fi
 	
@@ -425,7 +428,7 @@ loadsshkeys() {
 				echo -n "Key comment: "
 				awk '{ print $3 }' < "${key}.pub"
 			fi
-			ssh-add "$key" 2> /dev/null
+			ssh-add "$key" 2> /dev/null && echo "Key '$key' added OK"
 		fi
 	done
 }
@@ -434,7 +437,7 @@ find_ssh_agent() {
 	# Check for any available ssh-agents that contains keys:
 	for agent in /tmp/ssh-*/agent.*; do
 		export SSH_AUTH_SOCK=$agent
-		ssh-add -l | grep -q " [0-9][0-9]:" && break
+		ssh-add -l | egrep -q "( |)[0-9][0-9]:" && break
 		SSH_AUTH_SOCK=
 	done
 	# If no suitable agent was found then run the ssh-agent 
@@ -447,6 +450,8 @@ find_ssh_agent() {
 			loadsshkeys
 		fi
 	fi
+	ssh-add -l | egrep -q "( |)[0-9][0-9]:" && \
+		{ echo "Connected to ssh agent $SSH_AUTH_SOCK (pid $SSH_AGENT_PID). Keys found:"; ssh-add -l | awk '{ print $3 }'; }
 }
 
 ctd() {
@@ -460,10 +465,16 @@ vdiff() {
 	if [ -d "$1" ]; then
 		R="-r"
 	fi
+	B=
+	if [ "$1" = "-b" ]; then
+		B="-b"
+		shift
+	fi
 
-	MINPLUS=$(diff -u ${R} "$1" "$2" | grep "^[-+]" | grep -v "^---\|^+++" | cut -b 1 | sort | uniq -c | xargs echo)
+	MINPLUS=$(diff -u ${R} ${B} "$1" "$2" | grep "^[-+]" | grep -v "^---\|^+++" | cut -b 1 | sort | uniq -c | xargs echo)
 	echo "# $MINPLUS" > "$TMPDIFF"
-	diff -u ${R} "$1" "$2" >> "$TMPDIFF"
+	echo "# diff -u ${R} ${B} " >> "$TMPDIFF"
+	diff -u ${R} ${B} "$1" "$2" >> "$TMPDIFF"
 	echo '# vim:ft=diff:syntax=diff' >> "$TMPDIFF"
 	vim -R -c 'se ts=2' -c 'se ft=diff ro nomod ic' -c 'nmap q :q!<CR>' \
 		"$TMPDIFF"

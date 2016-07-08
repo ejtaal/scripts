@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ "$2" = "" ]; then
+	echo "Usage: $0 \$infile \$outfile.mp3"
+	exit 1
+fi
 
 INFILE="$1"
 MP3="$2"
@@ -11,4 +15,5 @@ avconv -i "$INFILE" -vn -b:a 64k "${MP3}_temp.mp3"
 # remove silence - http://digitalcardboard.com/blog/2009/08/25/the-sox-of-silence/
 sox -V3 "${MP3}_temp.mp3" "$MP3" silence -l 1 0.1 1% -1 2.0 1%
 
-mp3gain -r "$MP3"
+mp3gain -r "$MP3" && echo "Deleting temp file..." && rm -vf "${MP3}_temp.mp3"
+
