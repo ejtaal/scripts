@@ -11,6 +11,9 @@ fi
 
 if [ -f ~/scripts/generic-linux-funcs.sh ]; then
 	. ~/scripts/generic-linux-funcs.sh
+else
+	echo generic-linux-funcs.sh not found :-/
+	NOFUNCS=1
 fi
 
 # User specific aliases and functions
@@ -26,7 +29,7 @@ alias acs="apt-cache search"
 alias as="aptitude show"
 alias bzless='{ bzcat | less; } <'
 alias c='for i in {1..$LINES}; do echo; done; clear'
-alias cls='cd; for ((i = 1; i < $LINES; i++)) do echo; done; clear'
+alias cls='cd; for i in {1..$LINES}; do echo; done; clear'
 alias cp='cp -vip'
 alias d='du -csk -- * .[^.]*'
 alias ds='du -csk -- * .[^.]* | sort -n'
@@ -46,6 +49,7 @@ alias lt='ls -lartF'
 alias lat='ls -latF'
 alias mp3i='mp3info -x -ra -p "%-30F %6k kb  %02mm:%02ss  %.1r kbs  %q kHz  %o  mpg %.1v layer %L\n"'
 alias mv='mv -vi'
+alias ncat='ncat -v'
 alias onp='opera -newpage'
 #alias psf='ps auxwww --forest | less -S'
 alias psf='ps -eo user,pid,ni,%cpu,%mem,vsz,tty,stat,lstart,time,args --forest | less -S'
@@ -94,6 +98,8 @@ export PAGER="less"
 export PS1='\u@\h:\w> '
 #export TERM="linux"
 unset LS_COLORS
+# Highlight in green, 32 -\
+export GREP_COLORS='ms=01;32:mc=01;31:sl=:cx=:fn=35:ln=32:bn=32:se=36'
 #export HISTCONTROL="ignoredups:"
 export HISTFILESIZE=50000
 export HISTSIZE=50000
@@ -145,7 +151,7 @@ preexec () {
 	CMD="${1%% *}"
 	if [ -n "$CMD" ]; then
 		SCREENTITLE=$(echo "$@" | sed -e "s# $HOME# ~#" | sed -e 's/^\(............\).*/\1/');
-		echo "$TERM" | grep -q 'screen' && echo -e "\ek${SCREENTITLE}\e\\"
+		echo "$TERM" | grep -q 'screen' && echo -ne "\ek${SCREENTITLE}\e\\"
 	fi
 	
 	[ -z "$BASH_COMMAND_START" ] && export BASH_COMMAND_START=$(date +"%s%3N")
@@ -173,6 +179,10 @@ prompt_command() {
 		prompt_char='$'
   fi;
 	PS1="\[${indentcolour}\]${prompt_char}\[${reset}\] "
+	if [ "$HOSTNAME" = "kali" ]; then
+		PS1="\[${indentcolour}\]\u@\h:\w${prompt_char}\[${reset}\] "
+		#export PS1='\u@\h:\w> '
+	fi
 	echo -ne "${indentcolour}┌"
 	i=2
 	while [ $i -lt $COLUMNS ]; do
@@ -626,5 +636,7 @@ if [ -f $HOME/.bashrc.local ]; then
 	. $HOME/.bashrc.local
 fi
 
-# Lets try the fancy shell out shall we
-niceprompt
+if [ "$NOFUNCS" != 1 ]; then
+	# Lets try the fancy shell out shall we
+	niceprompt
+fi

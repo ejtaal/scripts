@@ -345,26 +345,33 @@ urldecode() {
 
 string_morph(){
 	s=$1
-	echo "==>> string [$s]:"
-	echo -n "base64        : "
+	echo "<<< string >>>"
+	echo "$s"
+	echo "<<< /string >>>"
+	echo "<<< base64 >>>"
 	echo "$1" | base64
-	echo -n "base64 decoded: "
-	echo "$1" | base64 -d
+	echo "<<< /base64 >>>"
+	echo "<<< base64 decode (fed through xxd)>>>"
+	echo "$1" | base64 -d | xxd
+	echo "<<< /base64 decode >>>"
 	echo
-	echo -n "hex           : "
+	echo "hex no        : "
+	printf "%x" $s
+	echo
+	echo "hex           : "
   local length="${#s}"
   for (( i = 0; i < length; i++ )); do
     local c="${s:i:1}"
     printf '\\x%02X' "'$c"
   done
 	echo
-	echo -n "numchars      : "
+	echo "numchars      : "
   for (( i = 0; i < length; i++ )); do
     local c="${1:i:1}"
     printf '%d ' "'$c"
   done
 	echo
-	echo -n "urlencode     : "
+	echo "urlencode     : "
   for (( i = 0; i < length; i++ )); do
       local c="${1:i:1}"
       case $c in
@@ -373,14 +380,17 @@ string_morph(){
       esac
   done
 	echo
-	echo -n "urldecode     : "
+	echo "urldecode     : "
 	python3 -c 'import sys, urllib.parse; print(urllib.parse.unquote(sys.argv[1]))' "$1"
 	echo
-	echo -n ",, forced     : "
+	echo ",, forced     : "
   for (( i = 0; i < length; i++ )); do
     local c="${1:i:1}"
     printf '%%%02X' "'$c"
   done
+	echo
+	echo "hex decoded   : " 
+	echo "$1" | xxd -r -p
 	echo
 }
 
