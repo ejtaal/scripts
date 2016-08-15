@@ -157,6 +157,11 @@ preexec () {
 		echo "$TERM" | grep -q 'screen' && echo -ne "\ek${SCREENTITLE}\e\\"
 	fi
 	
+	if [ "$TITLE_SETTABLE" = "y" ]; then
+		local title="${1:0:20}"
+		echo -n -e "\e]0;$title | $(whoami) @ $HOSTNAME | $PROMPTDIR   | \a";
+	fi
+	
 	[ -z "$BASH_COMMAND_START" ] && export BASH_COMMAND_START=$(date +"%s%3N")
 }
 
@@ -215,9 +220,9 @@ prompt_command() {
 	#fi
   # Set a nicer window title for screen
   # If we are in konsole, ssh or xterm
-  if [ -n "$SSH_CLIENT" -o -n "$KONSOLE_DCOP" -o "$TERM" = "xterm" -o "$TERM" = "xterm-color" ]; then
+	if [ "$TITLE_SETTABLE" = "y" ]; then
     # Set konsole window title
-    echo -n -e "\e]0;$(whoami) @ $HOSTNAME | $PROMPTDIR   | \a";
+    echo -n -e "\e]0;$(whoami)@$HOSTNAME | $PROMPTDIR   | \a";
   fi
   
 	indent="│"
@@ -399,6 +404,10 @@ niceprompt() {
 	INSIDE_SCREEN=n
   if echo "$TERMCAP $TERM" | grep -q 'screen'; then
 		INSIDE_SCREEN=y
+	fi
+  
+	if [ -n "$SSH_CLIENT" -o -n "$KONSOLE_DCOP" -o "$TERM" = "xterm" -o "$TERM" = "xterm-color" ]; then
+		TITLE_SETTABLE="y"
 	fi
 	
 	export PROMPT_COMMAND="prompt_command"

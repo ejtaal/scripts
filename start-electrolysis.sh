@@ -51,5 +51,11 @@ if [ ! -L ${BROWSER_PATH}/Downloads ]; then
 	ln -s ~/Downloads ${BROWSER_PATH}/Downloads
 fi
 
+if [ ! -L ${BROWSER_PATH}/.cache ]; then
+	mv ${BROWSER_PATH}/.cache ${BROWSER_PATH}/.cache.bak
+	mkdir -p /tmp/taal/.cache
+	ln -s /tmp/taal/.cache ${BROWSER_PATH}/.cache
+fi
+
 #HOME=${BROWSER_PATH} firefox-developer -no-remote -P ${BROWSER_DIR}
-HOME=${BROWSER_PATH} /home/taal/.local/share/umake/bin/firefox-developer -no-remote -P ${BROWSER_DIR}
+HOME=${BROWSER_PATH} /home/taal/.local/share/umake/bin/firefox-developer --no-remote -P ${BROWSER_DIR}

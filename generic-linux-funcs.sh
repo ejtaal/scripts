@@ -380,10 +380,19 @@ string_morph(){
     printf '\\x%02X' "'$c"
   done
 	echo
+	echo "hex decoded   : " 
+	echo "$1" | xxd -r -p
+	echo
 	echo "numchars      : "
   for (( i = 0; i < length; i++ )); do
     local c="${1:i:1}"
     printf '%d ' "'$c"
+  done
+	echo
+	echo "alphabet chars: "
+  for (( i = 0; i < length; i++ )); do
+    local c="${1:i:1}"
+    echo -n "$(($(printf '%d' "'$c")-96)) "
   done
 	echo
 	echo "urlencode     : "
@@ -398,14 +407,11 @@ string_morph(){
 	echo "urldecode     : "
 	python3 -c 'import sys, urllib.parse; print(urllib.parse.unquote(sys.argv[1]))' "$1"
 	echo
-	echo ",, forced     : "
+	echo "urldecode (forced): "
   for (( i = 0; i < length; i++ )); do
     local c="${1:i:1}"
     printf '%%%02X' "'$c"
   done
-	echo
-	echo "hex decoded   : " 
-	echo "$1" | xxd -r -p
 	echo
 }
 
