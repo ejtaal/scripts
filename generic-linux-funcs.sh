@@ -85,13 +85,21 @@ get_basic_dist_info() {
 				os_info=$(head -1 /etc/issue | sed -e 's/ \\.*//')
 				os_icon="U"
 				os_color="$purplefb"
+			elif head -1 /etc/issue | grep -qi 'KDE neon'; then
+				os_icon="Neon"
+				os_color="${blackb}${cyanfb}"
+				os_release=$(head -1 /etc/issue | tr -Cd '0-9.')
+			elif head -1 /etc/issue | grep -qi 'Mint'; then
+				os_icon="Mint"
+				os_color="${blackb}${greenfb}"
+				os_release=$(head -1 /etc/issue | tr -Cd '0-9.')
 			elif head -1 /etc/issue | grep -qi kali; then
 				os_icon="Kali"
 				os_color="${blackb}${redfb}"
 				os_release=$(head -1 /etc/issue | sed -e 's/[^0-9.]//g')
 			elif head -1 /etc/issue | grep -qi centos; then
 				os_info=$(head -1 /etc/issue | sed -e 's# release##' -e 's/ (.*//')
-				os_icon="COS"
+				os_icon="CentOS"
 				os_color="$greenfb"
 			elif head -1 /etc/issue | grep -qi ^red; then
 				os_info=$(head -1 /etc/issue | sed -e 's/Red Hat Linux/RH/' -e 's/Red Hat Enterprise Linux/RHEL/' -e 's# release##' -e 's# Server##' -e 's/ (.*//')
@@ -352,26 +360,42 @@ urldecode() {
 
 string_morph(){
 	s=$1
-	echo "==>> string [$s]:"
-	echo -n "base64        : "
+	echo "<<< string >>>"
+	echo "$s"
+	echo "<<< /string >>>"
+	echo "<<< base64 >>>"
 	echo "$1" | base64
-	echo -n "base64 decoded: "
-	echo "$1" | base64 -d
+	echo "<<< /base64 >>>"
+	echo "<<< base64 decode (fed through xxd)>>>"
+	echo "$1" | base64 -d | xxd
+	echo "<<< /base64 decode >>>"
 	echo
-	echo -n "hex           : "
+	echo "hex no        : "
+	printf "%x" $s
+	echo
+	echo "hex           : "
   local length="${#s}"
   for (( i = 0; i < length; i++ )); do
     local c="${s:i:1}"
     printf '\\x%02X' "'$c"
   done
 	echo
-	echo -n "numchars      : "
+	echo "hex decoded   : " 
+	echo "$1" | xxd -r -p
+	echo
+	echo "numchars      : "
   for (( i = 0; i < length; i++ )); do
     local c="${1:i:1}"
     printf '%d ' "'$c"
   done
 	echo
-	echo -n "urlencode     : "
+	echo "alphabet chars: "
+  for (( i = 0; i < length; i++ )); do
+    local c="${1:i:1}"
+    echo -n "$(($(printf '%d' "'$c")-96)) "
+  done
+	echo
+	echo "urlencode     : "
   for (( i = 0; i < length; i++ )); do
       local c="${1:i:1}"
       case $c in
@@ -380,10 +404,10 @@ string_morph(){
       esac
   done
 	echo
-	echo -n "urldecode     : "
+	echo "urldecode     : "
 	python3 -c 'import sys, urllib.parse; print(urllib.parse.unquote(sys.argv[1]))' "$1"
 	echo
-	echo -n ",, forced     : "
+	echo "urldecode (forced): "
   for (( i = 0; i < length; i++ )); do
     local c="${1:i:1}"
     printf '%%%02X' "'$c"
