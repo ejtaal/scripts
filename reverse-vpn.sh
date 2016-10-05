@@ -18,8 +18,10 @@ ssh -t -XYC \
 	-o 'StrictHostKeyChecking no' \
 	-o 'VisualHostKey yes' \
 	-o 'UserKnownHostsFile ~/.ssh/reverse-vpn_known_hosts' \
+	-L 2022:10.0.5.1:22 \
+	-L 2023:192.168.0.40:22 \
 	-L 5910:10.0.5.1:5900 \
-	-L 5921:192.168.0.20:5901 \
+	-L 5921:192.168.0.204:5901 \
 	-L 5922:192.168.0.20:5902 \
 	-L 5923:192.168.0.20:5903 \
 	-L 5924:192.168.0.20:5904 \
