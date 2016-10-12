@@ -463,3 +463,65 @@ modify_file() {
   mv -f "${filename}.new" "${filename}"
 	hm + "Updated $filename"
 }
+
+# A multi-threading implementation. How to use:
+# loop over commands you need executing and pass them to 'add_threads()'
+# E.g.:
+# $ threads_addcmd( "sleep 5")
+# $ threads_addcmd( "sleep 15")
+# $ threads_addcmd( "sleep 25")
+# Then execute the threads by doing
+# $ threads_run()
+# You'll be placed in a screen session with all threads executing the given commands
+# spread over your available cpu cores
+
+# Keep 2 threads for the system and we'll use the rest ;-p
+THREADS_TOTAL=$(($(grep -c ^processor /proc/cpuinfo)-2))
+THREADS_CMDS=()
+THREADS_CUR=0
+
+threads_addcmd() {
+	THREADS_CMDS[THREADS_CUR]="${THREADS_CMDS[THREADS_CUR]}$*;"
+	echo "==>> Command '$*' added to thread# $THREADS_CUR"
+	THREADS_CUR=$((THREADS_CUR+1))
+	if [ "$THREADS_CUR" = "$THREADS_TOTAL" ]; then
+		THREADS_CUR=0
+	fi
+}
+
+threads_run() {
+	echo '
+# Some usefull status lines scattered over the screen ;)
+hardstatus alwayslastline
+caption always "%{= C} %S | screen[%n] | %c | %h%="
+hardstatus string "%{= .W}%-Lw%{= C}%50>[%n* %t]%{-}%+Lw%<"
+windowlist string " screen[%n %t] %h"
+' > "/tmp/threads_screenrc_test_$$"
+	err_log="/tmp/threads_screenrc_test_$$.err"
+	> $err_log
+	if [ ${#THREADS_CMDS[*]} -eq 0 ]; then
+		echo "No commands have been specified. Use threads_addcmd() to add commands."
+		return 1
+	fi
+	echo $((${#THREADS_CMDS[*]}-1))
+	for i in `seq 0 $((${#THREADS_CMDS[*]}-1))`; do
+		threadfile="/tmp/sh_thread_$$_no_${i}.sh"
+		echo '#!/bin/bash' > "$threadfile"
+		echo "exec 2> >(tee -a $err_log)" >> "$threadfile"
+		chmod +x "$threadfile"
+		echo "${THREADS_CMDS[i]}" >> "$threadfile"
+		echo "echo Waiting 5 secs before exit..." >> "$threadfile"
+		echo "sleep 5" >> "$threadfile"
+		echo "screen -t thread_${i} bash -c '$threadfile'" \
+			>> "/tmp/threads_screenrc_test_$$"
+	done
+	echo screen -S "sh_threads_$$" -c "/tmp/threads_screenrc_test_$$"
+	time nice -n 20 screen -S "sh_threads_$$" -c "/tmp/threads_screenrc_test_$$"
+	date
+	echo "==> All threads (read 'screen') finished."
+	echo "Errors that occurred:"
+	ls -la $err_log
+	cat $err_log
+	THREADS_CMDS=()
+}
+

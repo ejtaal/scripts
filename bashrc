@@ -43,12 +43,12 @@ alias gd='git diff --word-diff=color'
 alias htmltidy='tidy -mi -wrap 100'
 alias killdupes='fdupes -dr .'
 alias ks="dcop `echo $KONSOLE_DCOP_SESSION | sed 's/.*(\(.*\),\(.*\).*)/\1 \2/'` setSize"
-alias la='ls -alF'
+alias la='ls -alF --color=auto'
 alias lac='ls -alF --color=auto'
-alias ll='ls -lF'
-alias l.='ls -dalF .[^.]*'
-alias lt='ls -lartF'
-alias lat='ls -latF'
+alias ll='ls -lF --color=auto'
+alias l.='ls -dalF --color=auto .[^.]*'
+alias lt='ls -lartF --color=auto'
+alias lat='ls -latF --color=auto'
 alias mp3i='mp3info -x -ra -p "%-30F %6k kb  %02mm:%02ss  %.1r kbs  %q kHz  %o  mpg %.1v layer %L\n"'
 alias mv='mv -vi'
 alias ncat='ncat -v'
@@ -58,7 +58,8 @@ alias psf='ps -eo user,pid,ni,%cpu,%mem,vsz,tty,stat,lstart,time,args --forest |
 alias rm='rm -vi'
 alias rpma='rpm -qa --qf "%{n}-%{v}-%{r}.%{arch}\n"'
 alias rlsql='/usr/local/wmfs/scripts/rlsql.sh'
-alias sagi="sudo apt-get install"
+#alias sagi="sudo apt-get install"
+alias sagi="sudo apt install"
 alias se='start-electrolysis.sh'
 alias sf='start-firefox.sh'
 alias smbmplayer='mplayer -cache 10000 -framedrop'
@@ -100,7 +101,9 @@ export EDITOR="vim"
 export PAGER="less"
 export PS1='\u@\h:\w> '
 #export TERM="linux"
-unset LS_COLORS
+#unset LS_COLORS
+#eval $(dircolors)
+eval $(dircolors ~/scripts/dircolors.ansi-dark)
 # Highlight in green, 32 -\
 export GREP_COLORS='ms=01;32:mc=01;31:sl=:cx=:fn=35:ln=32:bn=32:se=36'
 #export HISTCONTROL="ignoredups:"
@@ -157,7 +160,7 @@ preexec () {
 		echo "$TERM" | grep -q 'screen' && echo -ne "\ek${SCREENTITLE}\e\\"
 	fi
 	
-	if [ "$TITLE_SETTABLE" = "y" ]; then
+	if [ "$WINDOWTITLE_SETTABLE" = "y" ]; then
 		local title="${1:0:20}"
 		echo -n -e "\e]0;$title | $(whoami) @ $HOSTNAME | $PROMPTDIR   | \a";
 	fi
@@ -220,7 +223,7 @@ prompt_command() {
 	#fi
   # Set a nicer window title for screen
   # If we are in konsole, ssh or xterm
-	if [ "$TITLE_SETTABLE" = "y" ]; then
+	if [ "$WINDOWTITLE_SETTABLE" = "y" ]; then
     # Set konsole window title
     echo -n -e "\e]0;$(whoami)@$HOSTNAME | $PROMPTDIR   | \a";
   fi
@@ -407,7 +410,7 @@ niceprompt() {
 	fi
   
 	if [ -n "$SSH_CLIENT" -o -n "$KONSOLE_DCOP" -o "$TERM" = "xterm" -o "$TERM" = "xterm-color" ]; then
-		TITLE_SETTABLE="y"
+		WINDOWTITLE_SETTABLE="y"
 	fi
 	
 	export PROMPT_COMMAND="prompt_command"

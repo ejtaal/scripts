@@ -26,10 +26,12 @@ fi
 
 source ~/.bashrc
 
+PRIORITY_PKGS="openssh-server git screen"
+
 PKGS="
 aircrack-ng apmd autofs automake bmon build-essential calibre
 cherrytree cifs-utils cpulimit ddd dkms edb elinks ettercap-graphical
-fatsort fbreader fdupes gadmin-openvpn-client gdb gedit git git-gui
+fatsort fbreader fdupes filezilla gadmin-openvpn-client gdb gedit git git-gui
 gitk gnome-system-monitor gparted htop httrack iftop ike-qtgui
 ionice iotop iptraf-ng k4dirstat kate knockd konsole krusader lftp
 libav-tools libcpan-checksums-perl libdigest-crc-perl libgeo-ip-perl
@@ -65,7 +67,13 @@ for i in $PKGS; do
 	fi
 done
 
-hm '*' "Found following useful packages:" $FOUND_PKGS
+hm '*' "Doing update & upgrade first"
+sudo $CMD update && sudo $CMD upgrade
+
+hm '*' "Installing priority packages first:" $PRIORITY_PKGS
+sudo $CMD install $PRIORITY_PKGS
+
+hm '*' "Now installing following useful packages:" $FOUND_PKGS
 sudo $CMD install $FOUND_PKGS
 
 if [ -f /etc/apt/sources.list ]; then
