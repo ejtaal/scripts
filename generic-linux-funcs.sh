@@ -223,9 +223,11 @@ system_info() {
 vm_check() {
 	# Quick n dirty checks to see if we're running virtual
   VM_TYPE=""
-  if grep -qi "QEMU Virtual CPU" /proc/cpuinfo; then
+  if [ -f /proc/user_beancounters -o -d /proc/vz ]; then
+    VM_TYPE="OPENVZ"  # Or Virtuozzo
+  elif grep -qi "QEMU Virtual CPU" /proc/cpuinfo; then
     VM_TYPE="QEMU"
-	elif grep -qi 'Clock Event Device: xen' /proc/timer_list; then
+	elif [ -f /proc/timer_list ] && grep -qi 'Clock Event Device: xen' /proc/timer_list; then
     VM_TYPE="XEN"
 	elif test -f /proc/bus/input/devices && grep -q VirtualBox /proc/bus/input/devices \
 		|| grep -q "^hd.: VBOX " /var/log/dmesg; then

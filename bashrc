@@ -99,7 +99,8 @@ export PATH="$PATH:${ADDPATH}"
 export AGENTFILE="/home/taal/.ssh/agent.rc"
 export EDITOR="vim"
 export PAGER="less"
-export PS1='\u@\h:\w> '
+export PS1_DEFAULT="$PS1"
+#export PS1='\u@\h:\w> '
 #export TERM="linux"
 #unset LS_COLORS
 #eval $(dircolors)
@@ -136,6 +137,7 @@ fi
 normalprompt() {
 	export PROMPT_COMMAND=""
 	export PS1='\u@\h:\w> '
+	export PS1="$PS1_DEFAULT"
 }
 
 # The preexec stuff here allows you to set a variable
@@ -190,10 +192,6 @@ prompt_command() {
 		prompt_char='$'
   fi;
 	PS1="\[${indentcolour}\]${prompt_char}\[${reset}\] "
-	if [ "$HOSTNAME" = "kali" ]; then
-		PS1="\[${indentcolour}\]\u@\h:\w${prompt_char}\[${reset}\] "
-		#export PS1='\u@\h:\w> '
-	fi
 	echo -ne "${indentcolour}┌"
 	i=2
 	while [ $i -lt $COLUMNS ]; do
