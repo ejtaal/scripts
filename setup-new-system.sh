@@ -26,7 +26,7 @@ fi
 
 source ~/.bashrc
 
-PRIORITY_PKGS="openssh-server git screen"
+PRIORITY_PKGS="openssh-server git screen htop"
 
 # Duff packages: openvas-cli openvas-client openvas-manager openvas-server 
 
@@ -36,19 +36,20 @@ cherrytree cifs-utils cpulimit ddd dkms edb elinks ettercap-graphical
 fatsort fbreader fdupes filezilla flashplugin-nonfree
 gadmin-openvpn-client gdb gedit git git-gui
 gitk gnome-system-monitor gparted htop httrack hostapd
-iftop ike-qtgui
+iftop ike-qtgui ipcalc
 ionice iotop iptraf-ng k4dirstat kate kde-spectacle
 knockd konsole krusader lftp
 libav-tools libcpan-checksums-perl libdigest-crc-perl libgeo-ip-perl
 libimage-exiftool-perl libreoffice libsox-fmt-mp3 libstring-crc32-perl
 libstring-crc-cksum-perl libtool links linux-headers-`uname -r` ltrace
-lynx mc mosh mtr munin munin-node ncdu nethogs nmap ntp-doc okular onboard
+lynx mc mosh mtr munin munin-node ncdu netcat 
+nethogs nmap ntp-doc okular onboard
 openssh-blacklist openssh-blacklist-extra openssh-server 
 openvpn parcellite partimage
 pv python3-notify2 python-notify2 qbittorrent screen smartmontools
 smplayer sox sshfs sshpass ssldump sslscan strace supercat sysfsutils
 system-config-lvm tidy timelimit uswsusp veil-evasion vim vinagre vlc
-wine wireshark x11vnc xine-ui
+wine wireshark x11vnc xine-ui virtualenvwrapper
 "
 
 FOUND_PKGS=

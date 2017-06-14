@@ -17,6 +17,7 @@ italicson="${esc}[3m"; italicsoff="${esc}[23m"
 ulon="${esc}[4m";      uloff="${esc}[24m"
 redf="${esc}[31m";  greenf="${esc}[32m";  yellowf="${esc}[33m";
 bluef="${esc}[34m"; purplef="${esc}[35m"; cyanf="${esc}[36m";
+blackf="${esc}[30m"
 redfb="${esc}[1m${esc}[31m";  greenfb="${esc}[1m${esc}[32m";  yellowfb="${esc}[1m${esc}[33m";
 bluefb="${esc}[1m${esc}[34m"; purplefb="${esc}[1m${esc}[35m"; cyanfb="${esc}[1m${esc}[36m";
 
@@ -35,7 +36,8 @@ get_basic_dist_info() {
 	proc_info="?"
 	num_processors="?"
 	num_cores="?"
-	VM_TYPE=`vm_check`
+	#VM_TYPE=`vm_check`
+	vm_check
 
 	# Also some basic kernel info
 	if [ $system_type = FreeBSD ]; then
@@ -96,7 +98,11 @@ get_basic_dist_info() {
 			elif head -1 /etc/issue | grep -qi kali; then
 				os_icon="Kali"
 				os_color="${blackb}${redfb}"
-				os_release=$(head -1 /etc/issue | sed -e 's/[^0-9.]//g')
+				if grep '[0-9]' /etc/issue; then
+					os_release=$(head -1 /etc/issue | sed -e 's/[^0-9.]//g')
+				else
+					os_release="~$(dpkg -l | grep 'kali-' | awk '{ print $3 }' | sort -n | tail -1)"
+				fi
 			elif head -1 /etc/issue | grep -qi centos; then
 				os_info=$(head -1 /etc/issue | sed -e 's# release##' -e 's/ (.*//')
 				os_icon="CentOS"
@@ -225,21 +231,26 @@ vm_check() {
   VM_TYPE=""
   if [ -f /proc/user_beancounters -o -d /proc/vz ]; then
     VM_TYPE="OPENVZ"  # Or Virtuozzo
+		VM_COLOR="$blackb$greenfb"
   elif grep -qi "QEMU Virtual CPU" /proc/cpuinfo; then
     VM_TYPE="QEMU"
+		VM_COLOR="$blackb$purplef"
 	elif [ -f /proc/timer_list ] && grep -qi 'Clock Event Device: xen' /proc/timer_list; then
     VM_TYPE="XEN"
+		VM_COLOR="$whiteb$blackf"
 	elif test -f /proc/bus/input/devices && grep -q VirtualBox /proc/bus/input/devices \
 		|| grep -q "^hd.: VBOX " /var/log/dmesg; then
     VM_TYPE="VBOX"
+		VM_COLOR="$bluefb$blackb"
 	else
 		for i in /sys/devices/virtual/dmi/id/product_name /proc/scsi/scsi; do
 			if [ -f $i ] && grep -qi "VMware" $i; then
     		VM_TYPE="VMware"
+				VM_COLOR="$blueb$yellowfb"
 			fi
 		done
 	fi
-	echo "$VM_TYPE"
+	#echo "$VM_TYPE"
 }
 
 hexToIp(){

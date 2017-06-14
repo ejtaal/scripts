@@ -115,6 +115,7 @@ export SVKDIFF="/usr/bin/diff -u"
 export STATUSLINE_DELAY=10
 export USERNAME=$(whoami)
 export SUDO_EDITOR='rvim'
+export WORKON_HOME=~/virtualenvs
 
 shopt -s histappend
 shopt -s checkwinsize
@@ -136,7 +137,7 @@ fi
 
 normalprompt() {
 	export PROMPT_COMMAND=""
-	export PS1='\u@\h:\w> '
+	#export PS1='\u@\h:\w> '
 	export PS1="$PS1_DEFAULT"
 }
 
@@ -182,16 +183,25 @@ prompt_command() {
   # First get the last exit code to display later
   LASTEXIT=$?
 
-	indentcolour="$boldon$cyanf"
-  if [ $USERNAME = "root" -o "$UID" = 0 ]; then
-		usercolour="$boldon$redf"
-		indentcolour="$boldon$redf"
-		prompt_char='#'
-  else
-		usercolour="$boldon$greenf"
-		prompt_char='$'
-  fi;
-	PS1="\[${indentcolour}\]${prompt_char}\[${reset}\] "
+
+	if [ "$last_username" != $USERNAME ]; then
+		# We've switched users, update PS1 if necessary
+		# Note: this also allows 3rd party mods of PS1 by software
+		# such as virtualenvwrapper.
+		indentcolour="$boldon$cyanf"
+	  if [ $USERNAME = "root" -o "$UID" = 0 ]; then
+			usercolour="$boldon$redf"
+			indentcolour="$boldon$redf"
+			prompt_char='#'
+  	else
+			usercolour="$boldon$greenf"
+			prompt_char='$'
+  	fi;
+		#echo PS1="[$PS1]"
+		PS1="\[${indentcolour}\]${prompt_char}\[${reset}\] "
+	fi
+	last_username=$USERNAME
+
 	echo -ne "${indentcolour}┌"
 	i=2
 	while [ $i -lt $COLUMNS ]; do
@@ -400,6 +410,7 @@ niceprompt() {
   HOST_COLOR="${yellowf}"
 	if [ -n "$VM_TYPE" ]; then
   	HOST_COLOR="${cyanf}"
+  	HOST_COLOR="$VM_COLOR"
 	fi
 
 	INSIDE_SCREEN=n

@@ -269,7 +269,7 @@ sub make_local_left {
 	}
 
 	my $swapped = "";
-	my $dir = "$boldon$yellowf"."->$reset";
+	my $dir = "$boldon$yellowf"."->$reset ";
 
 	$incoming_packet = 0;
 	if ( exists( $own_addresses_hash{$right_ip}) and not exists( $own_addresses_hash{$left_ip}) ) {
