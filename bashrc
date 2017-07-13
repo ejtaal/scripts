@@ -52,6 +52,7 @@ alias lat='ls -latF --color=auto'
 alias mp3i='mp3info -x -ra -p "%-30F %6k kb  %02mm:%02ss  %.1r kbs  %q kHz  %o  mpg %.1v layer %L\n"'
 alias mv='mv -vi'
 alias ncat='ncat -v'
+alias ntulp='netstat -ntulp'
 alias onp='opera -newpage'
 #alias psf='ps auxwww --forest | less -S'
 alias psf='ps -eo user,pid,ni,%cpu,%mem,vsz,tty,stat,lstart,time,args --forest | less -S'
@@ -281,9 +282,37 @@ prompt_command() {
 	CURPOS=${#line2}
 	SPACELEFT=$((COLUMNS-CURPOS))
 
-	# Right justify battery and VMs info:
+	# Right justify mem, battery and VMs info:
 	right1_info=
 	right1_bare=
+
+	MemTotal=$(grep ^MemTotal: /proc/meminfo | awk '{ print $2 }')
+	MemAvailable=$(grep ^MemAvailable: /proc/meminfo | awk '{ print $2 }')
+	SwapTotal=$(grep ^SwapTotal: /proc/meminfo | awk '{ print $2 }')
+	SwapFree=$(grep ^SwapFree: /proc/meminfo | awk '{ print $2 }')
+
+	mem_threshold_warn=25
+	mem_threshold_crit=10
+	ram_free=$((100*MemAvailable / MemTotal))
+	swap_free=$((100*SwapFree / SwapTotal))
+	#echo $swap_free $ram_free
+	
+	ram_color="${greenf}"
+	if [ $ram_free -le $mem_threshold_crit ]; then
+		ram_color="${redf}"
+	elif [ $ram_free -le $mem_threshold_warn ]; then
+		ram_color="${yellowf}"
+	fi
+	swap_color="${greenf}"
+	if [ $swap_free -le $mem_threshold_crit ]; then
+		swap_color="${redf}"
+	elif [ $swap_free -le $mem_threshold_warn ]; then
+		swap_color="${yellowf}"
+	fi
+
+	right1_info="${right1_info}MEM:${boldon}${ram_color}${ram_free}%${reset}/${boldon}${swap_color}${swap_free}%${reset} "
+	right1_bare="${right1_bare}MEM:${ram_free}%/${swap_free}% "
+
 
 	batno=0
 	for i in /sys/class/power_supply/BAT*; do
@@ -314,20 +343,22 @@ prompt_command() {
 			#right1_bare=' | '
 			#line2="${line2} | "
 		#fi
-		right1_info="${right1_info}${boldon}${bat_color}${cap}%${reset} "
-		right1_bare="${right1_bare}${cap}% "
+		right1_info="${right1_info}BAT:${boldon}${bat_color}${cap}%${reset}"
+		right1_bare="${right1_bare}BAT:${cap}%"
 		#line2="${line2} ${cap}%"
 	done
 
 	NUM_VMS=$(pgrep -f "(vmware-vmx|VirtualBox.*startvm|qemu-kvm)" | wc -l)
 	if [ "$NUM_VMS" -gt 0 ]; then
 		if [ -n "${right1_info}" ]; then
-			right1_info="${right1_info}| "
-			right1_bare="${right1_bare}| "
+			right1_info="${right1_info} "
+			right1_bare="${right1_bare} "
 		fi
-		right1_info="${right1_info}${boldon}${cyanf}$NUM_VMS${reset}"
-		right1_bare="${right1_bare}$NUM_VMS"
+		right1_info="${right1_info}VMs:${boldon}${cyanf}$NUM_VMS${reset}"
+		right1_bare="${right1_bare}VMs:$NUM_VMS"
 	fi
+
+	#right1_bare=$(echo "$right1_info" | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g")
 
 	SPACELEFT=$((SPACELEFT-${#right1_bare}))
 	#echo "${right1_bare}" ${#right1_bare}
@@ -350,14 +381,17 @@ prompt_command() {
 	# this sets $if_gateway_info
 	get_default_if
 	MOREINFO="$os_icon $os_release $if_gateway_info"
+	MOREINFO_BARE="$os_icon $os_release $if_gateway_info_bare"
 	XINFO=""
 	if [ -n "$DISPLAY" ]; then
 		MOREINFO="$MOREINFO X"
+		MOREINFO_BARE="$MOREINFO_BARE X"
 		XINFO=" $boldon${yellowf}X$reset"
 	fi
 	#echo MARK
 	#echo MOREINFO = $MOREINFO
-	MOREINFOLENGTH=${#MOREINFO}
+	#echo MOREINFO_BARE = $MOREINFO_BARE
+	MOREINFOLENGTH=${#MOREINFO_BARE}
 	FILLERSPACE=$((SPACELEFT-MOREINFOLENGTH))
 	i=2
 	while [ $i -lt $FILLERSPACE ]; do
@@ -655,6 +689,75 @@ ltt() {
 
 add-ssh-pubkey() {
 	cat $HOME/.ssh/id_*.pub | \ssh "$1" "cat >> .ssh/authorized_keys"
+}
+
+get_default_if() {
+	while read -a rtLine ;do
+		# In case there's no gateway configured, just grab any configured device
+		# Alternatively, maybe look at /proc/net/arp?
+		device=${rtLine[0]}
+  	if [ ${rtLine[1]} == "00000000" ] && [ ${rtLine[7]} == "00000000" ] ;then
+      hexToIp default_gateway ${rtLine[2]}
+			#echo $netInt
+			#echo "addrLine = [$addrLine]"
+			last_2_digits=${default_gateway#[0-9]*.[0-9]*.}
+			last_digit=${default_gateway#[0-9]*.[0-9]*.[0-9]*.}
+			#device=${rtLine[0]}
+			break
+		fi
+	done < /proc/net/route
+	#echo default_gateway = $default_gateway device = $device
+	#if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3;exit}')
+	# Read them all in an array, if more than 1
+	if [ "$device" = "Iface" ]; then
+		if_ip="x.x.x.x"
+		last_digit="x"
+	else
+		if_ips=($(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}'))
+		if_ip=${if_ips[0]}
+		#if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}')
+		first_3_if_ip=${if_ip%.[0-9]*}
+		
+		if [ ${#if_ips[@]} -gt 1 ]; then
+			for (( i=1; i<${#if_ips[@]}; i++ )); do
+				alt_ip=${if_ips[$i]}
+				first_3_alt_ip=${if_ips[$i]%.[0-9]*}
+				last_digit_alt_ip=${alt_ip#[0-9]*.[0-9]*.[0-9]*.}
+				#mydebug alt_ip first_3_alt_ip last_digit_alt_ip first_3_if_ip
+				if [ "$first_3_if_ip" = "$first_3_alt_ip" ]; then
+					if_ip="$if_ip +${last_digit_alt_ip}"
+				else
+					if_ip="$if_ip $alt_ip"
+				fi
+			done
+		fi
+	
+	fi
+	first_3_gateway=${default_gateway%.[0-9]*}
+	#arrow=">"
+	arrow="→"
+	if [ "$first_3_if_ip" = "$first_3_gateway" ]; then
+		if_gateway_info="${if_ip} $arrow${last_digit}"
+	else
+		# Could be none found:
+		if [ -z "${last_2_digits}" ]; then
+			last_2_digits='_'
+		fi
+		if_gateway_info="${if_ip} $arrow${last_2_digits}"
+	fi
+
+	# Other ips active:
+	other_ips=$(ip addr show  | egrep -v "($device|127.0.0.1)" | awk -F'[ /]*' '/inet /{print $3}' | xargs echo -n)
+	if [ -n "$other_ips" ]; then
+		if_gateway_info="$other_ips / $if_gateway_info"
+	fi
+	if_gateway_info="| $if_gateway_info"
+
+	open_ports=$(awk '$4 == "0A" { split( $2, fields, ":"); a[strtonum("0x" fields[2])]++ } END { i=1; for (b in a) { SEP = (i++ < length(a) ? " " : "\n"); printf( "%s%s", b, SEP); }}' /proc/net/tcp{,?})
+	
+	if_gateway_info_bare="| L:$open_ports $if_gateway_info"
+	if_gateway_info="| L:$boldon$yellowf$open_ports$reset $if_gateway_info"
+
 }
 
 ### End of subroutines ###

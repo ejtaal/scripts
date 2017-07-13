@@ -16,6 +16,11 @@ tcpdump-colorize 2.0 - Erik Taal <ejtaal@gmail.com>
 Based on:
 tcpdump-colorize 1.0 - Nicolas Martyanoff <khaelin@gmail.com>
 This script is in the public domain.
+
+TODO: 
+- Give each /16 it's own color, then the remaining two numbers as well?
+This way traffic from certain subnets is easier identifiable
+- resolve processes (a la netstat -ntp) so we know which process is making the comms
 =cut
 
 # This script does need these libs installed please:
@@ -47,8 +52,9 @@ my $invon=$e."[7m",     my $invoff=$e."[27m";
 
 my $reset=$e."[0m";
 
+#$blueb.$redf,
+#$yellowb.$boldon.$yellowf,
 my @nice_colors = (
-$blueb.$redf,
 $blueb.$greenf,
 $blueb.$yellowf,
 $blueb.$purplef,
@@ -74,7 +80,6 @@ $yellowb.$bluef,
 $yellowb.$purplef,
 #$yellowb.$cyanf,
 $yellowb.$whitef,
-$yellowb.$boldon.$yellowf,
 $yellowb.$boldon.$whitef,
 
 $redb.$greenf,
