@@ -108,9 +108,9 @@ export PS1_DEFAULT="$PS1"
 eval $(dircolors ~/scripts/dircolors.ansi-dark)
 # Highlight in green, 32 -\
 export GREP_COLORS='ms=01;32:mc=01;31:sl=:cx=:fn=35:ln=32:bn=32:se=36'
-#export HISTCONTROL="ignoredups:"
-export HISTFILESIZE=50000
-export HISTSIZE=50000
+export HISTCONTROL="ignorespace"
+export HISTFILESIZE=99000
+export HISTSIZE=99000
 export HISTTIMEFORMAT="%Y-%m-%d--%H:%M "
 export SVKDIFF="/usr/bin/diff -u"
 export STATUSLINE_DELAY=10
@@ -294,7 +294,11 @@ prompt_command() {
 	mem_threshold_warn=25
 	mem_threshold_crit=10
 	ram_free=$((100*MemAvailable / MemTotal))
-	swap_free=$((100*SwapFree / SwapTotal))
+	if [ "$SwapTotal" != 0 ]; then
+		swap_free=$((100*SwapFree / SwapTotal))
+	else
+		swap_free='-'
+	fi
 	#echo $swap_free $ram_free
 	
 	ram_color="${greenf}"
@@ -304,10 +308,14 @@ prompt_command() {
 		ram_color="${yellowf}"
 	fi
 	swap_color="${greenf}"
-	if [ $swap_free -le $mem_threshold_crit ]; then
-		swap_color="${redf}"
-	elif [ $swap_free -le $mem_threshold_warn ]; then
-		swap_color="${yellowf}"
+	if [ "$swap_free" = '-' ]; then
+		swap_color="${ram_color}"
+	else
+		if [ $swap_free -le $mem_threshold_crit ]; then
+			swap_color="${redf}"
+		elif [ $swap_free -le $mem_threshold_warn ]; then
+			swap_color="${yellowf}"
+		fi
 	fi
 
 	right1_info="${right1_info}MEM:${boldon}${ram_color}${ram_free}%${reset}/${boldon}${swap_color}${swap_free}%${reset} "
