@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # sudo apt-get install git && \
-# 	wget https://github.com/ejtaal/scripts/raw/master/setup-new-system.sh && \
-#		bash ./setup-new-system.sh
+# 	wget -O /tmp/p.sh https://github.com/ejtaal/scripts/raw/master/setup-new-system.sh && \
+#		bash /tmp/p.sh
 
 echo "Setting up your new system, just sit back and relax..."
 
@@ -30,15 +30,15 @@ PRIORITY_PKGS="openssh-server git screen htop"
 
 # Duff packages: openvas-cli openvas-client openvas-manager openvas-server 
 
-PKGS="
-aircrack-ng apmd autofs automake bmon build-essential calibre
-cherrytree cifs-utils cpulimit ddd dkms edb elinks ettercap-graphical
+COMMON_PKGS="
+apmd autofs automake bmon build-essential calibre
+cherrytree cifs-utils cpulimit ddd dkms edb elinks
 fatsort fbreader fdupes filezilla flashplugin-nonfree
 gadmin-openvpn-client gdb gedit git git-gui
-gitk gnome-system-monitor gparted htop httrack hostapd
+gitk gnome-system-monitor gparted htop httrack 
 iftop ike-qtgui ipcalc
 ionice iotop iptraf-ng k4dirstat kate kde-spectacle
-knockd konsole krusader lftp
+knockd krusader lftp
 libav-tools libcpan-checksums-perl libdigest-crc-perl libgeo-ip-perl
 libimage-exiftool-perl libreoffice libsox-fmt-mp3 libstring-crc32-perl
 libstring-crc-cksum-perl libtool links linux-headers-`uname -r` ltrace
@@ -48,8 +48,21 @@ openssh-blacklist openssh-blacklist-extra openssh-server
 openvpn parcellite partimage
 pv python3-notify2 python-notify2 qbittorrent screen smartmontools
 smplayer sox sshfs sshpass ssldump sslscan strace supercat sysfsutils
-system-config-lvm tidy timelimit uswsusp veil-evasion vim vinagre vlc
-wine wireshark x11vnc xine-ui virtualenvwrapper
+system-config-lvm tidy timelimit uswsusp vim vinagre vlc
+wine x11vnc xine-ui virtualenvwrapper
+"
+
+DESKTOP_PKS="
+$COMMON_PKGS
+"
+
+PENTEST_PKGS="
+$COMMON_PKGS
+aircrack-ng
+ettercap-graphical
+veil-evasion 
+wireshark 
+hostapd
 "
 
 FOUND_PKGS=
@@ -64,24 +77,144 @@ elif [ -x /usr/bin/apt-get ]; then
 	CMD="apt "
 fi
 
-hm "*" "Finding packages to install..."
-for i in $PKGS; do
-	if $CHECK_CMD $i >/dev/null 2>&1; then
-		hm '+' "Found: $i"
-		FOUND_PKGS="$FOUND_PKGS $i"
+install_pkgs() {
+	hm "*" "Finding packages to install..."
+	for i in $1; do
+		if $CHECK_CMD $i 2>&1 | egrep -qv "No packages found"; then
+			hm '+' "Found: $i"
+			FOUND_PKGS="$FOUND_PKGS $i"
+		else
+			hm "-" "Not found: $i"
+		fi
+	done
+	hm '*' "Now installing following useful packages:" $FOUND_PKGS
+	sudo $CMD install $FOUND_PKGS
+}
+	
+install_pkgs "$PRIORITY_PKGS"
+#hm "*" "Finding priority packages to install..."
+#ALL_PRIOS_PKG_PRESENT=1
+#for i in $PRIORITY_PKGS; do
+#	if $CHECK_CMD $i 2>&1 | egrep -qv "No packages found" ; then
+#		hm '+' "Found: $i"
+#		FOUND_PKGS="$FOUND_PKGS $i"
+#	else
+#		hm "-" "Not found: $i"
+#		ALL_PRIOS_PKG_PRESENT=0
+#	fi
+#done
+
+#if [ $ALL_PRIOS_PKG_PRESENT = 1 ]; then
+#	hm '+' "Priority packages present and accounted for." $PRIORITY_PKGS
+#else
+#	hm '*' "Installing priority packages first:" $PRIORITY_PKGS
+#	sudo $CMD install $PRIORITY_PKGS
+#fi
+#sudo $CMD install $PRIORITY_PKGS
+
+gitclone() {
+	repo="$1"
+	commit="$2"
+	bn=$(basename $repo)
+	mkdir -p "$HOME/github" && pushd $HOME/github
+	hm '+' "Cloning $repo ..."
+	if [ -d "$bn" ]; then
+		cd "$bn" && git pull
 	else
-		hm "-" "Not found: $i"
+		git clone "$repo"
 	fi
-done
+	popd	
+}
 
-hm '*' "Doing update & upgrade first"
-sudo $CMD update && sudo $CMD upgrade
+PTF_MODULES="
+modules/vulnerability-analysis/openvas
+modules/vulnerability-analysis/nmap
+modules/vulnerability-analysis/droopescan
+modules/vulnerability-analysis/whatweb
+modules/vulnerability-analysis/nikto
+modules/vulnerability-analysis/wpscan
+modules/vulnerability-analysis/ike-scan
+modules/av-bypass/veil-framework
+modules/powershell/powersploit
+modules/powershell/nishang
+modules/powershell/bloodhound
+modules/powershell/empire
+modules/reporting/nessus_parser
+modules/wireless/mana-toolkit
+modules/wireless/aircrackng
+modules/intelligence-gathering/discover
+modules/intelligence-gathering/httpscreenshot
+modules/intelligence-gathering/theHarvester
+modules/intelligence-gathering/eyewitness
+modules/intelligence-gathering/wafw00f
+modules/post-exploitation/crackmapexec
+modules/post-exploitation/unicorn
+modules/post-exploitation/armitage
+modules/password-recovery/cewl
+modules/password-recovery/patator
+modules/password-recovery/hashcat-utils
+modules/password-recovery/crunch
+modules/password-recovery/johntheripper
+modules/reversing/radare2
+modules/exploitation/impacket
+modules/exploitation/sqlmap
+"
 
-hm '*' "Installing priority packages first:" $PRIORITY_PKGS
-sudo $CMD install $PRIORITY_PKGS
+ptf_install() {
+	pushd ~/github/ptf
+	> /tmp/ptf.rc
+	for module in $1; do
+		echo "
+use $module
+run
+exit" >> /tmp/ptf.rc
+	done
+	echo exit >> /tmp/ptf.rc
+	time ./ptf < /tmp/ptf.rc
+	popd
+}
 
-hm '*' "Now installing following useful packages:" $FOUND_PKGS
-sudo $CMD install $FOUND_PKGS
+choose_setup() {
+	if [ -z "$1" ]; then
+		hm '*' 'Choose from the following setups to install a base system:'
+		grep ' *) #' $0
+		#echo "pentest / desktop"
+		echo -n '=> '
+		read setup_type < /dev/tty
+	else
+		setup_type="$1"
+	fi
+		
+
+	case $setup_type in
+		pentest) # Will install a nice base pentesting platform, assuming to be running on Kali
+			install_pkgs "$PENTEST_PKGS"
+			gitclone 'https://github.com/trustedsec/ptf' '' # Add commits for reporting sake etc
+			ptf_install "$PTF_MODULES"
+			hm '+' "Et voila :)"
+			la `find /pentest/ -maxdepth 3 -type f -executable`
+			# Licensed stuff:
+			# Nessus: needs license put in for every new install
+			# Burp: ___
+			# Cobalt Strike: needs ~/.cobaltstrike.license
+			
+			;;
+		desktop) # Will install a generic Mate based desktop environment
+			# Do different stuff
+			echo test
+			install_pkgs "$DESKTOP_PKGS"
+			;;
+		*) hm '-' "entry not recognised"
+	esac
+}
+
+choose_setup "$1"
+
+
+#hm '*' "Doing update & upgrade first"
+#sudo $CMD update && sudo $CMD upgrade
+
+
 
 if [ -f /etc/apt/sources.list ]; then
 	. /etc/lsb-release
@@ -105,14 +238,14 @@ sudo apt-get install gstreamer0.10-libde265 gstreamer1.0-libde265 vlc vlc-plugin
 
 fi
 
-modify_file /etc/network/interfaces \
-"#iface eth0 inet static
+#modify_file /etc/network/interfaces \
+#"#iface eth0 inet static
 #        address 192.168.0.0
 #        netmask 255.255.255.0
 #        gateway 192.168.0.1
 #        dns-nameservers 194.168.4.100 194.168.8.100
 #        dns-search ejtaal.net
-"
+#"
 
 hm '+' "=> SSD tweaks:
 fstab:
@@ -127,14 +260,14 @@ sysfs.conf:
 	block/sda/queue/scheduler = deadline
 "
 
-for i in "" ".bak"; do
-	modify_file "/etc/resolv.conf${i}" \
-"#     PLEASE DO NOT EDIT THIS FILE, if you don't mind. Really, it's not nice, fool! - Mr.T
-nameserver 194.168.4.100
-nameserver 194.168.8.100
-search ejtaal.net
-"
-done
+#for i in "" ".bak"; do
+#	modify_file "/etc/resolv.conf${i}" \
+#"#     PLEASE DO NOT EDIT THIS FILE, if you don't mind. Really, it's not nice, fool! - Mr.T
+#nameserver 194.168.4.100
+#nameserver 194.168.8.100
+#search ejtaal.net
+#"
+#done
 
 hm '+' "=> Tablet additions:
 echo greeter-session=lightdm-gtk-greeter >> /etc/lightdm/lightdm.conf

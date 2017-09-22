@@ -52,6 +52,7 @@ alias lat='ls -latF --color=auto'
 alias mp3i='mp3info -x -ra -p "%-30F %6k kb  %02mm:%02ss  %.1r kbs  %q kHz  %o  mpg %.1v layer %L\n"'
 alias mv='mv -vi'
 alias ncat='ncat -v'
+alias	np=niceprompt
 alias ntulp='netstat -ntulp'
 alias onp='opera -newpage'
 #alias psf='ps auxwww --forest | less -S'
@@ -762,9 +763,18 @@ get_default_if() {
 	if_gateway_info="| $if_gateway_info"
 
 	open_ports=$(awk '$4 == "0A" { split( $2, fields, ":"); a[strtonum("0x" fields[2])]++ } END { i=1; for (b in a) { SEP = (i++ < length(a) ? " " : "\n"); printf( "%s%s", b, SEP); }}' /proc/net/tcp{,?})
+	open_ports_udp=$(awk '$4 == "07" { split( $2, fields, ":"); a[strtonum("0x" fields[2])]++ } END { i=1; for (b in a) { SEP = (i++ < length(a) ? " " : "\n"); printf( "%s%s", b, SEP); }}' /proc/net/udp{,?})
 	
-	if_gateway_info_bare="| L:$open_ports $if_gateway_info"
-	if_gateway_info="| L:$boldon$yellowf$open_ports$reset $if_gateway_info"
+	if [ -n "$open_ports_udp" ]; then
+		open_ports_udp=" ${open_ports_udp}"
+	fi
+	
+	if_gateway_info_bare="| L:$open_ports$open_ports_udp $if_gateway_info"
+	if_gateway_info="| L:$boldon$yellowf$open_ports$greenf$open_ports_udp$reset $if_gateway_info"
+
+	
+	#if_gateway_info_bare="${if_gateway_info_bare} $open_ports $if_gateway_info"
+	#if_gateway_info="| L:$boldon$greenf$open_ports$reset $if_gateway_info"
 
 }
 
@@ -780,6 +790,8 @@ if [ -f $HOME/.bashrc.local ]; then
 fi
 
 if [ "$NOFUNCS" != 1 ]; then
-	# Lets try the fancy shell out shall we
-	niceprompt
+	# Lets try the fancy shell out shall we, well, only if it's me
+	if ssh-add -l | grep -qi erik; then
+		niceprompt
+	fi
 fi
