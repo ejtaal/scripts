@@ -26,7 +26,7 @@ fi
 
 source ~/.bashrc
 
-PRIORITY_PKGS="openssh-server git screen htop"
+PRIORITY_PKGS="-y openssh-server git screen htop"
 
 # Duff packages: openvas-cli openvas-client openvas-manager openvas-server 
 
@@ -75,6 +75,9 @@ elif [ -x /usr/bin/apt-get ]; then
 	CHECK_CMD="apt-cache show"
 	#CMD="apt-get -mV --ignore-missing"
 	CMD="apt "
+	export DEBIAN_FRONTEND=noninteractive
+	apt update
+	apt -y upgrade
 fi
 
 install_pkgs() {
@@ -134,7 +137,6 @@ modules/vulnerability-analysis/whatweb
 modules/vulnerability-analysis/nikto
 modules/vulnerability-analysis/wpscan
 modules/vulnerability-analysis/ike-scan
-modules/av-bypass/veil-framework
 modules/powershell/powersploit
 modules/powershell/nishang
 modules/powershell/bloodhound
@@ -158,7 +160,9 @@ modules/password-recovery/johntheripper
 modules/reversing/radare2
 modules/exploitation/impacket
 modules/exploitation/sqlmap
+modules/av-bypass/veil-framework
 "
+# Put veil at the end as it has annoying windows installers to click through
 
 ptf_install() {
 	pushd ~/github/ptf
@@ -172,6 +176,45 @@ exit" >> /tmp/ptf.rc
 	echo exit >> /tmp/ptf.rc
 	time ./ptf < /tmp/ptf.rc
 	popd
+}
+
+fix_kali_pg_db() {
+	echo -n 'Generating MSF PG_DB user password... '
+	PG_PASS="MSF$(pwgen -1 | head -1)"
+	echo $PG_PASS
+	#psql -c "CREATE USER admin WITH PASSWORD 'test101';"
+	/etc/init.d/postgresql start
+echo "CREATE USER msfdev WITH PASSWORD '$PG_PASS';
+update pg_database set datallowconn = TRUE where datname = 'template0';
+\c template0
+update pg_database set datistemplate = FALSE where datname = 'template1';
+drop database template1;
+create database template1 with template = template0 encoding = 'UTF8';
+update pg_database set datistemplate = TRUE where datname = 'template1';
+\c template1
+update pg_database set datallowconn = FALSE where datname = 'template0';
+\l" > /tmp/pg.sql
+	su - postgres -c "psql < /tmp/pg.sql;
+#createuser msfdev -dPRS              # Come up with another great password
+createdb --owner msfdev msf_dev_db   # Create the development database
+createdb --owner msfdev msf_test_db  # Create the test database"
+
+	mkdir -p $HOME/.msf4
+	# Development Database
+	echo "development: &pgsql
+  adapter: postgresql
+  database: msf_dev_db
+  username: msfdev
+  password: $PG_PASS
+  host: localhost
+  port: 5432
+  pool: 5
+  timeout: 5
+# Production database -- same as dev
+production: &production
+  <<: *pgsql" > $HOME/.msf4/database.yml
+	hm \* 'Checking MSF DB connectivity...'
+	msfconsole -qx "db_status; exit"
 }
 
 choose_setup() {
@@ -188,11 +231,12 @@ choose_setup() {
 
 	case $setup_type in
 		pentest) # Will install a nice base pentesting platform, assuming to be running on Kali
+			fix_kali_pg_db
 			install_pkgs "$PENTEST_PKGS"
 			gitclone 'https://github.com/trustedsec/ptf' '' # Add commits for reporting sake etc
 			ptf_install "$PTF_MODULES"
 			hm '+' "Et voila :)"
-			la `find /pentest/ -maxdepth 3 -type f -executable`
+			ls -l `find /pentest/ -maxdepth 3 -type f -executable`
 			# Licensed stuff:
 			# Nessus: needs license put in for every new install
 			# Burp: ___
