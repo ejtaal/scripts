@@ -3,6 +3,9 @@
 # sudo apt-get install git && \
 # 	wget -O /tmp/p.sh https://github.com/ejtaal/scripts/raw/master/setup-new-system.sh && \
 #		bash /tmp/p.sh
+# Or to receive in a fresh VM:
+# client: # nc -lvp 4444 > setup.sh && bash ./setup.sh pentest|desktop|...
+# server: cat ~/scripts/setup-new-system.sh | nc -q 1 -v $client_IP 4444
 
 echo "Setting up your new system, just sit back and relax..."
 
