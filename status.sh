@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Input processing:
+# rd4 = route del (4)
+# vpn-1 1.2.3.4  = route only traffic for 1.2.3.4 through vpn-1
+# i2d = interface (2) do dhcp
+# i
+
 update_timeout() {
 	SECS="$1"
 

@@ -514,8 +514,8 @@ find_ssh_agent() {
 			loadsshkeys
 		fi
 	fi
-	ssh-add -l | egrep -q "( |)[0-9][0-9]:" && \
-		{ echo "Connected to ssh agent $SSH_AUTH_SOCK (pid $SSH_AGENT_PID). Keys found:"; ssh-add -l | awk '{ print $3 }'; }
+	ssh-add -l 2> /dev/null | egrep -q "( |)[0-9][0-9]:" && \
+			{ echo "Connected to ssh agent $SSH_AUTH_SOCK (pid $SSH_AGENT_PID). Keys found:"; ssh-add -l | awk '{ print $3 }'; }
 }
 
 ctd() {
@@ -791,7 +791,7 @@ fi
 
 if [ "$NOFUNCS" != 1 ]; then
 	# Lets try the fancy shell out shall we, well, only if it's me
-	if ssh-add -l | grep -qi erik; then
+	if ssh-add -l 2> /dev/null | grep -qi erik; then
 		niceprompt
 	fi
 fi
