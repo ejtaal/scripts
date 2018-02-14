@@ -508,11 +508,11 @@ myapt() {
 			fi
 			if fuser -v /var/lib/dpkg/lock; then
 				echo "Lock persists past timeout, giving up on package"
-				return
+			else
+				apt install -y "$pkg"
+				# Give another apt a chance to take the lock
+				sleep 3
 			fi
-			apt install -y "$pkg"
-			# Give another apt a chance to take the lock
-			sleep 3
 		done
 }
 
