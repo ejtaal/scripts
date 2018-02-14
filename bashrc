@@ -81,7 +81,6 @@ alias watp='watch --differences=permanent -n'
 alias watc='watch --differences=cumulative -n'
 alias x='startx'
 #alias xset-fast-keyboard='xset r rate 200 36'
-alias xset-fast-keyboard="for i in old c new; do [ \$i = c ] && xset r rate 200 37 || xset q | grep 'repeat delay' | xargs echo \$i; done"
 
 # Please no ugly colours from ls:
 alias ls > /dev/null 2>&1 && unalias ls
@@ -778,6 +777,12 @@ get_default_if() {
 
 }
 
+xset-fast-keyboard() {
+	for i in old c new; do 
+		[ $i = c ] && xset r rate 200 37 || xset q | grep 'repeat delay' | xargs echo $i
+	done
+}
+
 ### End of subroutines ###
 
 # Set up ssh keys if present
@@ -791,7 +796,8 @@ fi
 
 if [ "$NOFUNCS" != 1 ]; then
 	# Lets try the fancy shell out shall we, well, only if it's me
-	if ssh-add -l 2> /dev/null | grep -qi erik; then
+	if ssh-add -l 2> /dev/null | egrep -qi "(erik|taal)"; then
 		niceprompt
+		xset-fast-keyboard
 	fi
 fi

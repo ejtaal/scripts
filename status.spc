@@ -31,4 +31,6 @@
                      grn b   r ^[1-9]:\s*(.*?):.*UP
                      yel     r ^[1-9]:\s*(.*?):.*DOWN
                      grn b   r ^0.0.0.0\s*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)
+                     red b   r (\!)(ping|DNS)
+                     grn b   r :(OK/OK)
 #                     red b   r (0.0.0.0)

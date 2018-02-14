@@ -20,6 +20,28 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	# network info
 	ip addr | egrep -v "valid_lft"
 	echo
+	echo "== DNS info =="
+	DNS_SRVS=
+	if grep resolvconf /etc/resolv.conf > /dev/null; then
+		DNS_SRVS="$(nmcli dev show | grep -i DNS | awk '{ print $2 }')"
+	fi
+	DNS_SRVS="$DNS_SRVS $(grep ^nameserver /etc/resolv.conf | awk '{ print $2 }')"
+	for i in $DNS_SRVS; do
+		echo -n "$i:"
+		if ping -c 2 $i 2>&1 > /dev/null; then
+			echo -n OK
+		else
+			echo -n '!ping'
+		fi
+		if host -W 2 c.cc $i 2>&1 > /dev/null; then
+			echo -n '/OK'
+		else
+			echo -n '/!DNS'
+		fi
+		echo -n ' '
+	done
+	echo
+	echo
 	echo "== Routing info =="
 	route -n
 	# Check VPN / TOR / inet connectivity
@@ -31,7 +53,7 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	# remote FSes
 	# gits info
 	# backup info
-	SECS=2
+	SECS=60
 	while [ "$SECS" -gt 0 ]; do
 		echo -en "\rRefresh in: $SECS s ...  "
 		SECS=$((SECS-1))
