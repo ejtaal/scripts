@@ -11,6 +11,7 @@ update_timeout() {
 
 }
 
+RUNS_REQUESTED="$1"
 EXIT_REQUESTED=0
 while [ "$EXIT_REQUESTED" = 0 ] ; do
 	clear
@@ -28,7 +29,7 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	DNS_SRVS="$DNS_SRVS $(grep ^nameserver /etc/resolv.conf | awk '{ print $2 }')"
 	for i in $DNS_SRVS; do
 		echo -n "$i:"
-		if ping -c 2 $i 2>&1 > /dev/null; then
+		if ping -w 2 -W 1 -c 2 $i 2>&1 > /dev/null; then
 			echo -n OK
 		else
 			echo -n '!ping'
@@ -53,12 +54,22 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	# remote FSes
 	# gits info
 	# backup info
+	if [ -n "$RUNS_REQUESTED" ]; then
+		echo "$RUNS_REQUESTED runs requested"
+		RUNS_REQUESTED=$((RUNS_REQUESTED-1))
+	fi
 	SECS=60
 	while [ "$SECS" -gt 0 ]; do
 		echo -en "\rRefresh in: $SECS s ...  "
 		SECS=$((SECS-1))
 		sleep 1
 	done
+	if [ -n "$RUNS_REQUESTED" ]; then
+		if [ "$RUNS_REQUESTED" -lt 1 ]; then
+			echo "This was the last run"
+			exit 0
+		fi
+	fi
 done
 
 
