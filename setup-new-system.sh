@@ -317,7 +317,9 @@ choose_setup() {
 	case $setup_type in
 		pentest) # Will install a nice base pentesting platform, assuming to be running on Kali
 			fix_kali_pg_db
-			install_pkgs "$PENTEST_PKGS"
+			# We're going to be root on kali so use 'myapt'
+			#install_pkgs "$PENTEST_PKGS"
+			myapt install "$PENTEST_PKGS"
 			gitclone 'https://github.com/trustedsec/ptf' '' # Add commits for reporting sake etc
 			ptf_install "$PTF_MODULES"
 			hm '+' "Et voila :)"
