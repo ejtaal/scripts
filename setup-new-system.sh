@@ -162,7 +162,7 @@ elif [ -x /usr/bin/apt-get ]; then
 	CMD="apt "
 	export DEBIAN_FRONTEND=noninteractive
 	apt update
-	apt -y upgrade
+	myapt upgrade
 fi
 
 install_pkgs() {
@@ -330,8 +330,8 @@ choose_setup() {
 			;;
 		desktop) # Will install a generic Mate based desktop environment
 			# Do different stuff
-			echo test
-			install_pkgs "$DESKTOP_PKGS"
+			#install_pkgs "$DESKTOP_PKGS"
+			myapt install "$DESKTOP_PKGS"
 			;;
 		*) hm '-' "entry not recognised"
 	esac

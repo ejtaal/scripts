@@ -500,6 +500,7 @@ myapt() {
 			TIMEOUT=120
 			if fuser -v /var/lib/dpkg/lock; then
 				echo -n "Lock detected, waiting "
+				touch /tmp/myapt-request
 				while [ "$TIMEOUT" -gt 0 ] && fuser -s /var/lib/dpkg/lock; do
 					TIMEOUT=$((TIMEOUT-1))
 					sleep 1
@@ -508,11 +509,14 @@ myapt() {
 			fi
 			if fuser -v /var/lib/dpkg/lock; then
 				echo "Lock persists past timeout, giving up on package"
+				rm -f /tmp/myapt-request
 				return
 			fi
 			apt install -y "$pkg"
 			# Give another apt a chance to take the lock
-			sleep 3
+			if [ -f /tmp/myapt-request ]; then
+				sleep 3
+			fi
 		done
 }
 
