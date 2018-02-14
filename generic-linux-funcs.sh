@@ -476,3 +476,43 @@ windowlist string " screen[%n %t] %h"
 	THREADS_CMDS=()
 }
 
+myapt() {
+
+	case "$1" in
+			install)
+				command="$1"
+				shift
+				PKGS="$*"
+				;;
+			upgrade)
+				command="$1"
+				shift
+				PKGS="$(apt list --upgradable | grep upgradable | cut -f 1 -d '/')"
+				;;
+			*)
+				echo command not recognized.
+				return
+				;;
+		esac
+
+		for pkg in $PKGS; do
+			echo "==>> Attempting install of '$pkg' ..."
+			TIMEOUT=120
+			if fuser -v /var/lib/dpkg/lock; then
+				echo -n "Lock detected, waiting "
+				while [ "$TIMEOUT" -gt 0 ] && fuser -s /var/lib/dpkg/lock; do
+					TIMEOUT=$((TIMEOUT-1))
+					sleep 1
+					echo -n '.'
+				done
+			fi
+			if fuser -v /var/lib/dpkg/lock; then
+				echo "Lock persists past timeout, giving up on package"
+				return
+			fi
+			apt install -y "$pkg"
+			# Give another apt a chance to take the lock
+			sleep 3
+		done
+}
+
