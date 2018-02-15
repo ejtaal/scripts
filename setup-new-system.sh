@@ -65,6 +65,7 @@ iotop
 ipcalc
 iptraf-ng
 kde-spectacle
+keepass2
 knockd
 lftp
 libav-tools
@@ -125,20 +126,21 @@ wine
 
 DESKTOP_PKGS="
 $COMMON_PKGS
-ubuntu-mate-desktop
-parcellite
-system-config-lvm
-vinagre
-x11vnc
-xine-ui
 calibre
+encfs
 fbreader
 flashplugin-nonfree
 gnome-system-monitor
 k4dirstat
 kate
 krusader
+parcellite
 qbittorrent
+system-config-lvm
+ubuntu-mate-desktop
+vinagre
+x11vnc
+xine-ui
 "
 
 PENTEST_PKGS="

@@ -796,7 +796,7 @@ fi
 
 if [ "$NOFUNCS" != 1 ]; then
 	# Lets try the fancy shell out shall we, well, only if it's me
-	if ssh-add -l 2> /dev/null | egrep -qi "(erik|taal)"; then
+	if { echo $USER $USERNAME; ssh-add -l; } 2> /dev/null | egrep -qi "(erik|taal)"; then
 		niceprompt
 		xset-fast-keyboard
 	fi
