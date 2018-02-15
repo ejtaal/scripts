@@ -29,6 +29,8 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 			-e 's/ \+/ /g' \
 			-e 's/<.*,\(UP\),.*>/\1/g' \
 			| awk 'NR%4{printf "%s",$0;next;}1'
+	echo
+	echo
 	echo "== Internet/WWW info =="
 	PORTALINFO=$(curl -s detectportal.firefox.com/success.txt)
 	echo -n "WWW: "

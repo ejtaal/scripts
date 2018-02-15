@@ -36,7 +36,7 @@
                      red b   r (\!)(ping|DNS)
                      red b   r ^(.*\s+##\s+.*?)\s+M\s+.*)$
                      cya b   r (##)
-                     blu b   r (##)
+                     yel b   r ^(.*\s##\s.*\s+M\s+.*)$
                      yel b   r ^(.*\s+\#\#\s*.*?)\s+\?\?\s+.*)$
                      grn b   r :(OK/OK)
 #                     red b   r (0.0.0.0)
