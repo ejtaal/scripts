@@ -1,0 +1,7 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =5
+let g:netrw_dirhist_1='/etc/apt/sources.list.d'
+let g:netrw_dirhist_2='/home/taal/.config'
+let g:netrw_dirhist_3='/home/taal/.rtorrent'
+let g:netrw_dirhist_4='/home/taal/ejtaal.net/htdocs/mr'
+let g:netrw_dirhist_5='/etc/mysql/conf.d'
