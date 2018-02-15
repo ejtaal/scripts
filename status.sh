@@ -19,7 +19,47 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	echo "==== $(date) ===="
 	echo "== Interface info =="
 	# network info
-	ip addr | egrep -v "valid_lft"
+	#ip addr | egrep -v "valid_lft" 
+	ip addr | egrep -v "valid_lft" \
+		| sed -e 's/inet6 \(.*\) scope link/\1/' \
+			-e 's/> mtu.*/>/' \
+			-e 's/ link\/.* \(.*\) brd .*/\1/' \
+			-e 's/inet \(.*\) brd .*/\1/' \
+			-e 's/ scope host .*//' \
+			-e 's/ \+/ /g' \
+			-e 's/<.*,\(UP\),.*>/\1/g' \
+			| awk 'NR%4{printf "%s",$0;next;}1'
+	echo "== Internet/WWW info =="
+	PORTALINFO=$(curl -s detectportal.firefox.com/success.txt)
+	echo -n "WWW: "
+	if [ "$PORTALINFO" = "success" ]; then
+		echo -n OK
+	else
+		echo -n 'Portal?'
+	fi
+	echo -n ' External IP: '
+	dig +time=2 +short myip.opendns.com @208.67.222.222 #@resolver1.opendns.com
+	echo
+	echo "== GIT info =="
+	for repodir in ~/scripts ~/enc/*/*; do
+		if [ -d "$repodir/.git" ]; then
+			pushd "$repodir" > /dev/null
+			echo -n "$repodir "
+			git status -sb | xargs
+			popd > /dev/null
+		fi
+	done
+	echo
+	echo "== Listen info =="
+	netstat -ntulp | grep -i LIST | egrep -v " 127.0.| ::1:"
+	echo
+	echo "== Routing info =="
+	route -n
+	# Check VPN / TOR / inet connectivity
+	# encrypted FSes
+	echo
+	echo "== Disk info =="
+	lsblk -n | egrep -v " disk "
 	echo
 	echo "== DNS info =="
 	DNS_SRVS=
@@ -43,13 +83,6 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	done
 	echo
 	echo
-	echo "== Routing info =="
-	route -n
-	# Check VPN / TOR / inet connectivity
-	# encrypted FSes
-	echo
-	echo "== Disk info =="
-	lsblk -n | egrep -v " disk "
 	} | spc -c ~/scripts/status.spc
 	# remote FSes
 	# gits info
@@ -58,7 +91,7 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 		echo "$RUNS_REQUESTED runs requested"
 		RUNS_REQUESTED=$((RUNS_REQUESTED-1))
 	fi
-	SECS=60
+	SECS=30
 	while [ "$SECS" -gt 0 ]; do
 		echo -en "\rRefresh in: $SECS s ...  "
 		SECS=$((SECS-1))

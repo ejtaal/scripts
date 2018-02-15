@@ -16,6 +16,8 @@ fi
 
 if [ -f ~/scripts/generic-linux-funcs.sh ]; then
 	. ~/scripts/generic-linux-funcs.sh
+elif [ -f ./generic-linux-funcs.sh ]; then
+	. ./generic-linux-funcs.sh
 fi
 
 if [ -L ~/.bashrc ]; then
