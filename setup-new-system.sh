@@ -29,6 +29,16 @@ else
 	echo "New bashrc installed"
 fi
 
+pushd ~/scripts/dotfiles
+for i in *; do
+	if [ -f ~/."$i" -o -d ~/."$i" ]; then
+		echo "~/.$i already found."
+	else
+		cp -vR "$i" ~/."$i"
+	fi
+done
+popd
+
 source ~/.bashrc
 
 PRIORITY_PKGS="-y openssh-server git screen htop"
@@ -166,7 +176,8 @@ elif [ -x /usr/bin/apt-get ]; then
 	CMD="apt "
 	export DEBIAN_FRONTEND=noninteractive
 	apt update
-	myapt upgrade
+	#myapt upgrade
+	apt upgrade
 fi
 
 install_pkgs() {
@@ -322,8 +333,8 @@ choose_setup() {
 		pentest) # Will install a nice base pentesting platform, assuming to be running on Kali
 			fix_kali_pg_db
 			# We're going to be root on kali so use 'myapt'
-			#install_pkgs "$PENTEST_PKGS"
-			myapt install "$PENTEST_PKGS"
+			install_pkgs "$PENTEST_PKGS"
+			#myapt install "$PENTEST_PKGS"
 			gitclone 'https://github.com/trustedsec/ptf' '' # Add commits for reporting sake etc
 			ptf_install "$PTF_MODULES"
 			hm '+' "Et voila :)"
@@ -336,8 +347,8 @@ choose_setup() {
 			;;
 		desktop) # Will install a generic Mate based desktop environment
 			# Do different stuff
-			#install_pkgs "$DESKTOP_PKGS"
-			myapt install "$DESKTOP_PKGS"
+			install_pkgs "$DESKTOP_PKGS"
+			#myapt install "$DESKTOP_PKGS"
 			;;
 		*) hm '-' "entry not recognised"
 	esac

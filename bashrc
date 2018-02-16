@@ -785,8 +785,6 @@ xset-fast-keyboard() {
 
 ### End of subroutines ###
 
-# Set up ssh keys if present
-find_ssh_agent
 
 ### Part 5. Host specific stuff ###
 
@@ -797,6 +795,9 @@ fi
 if [ "$NOFUNCS" != 1 ]; then
 	# Lets try the fancy shell out shall we, well, only if it's me
 	if { echo $USER $USERNAME; ssh-add -l; } 2> /dev/null | egrep -qi "(erik|taal)"; then
+		echo "Access granted. Welcome Mr.T"
+		# Set up ssh keys if present
+		find_ssh_agent
 		niceprompt
 		xset-fast-keyboard
 	fi
