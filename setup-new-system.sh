@@ -3,6 +3,9 @@
 # sudo apt-get install git && \
 # 	wget -O /tmp/p.sh https://github.com/ejtaal/scripts/raw/master/setup-new-system.sh && \
 #		bash /tmp/p.sh
+# Or to receive in a fresh VM:
+# client: # nc -lvp 4444 > setup.sh && bash ./setup.sh pentest|desktop|...
+# server: cat ~/scripts/setup-new-system.sh | nc -q 1 -v $client_IP 4444
 
 echo "Setting up your new system, just sit back and relax..."
 
@@ -13,6 +16,8 @@ fi
 
 if [ -f ~/scripts/generic-linux-funcs.sh ]; then
 	. ~/scripts/generic-linux-funcs.sh
+elif [ -f ./generic-linux-funcs.sh ]; then
+	. ./generic-linux-funcs.sh
 fi
 
 if [ -L ~/.bashrc ]; then
@@ -24,36 +29,129 @@ else
 	echo "New bashrc installed"
 fi
 
+pushd ~/scripts/dotfiles
+for i in *; do
+	if [ -f ~/."$i" -o -d ~/."$i" ]; then
+		echo "~/.$i already found."
+	else
+		cp -vR "$i" ~/."$i"
+	fi
+done
+popd
+
 source ~/.bashrc
 
-PRIORITY_PKGS="-y openssh-server git screen htop"
+PRIORITY_PKGS="-y openssh-server git screen htop vim"
 
 # Duff packages: openvas-cli openvas-client openvas-manager openvas-server 
 
 COMMON_PKGS="
-apmd autofs automake bmon build-essential calibre
-cherrytree cifs-utils cpulimit ddd dkms edb elinks
-fatsort fbreader fdupes filezilla flashplugin-nonfree
-gadmin-openvpn-client gdb gedit git git-gui
-gitk gnome-system-monitor gparted htop httrack 
-iftop ike-qtgui ipcalc
-ionice iotop iptraf-ng k4dirstat kate kde-spectacle
-knockd krusader lftp
-libav-tools libcpan-checksums-perl libdigest-crc-perl libgeo-ip-perl
-libimage-exiftool-perl libreoffice libsox-fmt-mp3 libstring-crc32-perl
-libstring-crc-cksum-perl libtool links linux-headers-`uname -r` ltrace
-lynx mc mosh mtr munin munin-node ncdu netcat 
-nethogs nmap ntp-doc okular onboard
-openssh-blacklist openssh-blacklist-extra openssh-server 
-openvpn parcellite partimage
-pv python3-notify2 python-notify2 qbittorrent screen smartmontools
-smplayer sox sshfs sshpass ssldump sslscan strace supercat sysfsutils
-system-config-lvm tidy timelimit uswsusp vim vinagre vlc
-wine x11vnc xine-ui virtualenvwrapper
+apmd
+autofs
+automake
+bmon
+build-essential
+cherrytree
+cifs-utils
+cpulimit
+ddd
+dkms
+edb
+elinks
+fatsort
+fdupes
+filezilla
+gadmin-openvpn-client
+gdb
+gedit
+git
+git-gui
+gitk
+gparted
+htop
+httrack
+iftop
+ike-qtgui
+ionice
+iotop
+ipcalc
+iptraf-ng
+kde-spectacle
+keepass2
+knockd
+lftp
+libav-tools
+libcpan-checksums-perl
+libdigest-crc-perl
+libgeo-ip-perl
+libimage-exiftool-perl
+libreoffice
+libsox-fmt-mp3
+libstring-crc32-perl
+libstring-crc-cksum-perl
+libtool
+links
+linux-headers-`uname -r` ltrace
+lynx
+mc
+mosh
+mtr
+munin
+munin-node
+ncdu
+netcat
+nethogs
+nmap
+ntp-doc
+okular
+onboard
+openssh-blacklist
+openssh-blacklist-extra
+openssh-server
+openvpn
+partimage
+pv
+python3-notify2
+python-notify2
+screen
+smartmontools
+smplayer
+sox
+sshfs
+sshpass
+ssldump
+sslscan
+strace
+supercat
+supercat
+sysfsutils
+system-config-lvm
+tidy
+timelimit
+uswsusp
+vinagre
+virtualenvwrapper
+vlc
+wine
 "
 
-DESKTOP_PKS="
+DESKTOP_PKGS="
 $COMMON_PKGS
+calibre
+encfs
+fbreader
+flashplugin-nonfree
+gnome-system-monitor
+k4dirstat
+kate
+krusader
+parcellite
+qbittorrent
+system-config-lvm
+ubuntu-mate-desktop
+vinagre
+x11vnc
+xine-ui
 "
 
 PENTEST_PKGS="
@@ -77,7 +175,8 @@ elif [ -x /usr/bin/apt-get ]; then
 	CMD="apt "
 	export DEBIAN_FRONTEND=noninteractive
 	apt update
-	apt -y upgrade
+	#myapt upgrade
+	apt upgrade
 fi
 
 install_pkgs() {
@@ -232,7 +331,9 @@ choose_setup() {
 	case $setup_type in
 		pentest) # Will install a nice base pentesting platform, assuming to be running on Kali
 			fix_kali_pg_db
+			# We're going to be root on kali so use 'myapt'
 			install_pkgs "$PENTEST_PKGS"
+			#myapt install "$PENTEST_PKGS"
 			gitclone 'https://github.com/trustedsec/ptf' '' # Add commits for reporting sake etc
 			ptf_install "$PTF_MODULES"
 			hm '+' "Et voila :)"
@@ -245,8 +346,8 @@ choose_setup() {
 			;;
 		desktop) # Will install a generic Mate based desktop environment
 			# Do different stuff
-			echo test
 			install_pkgs "$DESKTOP_PKGS"
+			#myapt install "$DESKTOP_PKGS"
 			;;
 		*) hm '-' "entry not recognised"
 	esac

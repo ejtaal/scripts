@@ -82,7 +82,6 @@ alias watp='watch --differences=permanent -n'
 alias watc='watch --differences=cumulative -n'
 alias x='startx'
 #alias xset-fast-keyboard='xset r rate 200 36'
-alias xset-fast-keyboard="for i in old c new; do [ \$i = c ] && xset r rate 200 37 || xset q | grep 'repeat delay' | xargs echo \$i; done"
 
 # Please no ugly colours from ls:
 alias ls > /dev/null 2>&1 && unalias ls
@@ -515,8 +514,8 @@ find_ssh_agent() {
 			loadsshkeys
 		fi
 	fi
-	ssh-add -l | egrep -q "( |)[0-9][0-9]:" && \
-		{ echo "Connected to ssh agent $SSH_AUTH_SOCK (pid $SSH_AGENT_PID). Keys found:"; ssh-add -l | awk '{ print $3 }'; }
+	ssh-add -l 2> /dev/null | egrep -q "( |)[0-9][0-9]:" && \
+			{ echo "Connected to ssh agent $SSH_AUTH_SOCK (pid $SSH_AGENT_PID). Keys found:"; ssh-add -l | awk '{ print $3 }'; }
 }
 
 ctd() {
@@ -787,10 +786,14 @@ ffdp() {
 	~/.local/share/umake/web/firefox-dev/firefox -P "$1" --new-instance &
 }
 
+xset-fast-keyboard() {
+	for i in old c new; do 
+		[ $i = c ] && xset r rate 200 37 || xset q | grep 'repeat delay' | xargs echo $i
+	done
+}
+
 ### End of subroutines ###
 
-# Set up ssh keys if present
-find_ssh_agent
 
 ### Part 5. Host specific stuff ###
 
@@ -800,7 +803,11 @@ fi
 
 if [ "$NOFUNCS" != 1 ]; then
 	# Lets try the fancy shell out shall we, well, only if it's me
-	if ssh-add -l | egrep -qi "(erik|taal)"; then
+	if { echo $USER $USERNAME; ssh-add -l; } 2> /dev/null | egrep -qi "(erik|taal)"; then
+		echo "Access granted. Welcome Mr.T"
+		# Set up ssh keys if present
+		find_ssh_agent
 		niceprompt
+		xset-fast-keyboard
 	fi
 fi

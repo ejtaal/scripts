@@ -28,12 +28,19 @@
 #################### ### # # # ############################
                      yel b   r (^==.*$)
                      grn b   r (^.*crypt.*$)
-                     grn b   r ^[1-9]:\s*(.*?):.*UP
-                     yel     r ^[1-9]:\s*(.*?):.*DOWN
+                     grn b   r ^[0-9]:\s*(.*?):.*UP
+                     grn b   r inet ([0-9\.\/]+) 
+                     yel     r ^[0-9]:\s*(.*?):.*DOWN
+                     yel     r [0:]:([0-9]+)\s.*LISTEN
                      grn b   r ^0.0.0.0\s*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)
                      red b   r ^(├|└)(.*part /.*)$
                      yel b   r ^(.*\s:\s##.* )(\?\?|A|M)(\s.*$)
                      yel b   r ^(.*\s\[ahead [0-9]+\])
                      grn b   r ^(.*## master...origin/master)$
-#                     yel b   r \s:\s*(A\s.*$)
+                     red b   r (\!)(ping|DNS)
+                     red b   r ^(.*\s+##\s+.*?)\s+M\s+.*)$
+                     cya b   r (##)
+                     yel b   r ^(.*\s##\s.*\s+M\s+.*)$
+                     yel b   r ^(.*\s+\#\#\s*.*?)\s+\?\?\s+.*)$
+                     grn b   r :(OK/OK)
 #                     red b   r (0.0.0.0)
