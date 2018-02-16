@@ -41,7 +41,7 @@ popd
 
 source ~/.bashrc
 
-PRIORITY_PKGS="-y openssh-server git screen htop"
+PRIORITY_PKGS="-y openssh-server git screen htop vim"
 
 # Duff packages: openvas-cli openvas-client openvas-manager openvas-server 
 
@@ -129,7 +129,6 @@ system-config-lvm
 tidy
 timelimit
 uswsusp
-vim
 vinagre
 virtualenvwrapper
 vlc
