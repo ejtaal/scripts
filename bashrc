@@ -41,6 +41,7 @@ alias fixbackspace='reset -e "^?"'
 alias fixbackspace2='stty erase `tput kbs`'
 alias gd='git diff --word-diff=color'
 alias htmltidy='tidy -mi -wrap 100'
+alias hs='history | grep'
 alias killdupes='fdupes -dr .'
 alias ks="dcop `echo $KONSOLE_DCOP_SESSION | sed 's/.*(\(.*\),\(.*\).*)/\1 \2/'` setSize"
 alias la='ls -alF --color=auto'
@@ -778,6 +779,14 @@ get_default_if() {
 
 }
 
+ffp() {
+	firefox -P "$1" --new-instance &
+}
+
+ffdp() {
+	~/.local/share/umake/web/firefox-dev/firefox -P "$1" --new-instance &
+}
+
 ### End of subroutines ###
 
 # Set up ssh keys if present
@@ -791,7 +800,7 @@ fi
 
 if [ "$NOFUNCS" != 1 ]; then
 	# Lets try the fancy shell out shall we, well, only if it's me
-	if ssh-add -l | grep -qi erik; then
+	if ssh-add -l | egrep -qi "(erik|taal)"; then
 		niceprompt
 	fi
 fi
