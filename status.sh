@@ -43,7 +43,7 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	dig +time=2 +short myip.opendns.com @208.67.222.222 #@resolver1.opendns.com
 	echo
 	echo "== GIT info =="
-	for repodir in ~/scripts ~/enc/*/*; do
+	for repodir in ~/scripts ~/repos/*; do
 		if [ -d "$repodir/.git" ]; then
 			pushd "$repodir" > /dev/null
 			echo -n "$repodir "
