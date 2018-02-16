@@ -48,7 +48,7 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 		if [ -d "$repodir/.git" ]; then
 			pushd "$repodir" > /dev/null
 			echo -n "$repodir "
-			git status -sb | xargs
+			git status -sb | xargs | cut -b -40
 			popd > /dev/null
 		fi
 	done
@@ -67,21 +67,21 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	
 	echo
 	echo "== Git info =="
-	for gitdir in /mnt/*-webdav/*meta ~/scripts ~/repos/*; do
-		if [ -d "$gitdir" ]; then
+	for gitdir in ~/scripts ~/repos/*; do
+		if [ -d "$gitdir/.git" ]; then
 			pushd "$gitdir" > /dev/null
 			echo -n "$gitdir : "
 			#fetch remotes if done more than 30 mins ago
 			filename=.git/FETCH_HEAD
 			#$(( (`date +%s` - `stat -L --format %Y $filename`) > (30*60) ))
-			if [ $(date +%s) -lt $((`stat -L --format %Y $filename`+(30*60) )) ]; then
+			if [ -f $filename ] && [ $(date +%s) -lt $((`stat -L --format %Y $filename`+(30*60) )) ]; then
 				git fetch
 			fi
 			#BEHIND_CANFWD=$(git status | egrep 'Your branch is behind.*can be fast-forwarded' | sed -e 's/^.* by /behind by /' -e 's/, and/,/')
 			# Or git rev-list --count master..origin/master / git rev-list --count origin/master..master
 			#  / git status -sb / git branch -vv
 			#echo -n "$BEHIND_CANFWD "
-			git status -sb | xargs | cut -b -80
+			git status -sb | xargs | cut -b -60
 			popd > /dev/null
 		fi
 	done
