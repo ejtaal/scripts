@@ -90,7 +90,7 @@ alias ls > /dev/null 2>&1 && unalias ls
 ### Part 2. Variables ###
 
 # Dynamically build path:
-ADDPATH="/sbin:/usr/sbin:/usr/local/sbin:/usr/X11R6/bin:/usr/local/bin:$HOME/bin:$HOME/scripts:$HOME/quiver/scripts"
+ADDPATH="/sbin:/usr/sbin:/usr/local/sbin:/usr/X11R6/bin:/usr/local/bin:$HOME/bin:$HOME/scripts:$HOME/repos/quiver/scripts"
 #if [ -d "${HOME}/scripts/" ]; then
 #  for dir in `find "${HOME}/scripts/" -type d -regex "[^.]*"`; do
 #    ADDPATH="${ADDPATH}:$dir"
