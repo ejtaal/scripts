@@ -41,7 +41,7 @@ popd
 
 source ~/.bashrc
 
-PRIORITY_PKGS="-y openssh-server git screen htop vim"
+PRIORITY_PKGS="-y openssh-server git screen tmux htop vim"
 
 # Duff packages: openvas-cli openvas-client openvas-manager openvas-server 
 
@@ -161,6 +161,7 @@ ettercap-graphical
 veil-evasion 
 wireshark 
 hostapd
+mate-desktop
 "
 
 FOUND_PKGS=

@@ -8,15 +8,12 @@
 
 update_timeout() {
 	SECS="$1"
-
 }
 
 RUNS_REQUESTED="$1"
 EXIT_REQUESTED=0
 while [ "$EXIT_REQUESTED" = 0 ] ; do
-	clear
-	
-	{
+	#{
 	echo "==== $(date) ===="
 	echo "== Interface info =="
 	# network info
@@ -41,7 +38,9 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 		echo -n 'Portal?'
 	fi
 	echo -n ' External IP: '
-	dig +time=2 +short myip.opendns.com @208.67.222.222 #@resolver1.opendns.com
+	curl ipecho.net/plain;echo
+	#dig +time=2 +short myip.opendns.com @208.67.222.222 #@resolver1.opendns.com
+	echo
 	echo
 	echo "== GIT info =="
 	for repodir in ~/scripts ~/repos/*; do
@@ -109,7 +108,9 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	done
 	echo
 	echo
-	} | spc -c ~/scripts/status.spc
+	#} 2>&1 > /tmp/test.txt
+	#clear
+	#spc -c ~/scripts/status.spc /tmp/test.txt
 	# remote FSes
 	# gits info
 	# backup info
