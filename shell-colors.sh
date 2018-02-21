@@ -133,3 +133,11 @@ for a in {4..10}; do
 	done
 	bright_rainbowify $s
 done
+
+for i in {0..31}; do
+	for j in {0..7}; do
+		k=$((i*8+j))
+		printf "\x1b[38;5;${k}mcolour${k}\x1b[0m "
+	done
+	echo
+done
