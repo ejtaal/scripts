@@ -804,11 +804,13 @@ fi
 
 if [ "$NOFUNCS" != 1 ]; then
 	# Lets try the fancy shell out shall we, well, only if it's me
-	if { echo $USER $USERNAME; ssh-add -l; } 2> /dev/null | egrep -qi "(erik|taal)"; then
+	if { echo $SUDO_USER $USER $USERNAME; ssh-add -l; } 2> /dev/null | egrep -qi "(erik|taal)"; then
 		echo "Access granted. Welcome Mr.T"
 		# Set up ssh keys if present
 		find_ssh_agent
 		niceprompt
-		xset-fast-keyboard
+		if [ -n "$DISPLAY" ]; then
+			xset-fast-keyboard
+		fi
 	fi
 fi
