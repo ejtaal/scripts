@@ -175,9 +175,9 @@ elif [ -x /usr/bin/apt-get ]; then
 	#CMD="apt-get -mV --ignore-missing"
 	CMD="apt "
 	export DEBIAN_FRONTEND=noninteractive
-	apt update
+	apt update || exit 1
 	#myapt upgrade
-	apt upgrade
+	apt upgrade || exit 1
 fi
 
 install_pkgs() {
@@ -191,7 +191,7 @@ install_pkgs() {
 		fi
 	done
 	hm '*' "Now installing following useful packages:" $FOUND_PKGS
-	sudo $CMD install $FOUND_PKGS
+	sudo $CMD install $FOUND_PKGS || exit 1
 }
 	
 install_pkgs "$PRIORITY_PKGS"
@@ -332,8 +332,11 @@ choose_setup() {
 	case $setup_type in
 		pentest) # Will install a nice base pentesting platform, assuming to be running on Kali
 			fix_kali_pg_db
-			# We're going to be root on kali so use 'myapt'
+			systemctl stop packagekit.service
+			systemctl disable packagekit.service
+			sleep 2
 			install_pkgs "$PENTEST_PKGS"
+			# We're going to be root on kali so use 'myapt'
 			#myapt install "$PENTEST_PKGS"
 			gitclone 'https://github.com/trustedsec/ptf' '' # Add commits for reporting sake etc
 			ptf_install "$PTF_MODULES"
