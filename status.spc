@@ -26,21 +26,23 @@
 #2345678901234567890123456789012345678901234567890123456789
 # HTML COLOR         COL A N T STRING or REGULAR EXPRESSION
 #################### ### # # # ############################
-                     yel b   r (^==.*$)
+#                     yel b   r (^==.*$)
                      grn b   r (^.*crypt.*$)
-                     grn b   r ^[0-9]:\s*(.*?):.*UP
+                     grn b   r ^[0-9]:\s*(.*?):.*(UP).*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)
                      grn b   r inet ([0-9\.\/]+) 
                      yel     r ^[0-9]:\s*(.*?):.*DOWN
                      yel     r [0:]:([0-9]+)\s.*LISTEN
                      grn b   r ^0.0.0.0\s*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)
-                     red b   r ^(├|└)(.*part /.*)$
+                     red b   r ^(├|└)(.*\spart\s+/.*)$
+                     grn b   r ^    (├|└)(.*\spart\s+/.*)$
                      yel b   r ^(.*\s:\s##.* )(\?\?|A|M)(\s.*$)
                      yel b   r ^(.*\s\[ahead [0-9]+\])
                      grn b   r ^(.*## master...origin/master)$
                      red b   r (\!)(ping|DNS)
                      red b   r ^(.*\s+##\s+.*?)\s+M\s+.*)$
-                     cya b   r (##)
                      yel b   r ^(.*\s##\s.*\s+M\s+.*)$
                      yel b   r ^(.*\s+\#\#\s*.*?)\s+\?\?\s+.*)$
                      grn b   r :(OK/OK)
+                     grn b   r (WWW: OK)
+#                     cya b   r (##)
 #                     red b   r (0.0.0.0)
