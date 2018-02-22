@@ -284,7 +284,9 @@ fix_kali_pg_db() {
 	echo $PG_PASS
 	#psql -c "CREATE USER admin WITH PASSWORD 'test101';"
 	/etc/init.d/postgresql start
+	# ALTER USER as well in case this scripts runs again and user already exists
 echo "CREATE USER msfdev WITH PASSWORD '$PG_PASS';
+ALTER USER msfdev WITH PASSWORD '$PG_PASS';
 update pg_database set datallowconn = TRUE where datname = 'template0';
 \c template0
 update pg_database set datistemplate = FALSE where datname = 'template1';

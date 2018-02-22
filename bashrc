@@ -444,6 +444,7 @@ niceprompt() {
 # Now launch the statusline in the background
 	#statusline &
 	#write_statusline "[...gathering system information...]"
+	export TERM=xterm-256color
 	#dist_info=$(get_basic_dist_info)
 	get_basic_dist_info
 
@@ -812,6 +813,5 @@ if [ "$NOFUNCS" != 1 ]; then
 		if [ -n "$DISPLAY" ]; then
 			xset-fast-keyboard
 		fi
-		export TERM=xterm-256color
 	fi
 fi
