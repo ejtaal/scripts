@@ -40,6 +40,7 @@ alias ff="find . -name"
 alias fixbackspace='reset -e "^?"'
 alias fixbackspace2='stty erase `tput kbs`'
 alias gd='git diff --word-diff=color'
+alias gamp='git commit -am updates && git push'
 alias htmltidy='tidy -mi -wrap 100'
 alias hs='history | grep'
 alias killdupes='fdupes -dr .'
