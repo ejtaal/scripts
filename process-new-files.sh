@@ -10,9 +10,9 @@ fi
 usage()
 {
   echo
-  echo "Usage: `basename $0` DIR MASK CMD"
+  echo "Usage: `basename $0` DIR FILE_REGEX CMD"
   echo
-  echo "Example: `basename $0` /tmp/ '*.txt' 'rm -f' # Will call rm -f <file> for every *.txt file written/created in /tmp"
+  echo "Example: `basename $0` /tmp/ '.*.txt$' 'rm -f' # Will call rm -f <file> for every .txt file written/created in /tmp"
   echo "       `basename $0` -d(ownload) \$remotefile \$localfile  [\$sshargs]"
   echo
   echo "       current working directory."
