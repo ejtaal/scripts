@@ -72,10 +72,12 @@ htop
 httrack
 iftop
 ike-qtgui
+inotify-tools
 ionice
 iotop
 ipcalc
 iptraf-ng
+kbtin
 kde-spectacle
 keepass2
 knockd
@@ -162,6 +164,7 @@ veil-evasion
 wireshark 
 hostapd
 mate-desktop
+lightdm
 "
 
 FOUND_PKGS=
