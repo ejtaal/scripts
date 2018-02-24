@@ -779,6 +779,10 @@ get_default_if() {
 }
 
 ffp() {
+	if [ -z "$1" ]; then
+		echo "Available profiles:"
+		grep ^Name ~/.mozilla/firefox/profiles.ini | cut -f 2 -d=
+	fi
 	for i in "$@"; do
 		firefox -P "$i" --new-instance &
 	done
