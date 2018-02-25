@@ -8,14 +8,11 @@
 
 update_timeout() {
 	SECS="$1"
-
 }
 
 RUNS_REQUESTED="$1"
 EXIT_REQUESTED=0
 while [ "$EXIT_REQUESTED" = 0 ] ; do
-	clear
-	
 	{
 	echo "==== $(date) ===="
 	echo "== Interface info =="
@@ -23,13 +20,14 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	#ip addr | egrep -v "valid_lft" 
 	ip addr | egrep -v "valid_lft" \
 		| sed -e 's/inet6 \(.*\) scope link/\1/' \
+			-e 's/^\([0-9]: [a-z0-9]*\):/\1/' \
 			-e 's/> mtu.*/>/' \
 			-e 's/ link\/.* \(.*\) brd .*/\1/' \
 			-e 's/inet \(.*\) brd .*/\1/' \
 			-e 's/ scope host .*//' \
 			-e 's/ \+/ /g' \
-			-e 's/<.*,\(UP\),.*>/\1/g' \
-			| awk 'NR%4{printf "%s",$0;next;}1'
+			-e 's/<.*,\(UP\).*>/\1/g' \
+			| awk '/^[0-9]+: / && p{print p;p=""}{p=p $0}END{if(p) print p}'
 	echo
 	echo
 	echo "== Internet/WWW info =="
@@ -41,20 +39,45 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 		echo -n 'Portal?'
 	fi
 	echo -n ' External IP: '
-	dig +time=2 +short myip.opendns.com @208.67.222.222 #@resolver1.opendns.com
+	EXTIP=$(curl ipecho.net/plain 2> /dev/null)
+	EXTDNS=$(dig +time=2 +short -x $EXTIP)
+	EXTDNS=${EXTDNS:-(no dns)}
+	#dig +time=2 +short myip.opendns.com @208.67.222.222 #@resolver1.opendns.com
+	echo "$EXTIP / $EXTDNS"
 	echo
 	echo "== GIT info =="
-	for repodir in ~/scripts ~/repos/*; do
-		if [ -d "$repodir/.git" ]; then
-			pushd "$repodir" > /dev/null
-			echo -n "$repodir "
-			git status -sb | xargs | cut -b -40
-			popd > /dev/null
+#	for repodir in ~/scripts ~/repos/*; do
+#		if [ -d "$repodir/.git" ]; then
+#			pushd "$repodir" > /dev/null
+#			echo -n "$repodir "
+#			git status -sb | xargs | cut -b -60
+#			popd > /dev/null
+#		fi
+#	done
+#	echo
+	echo "== Git info =="
+	for gitdir in ~/scripts ~/repos/*; do
+		if [ -d "$gitdir/.git" ]; then
+			pushd "$gitdir" > /dev/null
+			echo -n "$gitdir : "
+			#fetch remotes if done more than 30 mins ago
+			filename=.git/FETCH_HEAD
+			#$(( (`date +%s` - `stat -L --format %Y $filename`) > (30*60) ))
+			if [ -f $filename ] && [ $(date +%s) -lt $((`stat -L --format %Y $filename`+(30*60) )) ]; then
+				echo git fetch
+			fi
+			#BEHIND_CANFWD=$(git status | egrep 'Your branch is behind.*can be fast-forwarded' | sed -e 's/^.* by /behind by /' -e 's/, and/,/')
+			# Or git rev-list --count master..origin/master / git rev-list --count origin/master..master
+			#  / git status -sb / git branch -vv
+			#echo -n "$BEHIND_CANFWD "
+			git status -sb | xargs | cut -b -60
+			#popd > /dev/null
 		fi
 	done
 	echo
+	echo
 	echo "== Listen info =="
-	netstat -ntulp | grep -i LIST | egrep -v " 127.0.| ::1:"
+	#netstat -ntulp | grep -i LIST | egrep -v " 127.0.| ::1:"
 	echo
 	echo "== Routing info =="
 	route -n
@@ -65,27 +88,6 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	echo "== Disk info =="
 	lsblk -n | egrep -v " disk "
 	
-	echo
-	echo "== Git info =="
-	for gitdir in ~/scripts ~/repos/*; do
-		if [ -d "$gitdir/.git" ]; then
-			pushd "$gitdir" > /dev/null
-			echo -n "$gitdir : "
-			#fetch remotes if done more than 30 mins ago
-			filename=.git/FETCH_HEAD
-			#$(( (`date +%s` - `stat -L --format %Y $filename`) > (30*60) ))
-			if [ -f $filename ] && [ $(date +%s) -lt $((`stat -L --format %Y $filename`+(30*60) )) ]; then
-				git fetch
-			fi
-			#BEHIND_CANFWD=$(git status | egrep 'Your branch is behind.*can be fast-forwarded' | sed -e 's/^.* by /behind by /' -e 's/, and/,/')
-			# Or git rev-list --count master..origin/master / git rev-list --count origin/master..master
-			#  / git status -sb / git branch -vv
-			#echo -n "$BEHIND_CANFWD "
-			git status -sb | xargs | cut -b -60
-			popd > /dev/null
-		fi
-	done
-	echo
 	echo
 	echo "== DNS info =="
 	DNS_SRVS=
@@ -109,7 +111,12 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	done
 	echo
 	echo
-	} | spc -c ~/scripts/status.spc
+	} 2>&1 > /tmp/test.txt
+	cat /tmp/test.txt
+	#cat /tmp/test.txt | spc -c ~/scripts/status.spc
+	#clear
+	#cat /tmp/test.txt
+	#spc -c ~/scripts/status.spc /tmp/test.txt
 	# remote FSes
 	# gits info
 	# backup info

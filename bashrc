@@ -39,7 +39,9 @@ alias er="extract-rpm.sh"
 alias ff="find . -name"
 alias fixbackspace='reset -e "^?"'
 alias fixbackspace2='stty erase `tput kbs`'
-alias gd='git diff --word-diff=color'
+alias gamp='git commit -am updates && git push'
+alias gdw='git diff --word-diff=color'
+alias gds='git diff --numstat | awk '\''{ print "+" $1 " -" $2 " " $3 }'\'
 alias htmltidy='tidy -mi -wrap 100'
 alias hs='history | grep'
 alias killdupes='fdupes -dr .'
@@ -90,7 +92,7 @@ alias ls > /dev/null 2>&1 && unalias ls
 ### Part 2. Variables ###
 
 # Dynamically build path:
-ADDPATH="/sbin:/usr/sbin:/usr/local/sbin:/usr/X11R6/bin:/usr/local/bin:$HOME/bin:$HOME/scripts:$HOME/quiver/scripts"
+ADDPATH="/sbin:/usr/sbin:/usr/local/sbin:/usr/X11R6/bin:/usr/local/bin:$HOME/bin:$HOME/scripts:$HOME/repos/quiver/scripts:$HOME/repos/webdavmeta"
 #if [ -d "${HOME}/scripts/" ]; then
 #  for dir in `find "${HOME}/scripts/" -type d -regex "[^.]*"`; do
 #    ADDPATH="${ADDPATH}:$dir"
@@ -444,6 +446,7 @@ niceprompt() {
 # Now launch the statusline in the background
 	#statusline &
 	#write_statusline "[...gathering system information...]"
+	export TERM=xterm-256color
 	#dist_info=$(get_basic_dist_info)
 	get_basic_dist_info
 
@@ -772,17 +775,15 @@ get_default_if() {
 ###	
 ###	if_gateway_info_bare="| L:$open_ports$open_ports_udp $if_gateway_info"
 ###	if_gateway_info="| L:$boldon$yellowf$open_ports$greenf$open_ports_udp$reset $if_gateway_info"
-	if_gateway_info_bare="$if_gateway_info"
-	if_gateway_info="$if_gateway_info"
 
-	
-	#if_gateway_info_bare="${if_gateway_info_bare} $open_ports $if_gateway_info"
-	#if_gateway_info="| L:$boldon$greenf$open_ports$reset $if_gateway_info"
+	if_gateway_info_bare="$if_gateway_info"
 
 }
 
 ffp() {
-	firefox -P "$1" --new-instance &
+	for i in "$@"; do
+		firefox -P "$i" --new-instance &
+	done
 }
 
 ffdp() {
@@ -806,11 +807,13 @@ fi
 
 if [ "$NOFUNCS" != 1 ]; then
 	# Lets try the fancy shell out shall we, well, only if it's me
-	if { echo $USER $USERNAME; ssh-add -l; } 2> /dev/null | egrep -qi "(erik|taal)"; then
+	if { echo $SUDO_USER $USER $USERNAME; ssh-add -l; } 2> /dev/null | egrep -qi "(erik|taal)"; then
 		echo "Access granted. Welcome Mr.T"
 		# Set up ssh keys if present
 		find_ssh_agent
 		niceprompt
-		xset-fast-keyboard
+		if [ -n "$DISPLAY" ]; then
+			xset-fast-keyboard
+		fi
 	fi
 fi
