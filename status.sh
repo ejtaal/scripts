@@ -13,7 +13,7 @@ update_timeout() {
 RUNS_REQUESTED="$1"
 EXIT_REQUESTED=0
 while [ "$EXIT_REQUESTED" = 0 ] ; do
-	{
+	#{
 	echo "==== $(date) ===="
 	echo "== Interface info =="
 	# network info
@@ -111,8 +111,8 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	done
 	echo
 	echo
-	} 2>&1 > /tmp/test.txt
-	cat /tmp/test.txt
+	#} 2>&1 > /tmp/test.txt
+	#cat /tmp/test.txt
 	#cat /tmp/test.txt | spc -c ~/scripts/status.spc
 	#clear
 	#cat /tmp/test.txt
@@ -143,11 +143,20 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 		RUNS_REQUESTED=$((RUNS_REQUESTED-1))
 	fi
 	SECS=30
-	while [ "$SECS" -gt 0 ]; do
+	INPUT=
+	while [ "$SECS" -gt 0 -a -z "$INPUT" ]; do
 		echo -en "\rRefresh in: $SECS s ...  "
 		SECS=$((SECS-1))
-		sleep 1
+		#sleep 1
+		read -n 1 -t 1 INPUT
 	done
+	#echo INPUT1 = $INPUT
+	if [ -n "$INPUT" ]; then
+		echo -en "\r                                                                    \r"
+		read -ei "$INPUT" -p "Yo... continue: " INPUT
+		echo INPUT2 = $INPUT
+		#exit
+	fi
 	if [ -n "$RUNS_REQUESTED" ]; then
 		if [ "$RUNS_REQUESTED" -lt 1 ]; then
 			echo "This was the last run"
