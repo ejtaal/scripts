@@ -184,36 +184,36 @@ elif [ -x /usr/bin/apt-get ]; then
 fi
 
 install_pkgs() {
-	echo "*" "Finding packages to install..."
+	hm "*" "Finding packages to install..."
 	for i in $1; do
 		if $CHECK_CMD $i 2>&1 | egrep -qv "No packages found"; then
-			echo '+' "Found: $i"
+			hm "+" "Found: $i"
 			FOUND_PKGS="$FOUND_PKGS $i"
 		else
-			echo "-" "Not found: $i"
+			hm "-" "Not found: $i"
 		fi
 	done
-	echo '*' "Now installing following useful packages:" $FOUND_PKGS
+	hm "*" "Now installing following useful packages:" $FOUND_PKGS
 	sudo $CMD install $FOUND_PKGS || exit 1
 }
 	
 install_pkgs "$PRIORITY_PKGS"
-#echo "*" "Finding priority packages to install..."
+#hm "*" "Finding priority packages to install..."
 #ALL_PRIOS_PKG_PRESENT=1
 #for i in $PRIORITY_PKGS; do
 #	if $CHECK_CMD $i 2>&1 | egrep -qv "No packages found" ; then
-#		echo '+' "Found: $i"
+#		hm "+" "Found: $i"
 #		FOUND_PKGS="$FOUND_PKGS $i"
 #	else
-#		echo "-" "Not found: $i"
+#		hm "-" "Not found: $i"
 #		ALL_PRIOS_PKG_PRESENT=0
 #	fi
 #done
 
 #if [ $ALL_PRIOS_PKG_PRESENT = 1 ]; then
-#	echo '+' "Priority packages present and accounted for." $PRIORITY_PKGS
+#	hm "+" "Priority packages present and accounted for." $PRIORITY_PKGS
 #else
-#	echo '*' "Installing priority packages first:" $PRIORITY_PKGS
+#	hm "*" "Installing priority packages first:" $PRIORITY_PKGS
 #	sudo $CMD install $PRIORITY_PKGS
 #fi
 #sudo $CMD install $PRIORITY_PKGS
@@ -223,7 +223,7 @@ gitclone() {
 	commit="$2"
 	bn=$(basename $repo)
 	mkdir -p "$HOME/github" && pushd $HOME/github
-	echo '+' "Cloning $repo ..."
+	hm "+" "Cloning $repo ..."
 	if [ -d "$bn" ]; then
 		cd "$bn" && git pull
 	else
@@ -318,13 +318,13 @@ createdb --owner msfdev msf_test_db  # Create the test database"
 # Production database -- same as dev
 production: &production
   <<: *pgsql" > $HOME/.msf4/database.yml
-	echo \* 'Checking MSF DB connectivity...'
+	hm "*" 'Checking MSF DB connectivity...'
 	msfconsole -qx "db_status; exit"
 }
 
 choose_setup() {
 	if [ -z "$1" ]; then
-		echo '*' 'Choose from the following setups to install a base system:'
+		hm "*" 'Choose from the following setups to install a base system:'
 		grep ' *) #' $0
 		#echo "pentest / desktop"
 		echo -n '=> '
@@ -345,7 +345,7 @@ choose_setup() {
 			#myapt install "$PENTEST_PKGS"
 			gitclone 'https://github.com/trustedsec/ptf' '' # Add commits for reporting sake etc
 			ptf_install "$PTF_MODULES"
-			echo '+' "Et voila :)"
+			hm "+" "Et voila :)"
 			ls -l `find /pentest/ -maxdepth 3 -type f -executable`
 			# Licensed stuff:
 			# Nessus: needs license put in for every new install
@@ -358,7 +358,7 @@ choose_setup() {
 			install_pkgs "$DESKTOP_PKGS"
 			#myapt install "$DESKTOP_PKGS"
 			;;
-		*) echo '-' "entry not recognised"
+		*) hm "-" "entry not recognised"
 	esac
 }
 
