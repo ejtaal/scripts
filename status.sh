@@ -13,7 +13,7 @@ update_timeout() {
 RUNS_REQUESTED="$1"
 EXIT_REQUESTED=0
 while [ "$EXIT_REQUESTED" = 0 ] ; do
-	{
+	#{
 	echo "==== $(date) ===="
 	echo "== Interface info =="
 	# network info
@@ -21,16 +21,17 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	ip addr | egrep -v "valid_lft" \
 		| sed -e 's/inet6 \(.*\) scope link/\1/' \
 			-e 's/^\([0-9]: [a-z0-9]*\):/\1/' \
+			-e 's/> mtu.*state DOWN .*/> DOWN/' \
 			-e 's/> mtu.*/>/' \
 			-e 's/ link\/.* \(.*\) brd .*/\1/' \
 			-e 's/inet \(.*\) brd .*/\1/' \
 			-e 's/ scope host .*//' \
 			-e 's/ \+/ /g' \
 			-e 's/<.*,\(UP\).*>/\1/g' \
+			-e 's/<.*,.*>//g' \
 			| awk '/^[0-9]+: / && p{print p;p=""}{p=p $0}END{if(p) print p}'
 	echo
-	echo
-	echo "== Internet/WWW info =="
+	echo -n "== Internet/WWW info: "
 	PORTALINFO=$(curl -s detectportal.firefox.com/success.txt)
 	echo -n "WWW: "
 	if [ "$PORTALINFO" = "success" ]; then
@@ -44,8 +45,7 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	EXTDNS=${EXTDNS:-(no dns)}
 	#dig +time=2 +short myip.opendns.com @208.67.222.222 #@resolver1.opendns.com
 	echo "$EXTIP / $EXTDNS"
-	echo
-	echo "== GIT info =="
+	echo "== GIT info: "
 #	for repodir in ~/scripts ~/repos/*; do
 #		if [ -d "$repodir/.git" ]; then
 #			pushd "$repodir" > /dev/null
@@ -55,7 +55,6 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 #		fi
 #	done
 #	echo
-	echo "== Git info =="
 	for gitdir in ~/scripts ~/repos/*; do
 		if [ -d "$gitdir/.git" ]; then
 			pushd "$gitdir" > /dev/null
@@ -75,18 +74,20 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 		fi
 	done
 	echo
-	echo
 	echo "== Listen info =="
-	#netstat -ntulp | grep -i LIST | egrep -v " 127.0.| ::1:"
+	netstat -ntulp | grep -i LIST | egrep -v " 127.0.| ::1:"
 	echo
-	echo "== Routing info =="
+	echo "== Routing / FW info =="
 	route -n
+	sysctl net.ipv4.ip_forward
+	sudo iptables -L -t nat | grep -i MASQ
+
 	# Check VPN / TOR / inet connectivity
 	# encrypted FSes
 	
 	echo
 	echo "== Disk info =="
-	lsblk -n | egrep -v " disk "
+	lsblk -n | egrep "part */|SWAP|lvm */|crypt"
 	
 	echo
 	echo "== DNS info =="
@@ -111,8 +112,8 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	done
 	echo
 	echo
-	} 2>&1 > /tmp/test.txt
-	cat /tmp/test.txt
+	#} 2>&1 > /tmp/test.txt
+	#cat /tmp/test.txt
 	#cat /tmp/test.txt | spc -c ~/scripts/status.spc
 	#clear
 	#cat /tmp/test.txt
@@ -143,11 +144,20 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 		RUNS_REQUESTED=$((RUNS_REQUESTED-1))
 	fi
 	SECS=30
-	while [ "$SECS" -gt 0 ]; do
+	INPUT=
+	while [ "$SECS" -gt 0 -a -z "$INPUT" ]; do
 		echo -en "\rRefresh in: $SECS s ...  "
 		SECS=$((SECS-1))
-		sleep 1
+		#sleep 1
+		read -n 1 -t 1 INPUT
 	done
+	#echo INPUT1 = $INPUT
+	if [ -n "$INPUT" ]; then
+		echo -en "\r                                                                    \r"
+		read -ei "$INPUT" -p "Yo... continue: " INPUT
+		echo INPUT2 = $INPUT
+		#exit
+	fi
 	if [ -n "$RUNS_REQUESTED" ]; then
 		if [ "$RUNS_REQUESTED" -lt 1 ]; then
 			echo "This was the last run"
