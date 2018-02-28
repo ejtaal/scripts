@@ -115,6 +115,8 @@ partimage
 pv
 python3-notify2
 python-notify2
+python-pip
+python-setuptools
 screen
 smartmontools
 smplayer

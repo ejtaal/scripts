@@ -13,7 +13,7 @@ update_timeout() {
 RUNS_REQUESTED="$1"
 EXIT_REQUESTED=0
 while [ "$EXIT_REQUESTED" = 0 ] ; do
-	#{
+	{
 	echo "==== $(date) ===="
 	echo "== Interface info =="
 	# network info
@@ -80,7 +80,7 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	echo "== Routing / FW info =="
 	route -n
 	sysctl net.ipv4.ip_forward
-	sudo iptables -L -t nat | grep -i MASQ
+	iptables -L -t nat | grep -i MASQ
 
 	# Check VPN / TOR / inet connectivity
 	# encrypted FSes
@@ -112,6 +112,7 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	done
 	echo
 	echo
+	} 2>&1 | grcat ~/scripts/status.grc
 	#} 2>&1 > /tmp/test.txt
 	#cat /tmp/test.txt
 	#cat /tmp/test.txt | spc -c ~/scripts/status.spc
