@@ -39,8 +39,10 @@ alias er="extract-rpm.sh"
 alias ff="find . -name"
 alias fixbackspace='reset -e "^?"'
 alias fixbackspace2='stty erase `tput kbs`'
-alias gd='git diff --word-diff=color'
 alias gamp='git commit -am updates && git push'
+alias gdw='git diff --word-diff=color'
+alias gs='git status -sb'
+alias gds='git diff --numstat | awk '\''{ print "+" $1 " -" $2 " " $3 }'\'
 alias htmltidy='tidy -mi -wrap 100'
 alias hs='history | grep'
 alias killdupes='fdupes -dr .'
@@ -766,22 +768,26 @@ get_default_if() {
 	fi
 	if_gateway_info="| $if_gateway_info"
 
- ###	open_ports=$(awk '$4 == "0A" { split( $2, fields, ":"); a[strtonum("0x" fields[2])]++ } END { i=1; for (b in a) { SEP = (i++ < length(a) ? " " : "\n"); printf( "%s%s", b, SEP); }}' /proc/net/tcp{,?})
- ###	open_ports_udp=$(awk '$4 == "07" { split( $2, fields, ":"); a[strtonum("0x" fields[2])]++ } END { i=1; for (b in a) { SEP = (i++ < length(a) ? " " : "\n"); printf( "%s%s", b, SEP); }}' /proc/net/udp{,?})
- ###	
- ###	if [ -n "$open_ports_udp" ]; then
- ###		open_ports_udp=" ${open_ports_udp}"
- ###	fi
- ###	
- ###	if_gateway_info_bare="| L:$open_ports$open_ports_udp $if_gateway_info"
- ###	if_gateway_info="| L:$boldon$yellowf$open_ports$greenf$open_ports_udp$reset $if_gateway_info"
+# This is a bit too much info and often spills over
+###	open_ports=$(awk '$4 == "0A" { split( $2, fields, ":"); a[strtonum("0x" fields[2])]++ } END { i=1; for (b in a) { SEP = (i++ < length(a) ? " " : "\n"); printf( "%s%s", b, SEP); }}' /proc/net/tcp{,?})
+###	open_ports_udp=$(awk '$4 == "07" { split( $2, fields, ":"); a[strtonum("0x" fields[2])]++ } END { i=1; for (b in a) { SEP = (i++ < length(a) ? " " : "\n"); printf( "%s%s", b, SEP); }}' /proc/net/udp{,?})
+###	
+###	if [ -n "$open_ports_udp" ]; then
+###		open_ports_udp=" ${open_ports_udp}"
+###	fi
+###	
+###	if_gateway_info_bare="| L:$open_ports$open_ports_udp $if_gateway_info"
+###	if_gateway_info="| L:$boldon$yellowf$open_ports$greenf$open_ports_udp$reset $if_gateway_info"
 
-	
 	if_gateway_info_bare="$if_gateway_info"
 
 }
 
 ffp() {
+	if [ -z "$1" ]; then
+		echo "Available profiles:"
+		grep ^Name ~/.mozilla/firefox/profiles.ini | cut -f 2 -d=
+	fi
 	for i in "$@"; do
 		firefox -P "$i" --new-instance &
 	done
