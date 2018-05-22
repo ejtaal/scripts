@@ -122,6 +122,8 @@ export WORKON_HOME=~/virtualenvs
 
 shopt -s histappend
 shopt -s checkwinsize
+# Disable super annoying broken per-app smarty pants tab completion..Ugh
+shopt -u progcomp
 
 # Fixes tab completion for: $ coolcmd --first-opt=/a/file/name<TAB> -- Hmm not really
 complete -D -o default

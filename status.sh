@@ -10,6 +10,7 @@ update_timeout() {
 	SECS="$1"
 }
 
+FIRSTRUN=1
 RUNS_REQUESTED="$1"
 EXIT_REQUESTED=0
 while [ "$EXIT_REQUESTED" = 0 ] ; do
@@ -40,7 +41,9 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	fi
 	echo -n ' External IP: '
 	EXTIP=$(curl ipecho.net/plain 2> /dev/null)
-	EXTDNS=$(dig +time=2 +short -x $EXTIP)
+	if [ -n "$EXTIP" ]; then
+		EXTDNS=$(dig +time=2 +short -x $EXTIP)
+	fi
 	EXTDNS=${EXTDNS:-(no dns)}
 	#dig +time=2 +short myip.opendns.com @208.67.222.222 #@resolver1.opendns.com
 	echo "$EXTIP / $EXTDNS"
@@ -142,7 +145,14 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 		echo "$RUNS_REQUESTED runs requested"
 		RUNS_REQUESTED=$((RUNS_REQUESTED-1))
 	fi
+
 	SECS=30
+	LAST_TIMECHECK=$TIMECHECK
+	TIMECHECK="$(date +%s)"
+	if [ "$FIRSTRUN" != "1" -a $((TIMECHECK-LAST_TIMECHECK)) -gt $((SECS*2)) ]; then
+		echo "*** SUSPEND DETECTED *** ?"
+		# TODO: stuff like, renew dhcp lease, reset keyboard speed, run ntpdate, ...
+	fi
 	while [ "$SECS" -gt 0 ]; do
 		echo -en "\rRefresh in: $SECS s ...  "
 		SECS=$((SECS-1))
@@ -154,6 +164,7 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 			exit 0
 		fi
 	fi
+	FIRSTRUN=0
 done
 
 
