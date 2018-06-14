@@ -235,11 +235,13 @@ vm_check() {
   elif grep -qi "QEMU Virtual CPU" /proc/cpuinfo; then
     VM_TYPE="QEMU"
 		VM_COLOR="$blackb$purplef"
-	elif [ -f /proc/timer_list ] && grep -qi 'Clock Event Device: xen' /proc/timer_list; then
+	elif [ -r /proc/timer_list ] && grep -qi 'Clock Event Device: xen' /proc/timer_list; then
     VM_TYPE="XEN"
 		VM_COLOR="$whiteb$blackf"
-	elif test -f /proc/bus/input/devices && grep -q VirtualBox /proc/bus/input/devices \
-		|| grep -q "^hd.: VBOX " /var/log/dmesg; then
+	elif [ -r /proc/bus/input/devices ] && grep -q VirtualBox /proc/bus/input/devices; then
+    VM_TYPE="VBOX"
+		VM_COLOR="$bluefb$blackb"
+	elif [ -r /var/log/dmesg ] && grep -q "^hd.: VBOX " /var/log/dmesg; then
     VM_TYPE="VBOX"
 		VM_COLOR="$bluefb$blackb"
 	else
@@ -520,3 +522,30 @@ myapt() {
 		done
 }
 
+rainbowify() {
+	str="$1"
+	rainbow[1]="$boldoff$redf"
+	rainbow[2]="$boldon$redf"
+	rainbow[3]="$boldoff$yellowf"
+	rainbow[4]="$boldon$yellowf"
+	rainbow[5]="$boldoff$greenf"
+	rainbow[6]="$boldon$greenf"
+	rainbow[7]="$boldoff$cyanf"
+	rainbow[8]="$boldon$cyanf"
+	rainbow[9]="$boldon$bluef"
+	rainbow[10]="$boldoff$bluef"
+	rainbow[11]="$boldon$purplef"
+	rainbow[12]="$boldoff$purplef"
+	total=${#rainbow[*]}
+	#echo "[$str]"
+	length=$(echo "$str" | wc -c)
+	for i in {1..12}; do
+		start=$(( (i-1)*length/total+1))
+		end=$(( i*length/total ))
+		#echo "i = $i, start = $start, end = $end"
+		substr=$(echo "$str" | cut -b "$start-$end")
+		#echo -n "$substr "
+		echo -en "${rainbow[i]}${substr}"
+	done
+	echo -e $reset
+}
