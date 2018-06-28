@@ -801,6 +801,24 @@ xset-fast-keyboard() {
 	done
 }
 
+git-convert-url() {
+	if [ -z "$1" ]; then
+		echo "Need argument 'ssh' or https' to convert your repo to"
+	else
+		case "$1" in
+			ssh)
+				echo before:
+				git remote -v
+				SSHURL=$(git remote -v | grep fetch | sed -e 's/.*:\/\///' -e 's/\//:/' | cut -f 1 -d' ')
+				git remote set-url origin "git@${SSHURL}.git"
+				echo after:
+				git remote -v
+				echo "Happy gitting! :)"
+				;;
+		esac
+	fi
+}
+
 ### End of subroutines ###
 
 
