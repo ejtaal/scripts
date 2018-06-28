@@ -512,7 +512,7 @@ loadsshkeys() {
 }
 
 find_ssh_agent() {
-	if [ -n "$SSH_AGENT_PID" ] && grep -q x-session-manager /proc/$SSH_AGENT_PID/cmdline; then
+	if [ -n "$SSH_AGENT_PID" ] && [ -r /proc/$SSH_AGENT_PID/cmdline ] && grep -q x-session-manager /proc/$SSH_AGENT_PID/cmdline; then
 		# Unhelpful, nonfunctioning, script breaking garbage!
 		#unset SSH_AGENT_PID
 		unset SSH_AUTH_SOCK
@@ -520,6 +520,7 @@ find_ssh_agent() {
 	# Check for any available ssh-agents that contains keys:
 	for agent in /tmp/ssh-*/agent.*; do
 		export SSH_AUTH_SOCK=$agent
+		# If loaded keys found then use that agent
 		ssh-add -l | egrep -q "( |)[0-9][0-9]:" && break
 		echo SSH_AUTH_SOCK=$agent
 		ssh-add -l
@@ -528,8 +529,9 @@ find_ssh_agent() {
 	# If no suitable agent was found then run the ssh-agent 
 	# and add my ssh-key(s), but only if we're on a tty (to
 	# stop this popping up before logging in to KDE
+	# and then only if there actually are keys to add
 	if tty > /dev/null 2>&1; then
-		if [ -z "$SSH_AUTH_SOCK" -a -d "$HOME/.ssh/" ]; then
+		if [ -z "$SSH_AUTH_SOCK" -a -d "$HOME/.ssh/" ] && grep -qrl 'PRIVATE KEY' $HOME/.ssh/; then
 			eval $(ssh-agent) > /dev/null
 			unset SSH_ASKPASS
 			loadsshkeys
