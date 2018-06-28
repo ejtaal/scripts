@@ -56,7 +56,7 @@ cifs-utils
 cpulimit
 ddd
 dkms
-edb
+edb-debugger
 elinks
 fatsort
 fdupes
@@ -136,6 +136,8 @@ uswsusp
 vinagre
 virtualenvwrapper
 vlc
+wpagui
+wicd
 wine
 "
 
@@ -145,6 +147,7 @@ calibre
 encfs
 fbreader
 flashplugin-nonfree
+gimp
 gnome-system-monitor
 k4dirstat
 kate
