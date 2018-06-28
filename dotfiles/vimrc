@@ -59,3 +59,4 @@ source ~/.vim/securemodelines.vim
 
 " ttymouse interferes with screen + vim middle mouse click paste
 set ttymouse=
+set nospell
