@@ -100,30 +100,34 @@ ADDPATH="/sbin:/usr/sbin:/usr/local/sbin:/usr/X11R6/bin:/usr/local/bin:$HOME/bin
 #  done
 #fi
 
-export PATH="$PATH:${ADDPATH}"
-export AGENTFILE="/home/taal/.ssh/agent.rc"
-export EDITOR="vim"
-export PAGER="less"
-export PS1_DEFAULT="$PS1"
 #export PS1='\u@\h:\w> '
 #export TERM="linux"
 #unset LS_COLORS
 #eval $(dircolors)
 eval $(dircolors ~/scripts/dircolors.ansi-dark)
+
+export PATH="$PATH:${ADDPATH}"
+export AGENTFILE="/home/taal/.ssh/agent.rc"
+export EDITOR="vim"
+export PAGER="less"
+export PS1_DEFAULT="$PS1"
 # Highlight in green, 32 -\
 export GREP_COLORS='ms=01;32:mc=01;31:sl=:cx=:fn=35:ln=32:bn=32:se=36'
 export HISTCONTROL="ignorespace"
 export HISTFILESIZE=99000
 export HISTSIZE=99000
 export HISTTIMEFORMAT="%Y-%m-%d--%H:%M "
+export LESS='--ignore-case --status-column --LONG-PROMPT --RAW-CONTROL-CHARS --HILITE-UNREAD --tabs=4 --no-init --window=-3'
 export SVKDIFF="/usr/bin/diff -u"
 export STATUSLINE_DELAY=10
-export USERNAME=$(whoami)
 export SUDO_EDITOR='rvim'
+export USERNAME=$(whoami)
 export WORKON_HOME=~/virtualenvs
 
 shopt -s histappend
 shopt -s checkwinsize
+# Disable super annoying broken per-app smarty pants tab completion..Ugh
+shopt -u progcomp
 
 # Fixes tab completion for: $ coolcmd --first-opt=/a/file/name<TAB> -- Hmm not really
 complete -D -o default
@@ -131,9 +135,9 @@ complete -D -o default
 # make less more friendly for non-text input files, see lesspipe(1)
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
-if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
-    . /etc/bash_completion
-fi
+#if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
+#    . /etc/bash_completion
+#fi
 	
 
 ### End of variables ###
@@ -444,6 +448,12 @@ write_statusline() {
 }
 
 niceprompt() {
+	rainbowify "Access granted. Welcome Mr.T_cpdump :)"
+	# Set up ssh keys if present
+	find_ssh_agent
+	if [ -n "$DISPLAY" ]; then
+		xset-fast-keyboard
+	fi
 # Now launch the statusline in the background
 	#statusline &
 	#write_statusline "[...gathering system information...]"
@@ -502,10 +512,17 @@ loadsshkeys() {
 }
 
 find_ssh_agent() {
+	if [ -n "$SSH_AGENT_PID" ] && grep -q x-session-manager /proc/$SSH_AGENT_PID/cmdline; then
+		# Unhelpful, nonfunctioning, script breaking garbage!
+		#unset SSH_AGENT_PID
+		unset SSH_AUTH_SOCK
+	fi
 	# Check for any available ssh-agents that contains keys:
 	for agent in /tmp/ssh-*/agent.*; do
 		export SSH_AUTH_SOCK=$agent
 		ssh-add -l | egrep -q "( |)[0-9][0-9]:" && break
+		echo SSH_AUTH_SOCK=$agent
+		ssh-add -l
 		SSH_AUTH_SOCK=
 	done
 	# If no suitable agent was found then run the ssh-agent 
@@ -519,7 +536,7 @@ find_ssh_agent() {
 		fi
 	fi
 	ssh-add -l 2> /dev/null | egrep -q "( |)[0-9][0-9]:" && \
-			{ echo "Connected to ssh agent $SSH_AUTH_SOCK (pid $SSH_AGENT_PID). Keys found:"; ssh-add -l | awk '{ print $3 }'; }
+			{ echo -n "SSH agent $SSH_AUTH_SOCK ($SSH_AGENT_PID): "; ssh-add -l | awk '{ print $3 }' | xargs; }
 }
 
 ctd() {
@@ -796,9 +813,11 @@ ffdp() {
 }
 
 xset-fast-keyboard() {
-	for i in old c new; do 
-		[ $i = c ] && xset r rate 200 37 || xset q | grep 'repeat delay' | xargs echo $i
-	done
+	delay_rate=$(xset q | grep 'repeat delay' | awk '{ print $4"/"$7 }')
+	[ "$delay_rate" = "200/37" ] && return
+	xset r rate 200 37
+	echo -n "KB delay repeat rate: $delay_rate -> "
+	xset q | grep 'repeat delay' | awk '{ print $4"/"$7 }'
 }
 
 git-convert-url() {
@@ -828,15 +847,10 @@ if [ -f $HOME/.bashrc.local ]; then
 	. $HOME/.bashrc.local
 fi
 
+
 if [ "$NOFUNCS" != 1 ]; then
 	# Lets try the fancy shell out shall we, well, only if it's me
 	if { echo $SUDO_USER $USER $USERNAME; ssh-add -l; } 2> /dev/null | egrep -qi "(erik|taal)"; then
-		echo "Access granted. Welcome Mr.T"
-		# Set up ssh keys if present
-		find_ssh_agent
 		niceprompt
-		if [ -n "$DISPLAY" ]; then
-			xset-fast-keyboard
-		fi
 	fi
 fi

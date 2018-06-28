@@ -56,6 +56,49 @@ bright_rainbowify() {
   echo -e $reset
 }
 
+bright_rainbowify256() {
+  str="$1"
+##### dark purple blue teal green yellow orange red
+rainbow256=( 53 89 125 161 197 
+	198 199 200 201 165 129 93 57 
+	63 69 33 27 21 20 26 32 39 45 51 50 44 43 37 30 29 28 34 40 46 82 
+	118 154 190 226 
+	220 214 208 202 
+	166 130 94 52 88 124 160 196
+	)
+	#for k in ${rainbow256[*]}; do
+	#	/usr/bin/printf "%b%s%b" "\e[38;5;${k}m" "${k}" "\e[0m"
+	#done
+	#echo
+	#for k in ${rainbow256[*]}; do
+	#	/usr/bin/printf "%b%s%b" "\e[38;5;${k}m" "#" "\e[0m"
+	#done
+	#echo
+  
+	total=${#rainbow256[*]}
+  
+	#echo "[$str]"
+  length=$(echo "$str" | wc -c)
+  for i in `seq 1 $total`; do
+    start=$(( (i-1)*length/total+1))
+    end=$(( i*length/total ))
+    #echo "i = $i, start = $start, end = $end"
+		if [ $i = $total ]; then
+			#echo MARK
+			end=
+		fi
+    substr=$(echo "$str" | cut -b "$start-$end")
+		#echo "SUB = [$substr]"
+    #echo -n "$substr "
+    #echo -en "${bright_rainbow[i]}${substr}"
+		j=$((i-1))
+		/usr/bin/printf "%b%s" "\e[38;5;${rainbow256[j]}m" "${substr}" 
+  done
+  echo -e $reset
+}
+bright_rainbowify256 \
+	"Now this is a way cooler way to print some text in a colour spectrum :)"
+
 initializeANSI()
 {
   esc="\e"
@@ -124,7 +167,7 @@ rainbowify "SOMEWHERE OVER THE RAINBOW SOMEWHERE OVER THE RAINBOW SOMEWHERE OVER
 #bright_rainbowify ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 #bright_rainbowify "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 
-for a in {4..10}; do
+for a in 10 20 30; do
 	s=""
 	b=0
 	while [ $b -le $a ]; do
@@ -134,10 +177,25 @@ for a in {4..10}; do
 	bright_rainbowify $s
 done
 
+
 for i in {0..31}; do
 	for j in {0..7}; do
 		k=$((i*8+j))
-		printf "\x1b[38;5;${k}mcolour${k}\x1b[0m "
+		#printf "%b%*s" 12 "\x1b[38;5;${k}mcolour${k}\x1b[0m"
+		#/usr/bin/printf "10. %b%s%b\n" "\e[38;5;11m" "test" "\e[0m"
+		/usr/bin/printf "%b%*s%b" "\e[38;5;${k}m" 14 "colour${k} ### " "\e[0m"
+		#/usr/bin/printf "%b%*s" 12 "\e[38;5;${k}m" "colour${k}\x1b[0m"
+		#if [ $k -lt 10 ]; then
+		#	echo -n '  '
+
+
+		if [ $k -lt 17 -a $(((k+1)%8)) = 0 ]; then
+			echo
+		elif [ $k -gt 16 -a $(((k-15)%6)) = 0 ]; then
+			echo
+		fi
 	done
-	echo
+	#if [ i
+	#echo
 done
+
