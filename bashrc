@@ -60,6 +60,7 @@ alias	np=niceprompt
 alias ntulp='netstat -ntulp'
 alias onp='opera -newpage'
 #alias psf='ps auxwww --forest | less -S'
+alias pcc='ping -c 2 c.cc'
 alias psf='ps -eo user,pid,ni,%cpu,%mem,vsz,tty,stat,lstart,time,args --forest | less -S'
 alias rm='rm -vi'
 alias rpma='rpm -qa --qf "%{n}-%{v}-%{r}.%{arch}\n"'
@@ -517,8 +518,9 @@ find_ssh_agent() {
 		#unset SSH_AGENT_PID
 		unset SSH_AUTH_SOCK
 	fi
-	# Check for any available ssh-agents that contains keys:
-	for agent in /tmp/ssh-*/agent.*; do
+	# Check for any available ssh-agents that contains keys, and try $SSH_AUTH_SOCK 
+	# first because ssh -A sets that. If it's set do we want to load local keys as well? Hmm
+	for agent in $SSH_AUTH_SOCK /tmp/ssh-*/agent.*; do
 		export SSH_AUTH_SOCK=$agent
 		# If loaded keys found then use that agent
 		ssh-add -l | egrep -q "( |)[0-9][0-9]:" && break
