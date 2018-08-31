@@ -60,6 +60,7 @@ alias	np=niceprompt
 alias ntulp='netstat -ntulp'
 alias onp='opera -newpage'
 #alias psf='ps auxwww --forest | less -S'
+alias pcc='ping -c 2 c.cc'
 alias psf='ps -eo user,pid,ni,%cpu,%mem,vsz,tty,stat,lstart,time,args --forest | less -S'
 alias rm='rm -vi'
 alias rpma='rpm -qa --qf "%{n}-%{v}-%{r}.%{arch}\n"'
@@ -512,14 +513,16 @@ loadsshkeys() {
 }
 
 find_ssh_agent() {
-	if [ -n "$SSH_AGENT_PID" ] && grep -q x-session-manager /proc/$SSH_AGENT_PID/cmdline; then
+	if [ -n "$SSH_AGENT_PID" ] && [ -r /proc/$SSH_AGENT_PID/cmdline ] && grep -q x-session-manager /proc/$SSH_AGENT_PID/cmdline; then
 		# Unhelpful, nonfunctioning, script breaking garbage!
 		#unset SSH_AGENT_PID
 		unset SSH_AUTH_SOCK
 	fi
-	# Check for any available ssh-agents that contains keys:
-	for agent in /tmp/ssh-*/agent.*; do
+	# Check for any available ssh-agents that contains keys, and try $SSH_AUTH_SOCK 
+	# first because ssh -A sets that. If it's set do we want to load local keys as well? Hmm
+	for agent in $SSH_AUTH_SOCK /tmp/ssh-*/agent.*; do
 		export SSH_AUTH_SOCK=$agent
+		# If loaded keys found then use that agent
 		ssh-add -l | egrep -q "( |)[0-9][0-9]:" && break
 		echo SSH_AUTH_SOCK=$agent
 		ssh-add -l
@@ -528,8 +531,9 @@ find_ssh_agent() {
 	# If no suitable agent was found then run the ssh-agent 
 	# and add my ssh-key(s), but only if we're on a tty (to
 	# stop this popping up before logging in to KDE
+	# and then only if there actually are keys to add
 	if tty > /dev/null 2>&1; then
-		if [ -z "$SSH_AUTH_SOCK" -a -d "$HOME/.ssh/" ]; then
+		if [ -z "$SSH_AUTH_SOCK" -a -d "$HOME/.ssh/" ] && grep -qrl 'PRIVATE KEY' $HOME/.ssh/; then
 			eval $(ssh-agent) > /dev/null
 			unset SSH_ASKPASS
 			loadsshkeys
@@ -818,6 +822,24 @@ xset-fast-keyboard() {
 	xset r rate 200 37
 	echo -n "KB delay repeat rate: $delay_rate -> "
 	xset q | grep 'repeat delay' | awk '{ print $4"/"$7 }'
+}
+
+git-convert-url() {
+	if [ -z "$1" ]; then
+		echo "Need argument 'ssh' or https' to convert your repo to"
+	else
+		case "$1" in
+			ssh)
+				echo before:
+				git remote -v
+				SSHURL=$(git remote -v | grep fetch | sed -e 's/.*:\/\///' -e 's/\//:/' | cut -f 1 -d' ')
+				git remote set-url origin "git@${SSHURL}.git"
+				echo after:
+				git remote -v
+				echo "Happy gitting! :)"
+				;;
+		esac
+	fi
 }
 
 ### End of subroutines ###

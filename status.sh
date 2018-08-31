@@ -15,6 +15,7 @@ RUNS_REQUESTED="$1"
 EXIT_REQUESTED=0
 while [ "$EXIT_REQUESTED" = 0 ] ; do
 	{
+	COLUMNS=$(tput cols)
 	echo "==== $(date) ===="
 	echo "== Interface info =="
 	# network info
@@ -61,7 +62,6 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	for gitdir in ~/scripts ~/repos/*; do
 		if [ -d "$gitdir/.git" ]; then
 			pushd "$gitdir" > /dev/null
-			echo -n "$gitdir : "
 			#fetch remotes if done more than 30 mins ago
 			filename=.git/FETCH_HEAD
 			#$(( (`date +%s` - `stat -L --format %Y $filename`) > (30*60) ))
@@ -72,7 +72,8 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 			# Or git rev-list --count master..origin/master / git rev-list --count origin/master..master
 			#  / git status -sb / git branch -vv
 			#echo -n "$BEHIND_CANFWD "
-			git status -sb | xargs | cut -b -60
+	#echo HOME = $HOME
+			{ echo -n "$gitdir : "; git status -sb; } | xargs | sed "s|$HOME|~|" | cut -b -$COLUMNS
 			#popd > /dev/null
 		fi
 	done
@@ -83,7 +84,11 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	echo "== Routing / FW info =="
 	route -n
 	sysctl net.ipv4.ip_forward
-	iptables -L -t nat | grep -i MASQ
+	if iptables -L -t nat > /dev/null 2>&1; then
+		iptables -L -t nat | grep -i MASQ
+	else
+		echo "Not root: iptables status unknown"
+	fi
 
 	# Check VPN / TOR / inet connectivity
 	# encrypted FSes
