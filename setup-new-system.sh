@@ -20,7 +20,9 @@ elif [ -f ./generic-linux-funcs.sh ]; then
 	. ./generic-linux-funcs.sh
 fi
 
-~/scripts/setup-dotfiles.sh
+pushd scripts
+./setup-dotfiles.sh
+popd
 
 source ~/.bashrc
 
@@ -183,10 +185,10 @@ install_pkgs() {
 	hm "*" "Finding packages to install..."
 	for i in $1; do
 		if $CHECK_CMD $i 2>&1 | egrep -qv "No packages found"; then
-			hm "+" "Found: $i"
+			hm "+" "Available: $i"
 			FOUND_PKGS="$FOUND_PKGS $i"
 		else
-			hm "-" "Not found: $i"
+			hm "-" "Not available: $i"
 		fi
 	done
 	hm "*" "Now installing following useful packages:" $FOUND_PKGS
