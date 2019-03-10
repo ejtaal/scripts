@@ -39,7 +39,7 @@ alias er="extract-rpm.sh"
 alias ff="find . -name"
 alias fixbackspace='reset -e "^?"'
 alias fixbackspace2='stty erase `tput kbs`'
-alias gamp='git commit -am updates && git push'
+alias gamp='git commit -am updates && git pull && git push'
 alias gdw='git diff --word-diff=color'
 alias gs='git status -sb'
 alias gds='git diff --numstat | awk '\''{ print "+" $1 " -" $2 " " $3 }'\'
