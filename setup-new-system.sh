@@ -20,7 +20,7 @@ elif [ -f ./generic-linux-funcs.sh ]; then
 	. ./generic-linux-funcs.sh
 fi
 
-./setup-dotfiles.sh
+~/scripts/setup-dotfiles.sh
 
 source ~/.bashrc
 
@@ -127,14 +127,20 @@ wine
 DESKTOP_PKGS="
 $COMMON_PKGS
 calibre
+curl
 encfs
 fbreader
 flashplugin-nonfree
 gimp
 gnome-system-monitor
+grc
+hunspell-en-gb
 k4dirstat
 kate
 krusader
+mp3info
+myspell-en-gb
+open-vm-tools-desktop
 parcellite
 qbittorrent
 system-config-lvm
@@ -152,6 +158,8 @@ veil-evasion
 wireshark 
 hostapd
 mate-desktop
+mate-desktop-environment
+mate-desktop-environment-extras
 lightdm
 "
 
