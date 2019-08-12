@@ -10,6 +10,14 @@ update_timeout() {
 	SECS="$1"
 }
 
+if ! which grcat > /dev/null; then
+	echo grcat not found. Install 'grc'.
+	exit 1
+elif ! which curl > /dev/null; then
+	echo curl not found.
+	exit 1
+fi
+
 FIRSTRUN=1
 RUNS_REQUESTED="$1"
 EXIT_REQUESTED=0
@@ -79,7 +87,7 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	done
 	echo
 	echo "== Listen info =="
-	netstat -ntulp | grep -i LIST | egrep -v " 127.0.| ::1:"
+	netstat -ntulp | grep -i LIST | egrep -v " 127.0.| ::1:" | cut -b -$COLUMNS
 	echo
 	echo "== Routing / FW info =="
 	route -n

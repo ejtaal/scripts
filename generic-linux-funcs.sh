@@ -522,6 +522,26 @@ myapt() {
 		done
 }
 
+swap-increase-temp() {
+	if [ "$(id -u)" != 0 ]; then
+		hm - "Not recommended to run this as non-root user"
+		return
+	fi
+	hm \* "Attempting to increase swap by 1 GB"
+	grep -i swap /proc/meminfo
+	SWAPFILE=$(mktemp)
+	dd if=/dev/zero of="$SWAPFILE" bs=1M count=1k
+	chmod 0600 "$SWAPFILE"
+	mkswap "$SWAPFILE"
+	if swapon "$SWAPFILE"; then
+		hm + "Success"
+		grep -i swap /proc/meminfo
+	else
+		hm - "Failed"
+		grep -i swap /proc/meminfo
+	fi
+}
+
 rainbowify() {
 	str="$1"
 	rainbow[1]="$boldoff$redf"

@@ -20,7 +20,9 @@ elif [ -f ./generic-linux-funcs.sh ]; then
 	. ./generic-linux-funcs.sh
 fi
 
+pushd scripts
 ./setup-dotfiles.sh
+popd
 
 source ~/.bashrc
 
@@ -127,14 +129,20 @@ wine
 DESKTOP_PKGS="
 $COMMON_PKGS
 calibre
+curl
 encfs
 fbreader
 flashplugin-nonfree
 gimp
 gnome-system-monitor
+grc
+hunspell-en-gb
 k4dirstat
 kate
 krusader
+mp3info
+myspell-en-gb
+open-vm-tools-desktop
 parcellite
 qbittorrent
 system-config-lvm
@@ -152,6 +160,8 @@ veil-evasion
 wireshark 
 hostapd
 mate-desktop
+mate-desktop-environment
+mate-desktop-environment-extras
 lightdm
 "
 
@@ -175,10 +185,10 @@ install_pkgs() {
 	hm "*" "Finding packages to install..."
 	for i in $1; do
 		if $CHECK_CMD $i 2>&1 | egrep -qv "No packages found"; then
-			hm "+" "Found: $i"
+			hm "+" "Available: $i"
 			FOUND_PKGS="$FOUND_PKGS $i"
 		else
-			hm "-" "Not found: $i"
+			hm "-" "Not available: $i"
 		fi
 	done
 	hm "*" "Now installing following useful packages:" $FOUND_PKGS
