@@ -98,6 +98,7 @@ openssh-server
 openvpn
 partimage
 pv
+pwgen
 python3-notify2
 python-notify2
 python-pip
@@ -129,6 +130,7 @@ wine
 DESKTOP_PKGS="
 $COMMON_PKGS
 calibre
+csvkit
 curl
 encfs
 fbreader

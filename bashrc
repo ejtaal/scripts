@@ -133,6 +133,12 @@ shopt -u progcomp
 # Fixes tab completion for: $ coolcmd --first-opt=/a/file/name<TAB> -- Hmm not really
 complete -D -o default
 
+# Alternative to putting things in .inputrc we can define readline options using 'bind' within bash:
+bind 'set completion-ignore-case On'
+bind 'set completion-map-case On'
+bind 'set completion-prefix-display-length 3'
+
+
 # make less more friendly for non-text input files, see lesspipe(1)
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
@@ -449,7 +455,8 @@ write_statusline() {
 }
 
 niceprompt() {
-	rainbowify "Access granted. Welcome Mr.T_cpdump :)"
+	#rainbowify "Access granted. Welcome Mr.T_cpdump :)"
+	bright_rainbowify256 "Access granted. Welcome Mr.T_cpdump :)"
 	# Set up ssh keys if present
 	find_ssh_agent
 	if [ -n "$DISPLAY" ]; then

@@ -569,3 +569,58 @@ rainbowify() {
 	done
 	echo -e $reset
 }
+
+bright_rainbowify256() {
+  str="$1"
+##### dark purple blue teal green yellow orange red
+rainbow256=( 53 89 125 161 197 
+	198 199 200 201 165 129 93 57 
+	63 69 33 27 21 20 26 32 39 45 51 50 44 43 37 30 29 28 34 40 46 82 
+	118 154 190 226 
+	220 214 208 202 
+	166 130 94 52 88 124 160 196
+	)
+	#for k in ${rainbow256[*]}; do
+	#	/usr/bin/printf "%b%s%b" "\e[38;5;${k}m" "${k}" "\e[0m"
+	#done
+	#echo
+	#for k in ${rainbow256[*]}; do
+	#	/usr/bin/printf "%b%s%b" "\e[38;5;${k}m" "#" "\e[0m"
+	#done
+	#echo
+  
+	total=${#rainbow256[*]}
+  
+	#echo "[$str]"
+  length=$(echo "$str" | wc -c)
+  for i in `seq 1 $total`; do
+    start=$(( (i-1)*length/total+1))
+    end=$(( i*length/total ))
+    #echo "i = $i, start = $start, end = $end"
+		#echo if  $start -gt $end 
+		if [ $start -gt $end ]; then
+			continue
+		fi
+		if [ $i = $total ]; then
+			#echo MARK
+			end=
+		fi
+    substr=$(echo "$str" | cut -b "$start-$end")
+		#echo "SUB = [$substr]"
+    #echo -n "$substr "
+    #echo -en "${bright_rainbow[i]}${substr}"
+		j=$((i-1))
+		/usr/bin/printf "%b%s" "\e[38;5;${rainbow256[j]}m" "${substr}" 
+  done
+  echo -e $reset
+}
+
+tm() {
+	TMUX_SESSION="$1"
+	if ! tmux att -t $TMUX_SESSION; then
+		hm \! "Couldn't find tmux session '$TMUX_SESSION'"
+		hm \* "Starting it ..."
+		sleep 2
+		tmux new -s $TMUX_SESSION
+	fi
+}

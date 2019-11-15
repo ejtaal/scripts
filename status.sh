@@ -57,35 +57,6 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 	EXTDNS=${EXTDNS:-(no dns)}
 	#dig +time=2 +short myip.opendns.com @208.67.222.222 #@resolver1.opendns.com
 	echo "$EXTIP / $EXTDNS"
-	echo "== GIT info: "
-#	for repodir in ~/scripts ~/repos/*; do
-#		if [ -d "$repodir/.git" ]; then
-#			pushd "$repodir" > /dev/null
-#			echo -n "$repodir "
-#			git status -sb | xargs | cut -b -60
-#			popd > /dev/null
-#		fi
-#	done
-#	echo
-	for gitdir in ~/scripts ~/repos/*; do
-		if [ -d "$gitdir/.git" ]; then
-			pushd "$gitdir" > /dev/null
-			#fetch remotes if done more than 30 mins ago
-			filename=.git/FETCH_HEAD
-			#$(( (`date +%s` - `stat -L --format %Y $filename`) > (30*60) ))
-			if [ -f $filename ] && [ $(date +%s) -lt $((`stat -L --format %Y $filename`+(30*60) )) ]; then
-				echo git fetch
-			fi
-			#BEHIND_CANFWD=$(git status | egrep 'Your branch is behind.*can be fast-forwarded' | sed -e 's/^.* by /behind by /' -e 's/, and/,/')
-			# Or git rev-list --count master..origin/master / git rev-list --count origin/master..master
-			#  / git status -sb / git branch -vv
-			#echo -n "$BEHIND_CANFWD "
-	#echo HOME = $HOME
-			{ echo -n "$gitdir : "; git status -sb; } | xargs | sed "s|$HOME|~|" | cut -b -$COLUMNS
-			#popd > /dev/null
-		fi
-	done
-	echo
 	echo "== Listen info =="
 	netstat -ntulp | grep -i LIST | egrep -v " 127.0.| ::1:" | cut -b -$COLUMNS
 	echo
@@ -127,6 +98,46 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 		echo -n ' '
 	done
 	echo
+	echo
+	echo "== GIT info: "
+#	for repodir in ~/scripts ~/repos/*; do
+#		if [ -d "$repodir/.git" ]; then
+#			pushd "$repodir" > /dev/null
+#			echo -n "$repodir "
+#			git status -sb | xargs | cut -b -60
+#			popd > /dev/null
+#		fi
+#	done
+#	echo
+	for gitdir in ~/scripts ~/repos/*; do
+		if [ -d "$gitdir/.git" ]; then
+			pushd "$gitdir" > /dev/null
+			#fetch remotes if done more than 30 mins ago
+			filename=.git/FETCH_HEAD
+			#$(( (`date +%s` - `stat -L --format %Y $filename`) > (30*60) ))
+			if [ -f $filename ] && [ $(date +%s) -lt $((`stat -L --format %Y $filename`+(30*60) )) ]; then
+				echo git fetch
+			fi
+			#BEHIND_CANFWD=$(git status | egrep 'Your branch is behind.*can be fast-forwarded' | sed -e 's/^.* by /behind by /' -e 's/, and/,/')
+			# Or git rev-list --count master..origin/master / git rev-list --count origin/master..master
+			#  / git status -sb / git branch -vv
+			#echo -n "$BEHIND_CANFWD "
+	#echo HOME = $HOME
+			git_config=.git/config
+			git_location='??'
+			if egrep -q "url.*@github.com" $git_config; then
+				git_location='GH '
+			elif egrep -q "url.*@.*azure.com:" $git_config; then
+				git_location='AZ '
+			elif egrep -q "url.*keybase://" $git_config; then
+				git_location='KB '
+			elif egrep -q "url.*/encfs/" $git_config; then
+				git_location='ENC'
+			fi
+			{ echo -n "$git_location $gitdir : "; git status -sb; } | xargs | sed "s|$HOME|~|" | cut -b -$COLUMNS
+			#popd > /dev/null
+		fi
+	done
 	echo
 	} 2>&1 | grcat ~/scripts/status.grc
 	#} 2>&1 > /tmp/test.txt
