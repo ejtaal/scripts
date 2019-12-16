@@ -53,6 +53,7 @@ alias ll='ls -lF --color=auto'
 alias l.='ls -dalF --color=auto .[^.]*'
 alias lt='ls -lartF --color=auto'
 alias lat='ls -latF --color=auto'
+alias md=mkdir
 alias mp3i='mp3info -x -ra -p "%-30F %6k kb  %02mm:%02ss  %.1r kbs  %q kHz  %o  mpg %.1v layer %L\n"'
 alias mv='mv -vi'
 alias ncat='ncat -v'

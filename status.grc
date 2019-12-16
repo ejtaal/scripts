@@ -54,7 +54,7 @@ regexp=[0:]:([0-9]+)\s.*LISTEN
 #regexp=^[0-9]:\s*(.*?).*(UP).*?([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)
 colours=none,bold yellow
 =======
-regexp=^(.*\s:\s##.* )(\?\?|A|M|R)(\s.*$)
+regexp=^(.*\s:\s##.* )(\?\?|A|M|R|D)(\s.*$)
 #regexp=^[0-9]:\s*(.*?).*(UP).*?([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)
 colours=none,bold yellow,bold red
 =======

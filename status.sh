@@ -116,7 +116,7 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 			filename=.git/FETCH_HEAD
 			#$(( (`date +%s` - `stat -L --format %Y $filename`) > (30*60) ))
 			if [ -f $filename ] && [ $(date +%s) -lt $((`stat -L --format %Y $filename`+(30*60) )) ]; then
-				echo git fetch
+				echo "$0 was thinking of doing 'git fetch'..."
 			fi
 			#BEHIND_CANFWD=$(git status | egrep 'Your branch is behind.*can be fast-forwarded' | sed -e 's/^.* by /behind by /' -e 's/, and/,/')
 			# Or git rev-list --count master..origin/master / git rev-list --count origin/master..master
@@ -131,6 +131,8 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 				git_location='AZ '
 			elif egrep -q "url.*keybase://" $git_config; then
 				git_location='KB '
+			elif egrep -q "url.*tilaa1:git" $git_config; then
+				git_location='TL'
 			elif egrep -q "url.*/encfs/" $git_config; then
 				git_location='ENC'
 			fi

@@ -144,6 +144,7 @@ kate
 krusader
 mp3info
 myspell-en-gb
+odt2txt
 open-vm-tools-desktop
 parcellite
 qbittorrent
