@@ -383,7 +383,9 @@ hm() {
 		'*') color="$cyanfb";;
 	esac
 	shift
-	echo -e "${color}[${icon}] $@${reset}"
+	echo -en "${color}[${icon}] "
+	echo -n "$@"
+	echo -e "${reset}"
 	
 }
 
