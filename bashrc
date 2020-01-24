@@ -108,8 +108,16 @@ ADDPATH="/sbin:/usr/sbin:/usr/local/sbin:/usr/X11R6/bin:/usr/local/bin:$HOME/bin
 #eval $(dircolors)
 eval $(dircolors ~/scripts/dircolors.ansi-dark)
 
-export PATH="$PATH:${ADDPATH}"
 export AGENTFILE="/home/taal/.ssh/agent.rc"
+
+# Check for WSL:
+if [ -x "$(which powershell.exe 2> /dev/null)" ]; then
+	if "$(which powershell.exe)" 'ps' | grep -q Xming; then
+		# Yay, got Xming
+		DISPLAY=0:0
+	fi
+fi
+
 export EDITOR="vim"
 export PAGER="less"
 export PS1_DEFAULT="$PS1"
@@ -120,6 +128,7 @@ export HISTFILESIZE=99000
 export HISTSIZE=99000
 export HISTTIMEFORMAT="%Y-%m-%d--%H:%M "
 export LESS='--ignore-case --status-column --LONG-PROMPT --RAW-CONTROL-CHARS --HILITE-UNREAD --tabs=4 --no-init --window=-3'
+export PATH="$PATH:${ADDPATH}"
 export SVKDIFF="/usr/bin/diff -u"
 export STATUSLINE_DELAY=10
 export SUDO_EDITOR='rvim'

@@ -244,6 +244,10 @@ vm_check() {
 	elif [ -r /var/log/dmesg ] && grep -q "^hd.: VBOX " /var/log/dmesg; then
     VM_TYPE="VBOX"
 		VM_COLOR="$bluefb$blackb"
+	elif uname -r | grep -q Microsoft; then
+		# Pigs can finally fly, it's 2019 and we have M$ Linux O_O
+    VM_TYPE="WSL"
+		VM_COLOR="$whitefb$blueb"
 	else
 		for i in /sys/devices/virtual/dmi/id/product_name /proc/scsi/scsi; do
 			if [ -f $i ] && grep -qi "VMware" $i; then
@@ -383,7 +387,9 @@ hm() {
 		'*') color="$cyanfb";;
 	esac
 	shift
-	echo -e "${color}[${icon}] $@${reset}"
+	echo -en "${color}[${icon}] "
+	echo -n "$@"
+	echo -e "${reset}"
 	
 }
 
