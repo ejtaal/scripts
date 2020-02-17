@@ -626,7 +626,7 @@ tm() {
 	if ! tmux att -t $TMUX_SESSION; then
 		hm \! "Couldn't find tmux session '$TMUX_SESSION'"
 		hm \* "Starting it ..."
-		sleep 2
+		sleep 1
 		tmux new -s $TMUX_SESSION
 	fi
 }

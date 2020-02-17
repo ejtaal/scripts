@@ -109,3 +109,4 @@ set statusline+=\ [%b][0x%B]\               " ASCII and byte code under cursor
 
 autocmd BufReadPost,FileReadPost,BufNewFile,BufEnter * call system("tmux rename-window " . expand("%:t"))
 
+set number

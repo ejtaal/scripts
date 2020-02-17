@@ -127,7 +127,7 @@ export HISTCONTROL="ignorespace"
 export HISTFILESIZE=99000
 export HISTSIZE=99000
 export HISTTIMEFORMAT="%Y-%m-%d--%H:%M "
-export LESS='--ignore-case --status-column --LONG-PROMPT --RAW-CONTROL-CHARS --HILITE-UNREAD --tabs=4 --no-init --window=-3'
+export LESS='--ignore-case --LONG-PROMPT --RAW-CONTROL-CHARS --HILITE-UNREAD --tabs=4 --no-init --window=-3'
 export PATH="$PATH:${ADDPATH}"
 export SVKDIFF="/usr/bin/diff -u"
 export STATUSLINE_DELAY=10
@@ -147,7 +147,7 @@ complete -D -o default
 bind 'set completion-ignore-case On'
 bind 'set completion-map-case On'
 bind 'set completion-prefix-display-length 3'
-
+bind 'set mark-symlinked-directories on'
 
 # make less more friendly for non-text input files, see lesspipe(1)
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
