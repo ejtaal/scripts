@@ -30,12 +30,54 @@ PRIORITY_PKGS="-y openssh-server git screen tmux htop vim"
 
 # Duff packages: openvas-cli openvas-client openvas-manager openvas-server 
 
+# For WSL and/or lean server installs we could suffice with just cmd line apps:
+CMDLINE_PKGS="
+automake
+build-essential
+clinfo
+cryptcat
+dc
+expect
+fdupes
+firefox
+g++
+gcc-mingw-w64-x86-64
+gnupg
+grc
+htop
+ipcalc
+john
+libc6-dev
+lynx links links2
+man-db
+mc
+mosh
+multitail
+nmap
+p7zip-full
+perl-doc
+perldoc
+pv
+pwgen
+python3-numpy
+python-numpy
+r-base-core
+sshpass
+ssldump
+sslscan
+strace
+supercat
+tidy
+timelimit
+unzip
+win-iconv-mingw-w64-dev
+"
+
 COMMON_PKGS="
+$CMDLINE_PKGS
 apmd
 autofs
-automake
 bmon
-build-essential
 cherrytree
 cifs-utils
 cpulimit
@@ -44,7 +86,6 @@ dkms
 edb-debugger
 elinks
 fatsort
-fdupes
 filezilla
 gadmin-openvpn-client
 gdb
@@ -80,15 +121,12 @@ libtool
 links
 linux-headers-`uname -r` ltrace
 lynx
-mc
-mosh
 mtr
 munin
 munin-node
 ncdu
 netcat
 nethogs
-nmap
 ntp-doc
 okular
 onboard
@@ -97,8 +135,6 @@ openssh-blacklist-extra
 openssh-server
 openvpn
 partimage
-pv
-pwgen
 python3-notify2
 python-notify2
 python-pip
@@ -108,16 +144,8 @@ smartmontools
 smplayer
 sox
 sshfs
-sshpass
-ssldump
-sslscan
-strace
-supercat
-supercat
 sysfsutils
 system-config-lvm
-tidy
-timelimit
 uswsusp
 vinagre
 virtualenvwrapper
@@ -358,6 +386,10 @@ choose_setup() {
 			# Do different stuff
 			install_pkgs "$DESKTOP_PKGS"
 			#myapt install "$DESKTOP_PKGS"
+			;;
+		wsl|server|lean) # Will install a generic Mate based desktop environment
+			# Do different stuff
+			install_pkgs "$CMDLINE_PKGS"
 			;;
 		*) hm "-" "entry not recognised"
 	esac
