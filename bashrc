@@ -149,6 +149,7 @@ bind 'set completion-ignore-case On'
 bind 'set completion-map-case On'
 bind 'set completion-prefix-display-length 3'
 bind 'set mark-symlinked-directories on'
+bind 'set bell-style none'
 
 # make less more friendly for non-text input files, see lesspipe(1)
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
