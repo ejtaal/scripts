@@ -83,6 +83,7 @@ alias supernice='ionice -c 3 nice'
 alias vanish="kill -9 $$"
 alias vimhtml='vim -c ":se ft=html"'
 alias vimphp='vim -c ":se ft=php"'
+alias vless="vim -R -c 'nmap q :q!<CR>' -c 'nmap r :e<CR>'"
 alias watp='watch --differences=permanent -n'
 alias watc='watch --differences=cumulative -n'
 alias x='startx'
