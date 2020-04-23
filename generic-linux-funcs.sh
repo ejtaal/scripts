@@ -247,6 +247,8 @@ vm_check() {
 	elif uname -r | grep -q Microsoft; then
 		# Pigs can finally fly, it's 2019 and we have M$ Linux O_O
     VM_TYPE="WSL"
+		# Windows home path seems to leak through the $PATH
+		WINDOWS_HOME=$(echo $PATH | sed 's#.*:\(/mnt/c/Users/[^/]*\)/.*#\1#')
 		VM_COLOR="$whitefb$blueb"
 	else
 		for i in /sys/devices/virtual/dmi/id/product_name /proc/scsi/scsi; do
