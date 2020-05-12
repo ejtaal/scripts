@@ -599,6 +599,7 @@ rainbow256=( 53 89 125 161 197
   
 	#echo "[$str]"
   length=$(echo "$str" | wc -c)
+	print_str=
   for i in `seq 1 $total`; do
     start=$(( (i-1)*length/total+1))
     end=$(( i*length/total ))
@@ -616,8 +617,10 @@ rainbow256=( 53 89 125 161 197
     #echo -n "$substr "
     #echo -en "${bright_rainbow[i]}${substr}"
 		j=$((i-1))
+		#print_str="${print_str}\e[38;5;${rainbow256[j]}m${substr}"
 		/usr/bin/printf "%b%s" "\e[38;5;${rainbow256[j]}m" "${substr}" 
   done
+	#echo -en "${print_str}"
   echo -e $reset
 }
 
