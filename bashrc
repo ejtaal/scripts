@@ -824,7 +824,12 @@ get_default_if() {
 ffp() {
 	if [ -z "$1" ]; then
 		echo "Available profiles:"
-		grep ^Name ~/.mozilla/firefox/profiles.ini | cut -f 2 -d=
+		FF_PROFILE=~/.mozilla/firefox/profiles.ini
+		if [ "$VM_TYPE" = "WSL" ]; then
+			# Look in windows profiles:
+			FF_PROFILE="$WINDOWS_HOME/AppData/Roaming/Mozilla/Firefox/profiles.ini"
+		fi
+		grep ^Name "$FF_PROFILE" | cut -f 2 -d=
 	fi
 	for i in "$@"; do
 		firefox -P "$i" --new-instance &
