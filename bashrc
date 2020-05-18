@@ -366,7 +366,11 @@ prompt_command() {
 		#current=$(cat $i/current_now)
 		status=$(cat $i/status)
 		#perc=$((current*100/full))
-		cap=$(cat $i/capacity)
+		if [ -f $i/capacity ]; then
+			cap=$(cat $i/capacity)
+		else
+			cap=1
+		fi
 		if [ "$status" = 'Discharging' ]; then
 			bat_color="${yellowf}"
 			if [ "${cap}" -le 20 ]; then
