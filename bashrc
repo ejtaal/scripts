@@ -446,6 +446,10 @@ prompt_command() {
   	#echo -ne "\033k$SCREENTITLE\033\134";
   	echo -ne "\033k$SCREENTITLE\033\\";
 	fi
+	if [ -n "$TMUX_PANE" ]; then
+		TMUX_PANE_TITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/')
+		tmux rename-window "$TMUX_PANE_TITLE"
+	fi
 }
 
 statusline() {
