@@ -41,6 +41,7 @@ alias er="extract-rpm.sh"
 alias ff="find . -name"
 alias fixbackspace='reset -e "^?"'
 alias fixbackspace2='stty erase `tput kbs`'
+alias fixvmwarehgfs='vmhgfs-fuse .host:/ /mnt/hgfs/ -o allow_other -o uid=1000'
 alias gamp='git commit -am updates && git pull && git push'
 alias gdw='git diff --word-diff=color'
 alias gs='git status -sb'
@@ -448,6 +449,7 @@ prompt_command() {
 	fi
 	if [ -n "$TMUX_PANE" ]; then
 		TMUX_PANE_TITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/')
+		#ps h -o cmd -q $PPID | grep script
 		tmux rename-window "$TMUX_PANE_TITLE"
 	fi
 }
@@ -914,6 +916,14 @@ git-convert-url() {
 				;;
 		esac
 	fi
+}
+
+set-dhcp-lease-forever() {
+	IF=$1
+	ip addr show dev $IF
+	echo "Setting interface $IF's IP to permanently valid"
+	sudo ip addr change $(ip ad show dev $IF | grep -Po "(?<=inet )(\S+)") dev $IF valid_lft forever preferred_lft forever
+	ip addr show dev $IF
 }
 
 ### End of subroutines ###
