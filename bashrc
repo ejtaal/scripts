@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # My .bashrc full of magical bash wizardry...well sort of.
 # Depends on: generic-linux-funcs.sh
 
@@ -39,6 +41,7 @@ alias er="extract-rpm.sh"
 alias ff="find . -name"
 alias fixbackspace='reset -e "^?"'
 alias fixbackspace2='stty erase `tput kbs`'
+alias fixvmwarehgfs='vmhgfs-fuse .host:/ /mnt/hgfs/ -o allow_other -o uid=1000'
 alias gamp='git commit -am updates && git pull && git push'
 alias gdw='git diff --word-diff=color'
 alias gs='git status -sb'
@@ -364,7 +367,11 @@ prompt_command() {
 		#current=$(cat $i/current_now)
 		status=$(cat $i/status)
 		#perc=$((current*100/full))
-		cap=$(cat $i/capacity)
+		if [ -f $i/capacity ]; then
+			cap=$(cat $i/capacity)
+		else
+			cap=1
+		fi
 		if [ "$status" = 'Discharging' ]; then
 			bat_color="${yellowf}"
 			if [ "${cap}" -le 20 ]; then
@@ -439,6 +446,11 @@ prompt_command() {
 		SCREENTITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/')
   	#echo -ne "\033k$SCREENTITLE\033\134";
   	echo -ne "\033k$SCREENTITLE\033\\";
+	fi
+	if [ -n "$TMUX_PANE" ]; then
+		TMUX_PANE_TITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/')
+		#ps h -o cmd -q $PPID | grep script
+		tmux rename-window "$TMUX_PANE_TITLE"
 	fi
 }
 
@@ -822,18 +834,58 @@ get_default_if() {
 }
 
 ffp() {
-	if [ -z "$1" ]; then
-		echo "Available profiles:"
-		FF_PROFILE=~/.mozilla/firefox/profiles.ini
-		if [ "$VM_TYPE" = "WSL" ]; then
-			# Look in windows profiles:
-			FF_PROFILE="$WINDOWS_HOME/AppData/Roaming/Mozilla/Firefox/profiles.ini"
-		fi
-		grep ^Name "$FF_PROFILE" | cut -f 2 -d=
+	FF_PROFILE_INI=~/.mozilla/firefox/profiles.ini
+	FF_EXE=/usr/bin/firefox
+	if [ "$VM_TYPE" = "WSL" ]; then
+		# Look in windows profiles:
+		FF_PROFILE_INI="$WINDOWS_HOME/AppData/Roaming/Mozilla/Firefox/profiles.ini"
+		FF_EXE="/mnt/c/Program Files/Mozilla Firefox/firefox.exe"
 	fi
+	FF_PROFILE_DIR="$(dirname $FF_PROFILE_INI)"
+	if [ -z "$1" ]; then
+		echo "Available profiles ( in $FF_PROFILE_INI ) :"
+		#grep ^Name "$FF_PROFILE_INI" | cut -f 2 -d=
+		egrep '^(Name|Path)' "$FF_PROFILE_INI" | xargs -n 2 | tr -d '\r' | sed -e "s#Path=\\(.*\\)#$FF_PROFILE_DIR/\\1#" -e 's/ /\t - /'
+		echo "Now launching the FF profile editor for you..."
+		"${FF_EXE}" -P &
+		return
+		# Don't make a backup now
+	fi
+
+	RECENT_FF_BACKUPS=$(find $FF_PROFILE_DIR -maxdepth 1 -name 'ff-sessions*gz' -mmin -60)
+	if [ -z "$RECENT_FF_BACKUPS" ]; then
+		echo "No recent backups of FF sessions found."
+		echo "While we're here, let's back up all FF profile sessions, just in case, stand by..."
+
+	# And after losing yet another FF session due to the way it saves (or rather doesn't save) a recent
+	# record of session files, I'm finally implementing something to stop that hopefully ever happening again.
+	# $ cat sessionCheckpoints.json (after normal shutdown (session not set to restore))
+	# {"profile-after-change":true,"final-ui-startup":true,"sessionstore-windows-restored":true,"quit-application-granted":true,"quit-application":true,"sessionstore-final-state-write-complete":true,"profile-change-net-teardown":true,"profile-change-teardown":true,"profile-before-change":true}
+	# $ cat sessionCheckpoints.json (while running)
+	# {"profile-after-change":true,"final-ui-startup":true,"sessionstore-windows-restored":true}
+	#
+	# Also, interestingly, an "empty" FF profile dir only contains this file:
+	# $ cat test/times.json
+	# {"created":1589449611997,"firstUse":1589449650455}
+
+
+		tar vczf "$FF_PROFILE_DIR/ff-sessions-$(date +%Y%m%d-%H%M).tar.gz" \
+			$FF_PROFILE_DIR/*/session* \
+			$FF_PROFILE_DIR/*/*/session* \
+		# So to restore an arbitrary session, one appears to need to copy "sessionstore.jsonlz4" back into
+		# place from either the file with the same name, or from sessionstore-backup/recovery.jsonlz4, 
+		# and modify sessionCheckpoints.json to the running version above. Then FF will start with
+		# the button asking if you wish to restore your session, et voila, your session is reborn.
+	else
+		echo "Recent backups of FF sessions found :)"
+		find $FF_PROFILE_DIR -maxdepth 1 -name 'ff-sessions*gz' -mmin -60
+	fi
+
+	# And now start FF, just in case the files get screwed up during startup
 	for i in "$@"; do
-		firefox -P "$i" --new-instance &
+		"${FF_EXE}" -P "$i" --new-instance &
 	done
+	
 }
 
 ffdp() {
@@ -864,6 +916,14 @@ git-convert-url() {
 				;;
 		esac
 	fi
+}
+
+set-dhcp-lease-forever() {
+	IF=$1
+	ip addr show dev $IF
+	echo "Setting interface $IF's IP to permanently valid"
+	sudo ip addr change $(ip ad show dev $IF | grep -Po "(?<=inet )(\S+)") dev $IF valid_lft forever preferred_lft forever
+	ip addr show dev $IF
 }
 
 ### End of subroutines ###
