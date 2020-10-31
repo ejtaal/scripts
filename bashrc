@@ -72,6 +72,7 @@ alias rpma='rpm -qa --qf "%{n}-%{v}-%{r}.%{arch}\n"'
 alias rlsql='/usr/local/wmfs/scripts/rlsql.sh'
 #alias sagi="sudo apt-get install"
 alias sagi="sudo apt install"
+alias save-tmux-buffer='tmux capture-pane -peJ -S -'
 alias se='start-electrolysis.sh'
 alias sf='start-firefox.sh'
 alias smbmplayer='mplayer -cache 10000 -framedrop'
