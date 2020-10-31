@@ -66,6 +66,7 @@ alias onp='opera -newpage'
 #alias psf='ps auxwww --forest | less -S'
 alias pcc='ping -c 2 c.cc'
 alias psf='ps -eo user,pid,ni,%cpu,%mem,vsz,tty,stat,lstart,time,args --forest | less -S'
+alias remove-ansi-codes="sed 's/\\x1b\\[[0-9;]*m//g'"
 alias rm='rm -vi'
 alias rpma='rpm -qa --qf "%{n}-%{v}-%{r}.%{arch}\n"'
 alias rlsql='/usr/local/wmfs/scripts/rlsql.sh'
