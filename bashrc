@@ -44,7 +44,7 @@ alias fixbackspace2='stty erase `tput kbs`'
 alias fixvmwarehgfs='vmhgfs-fuse .host:/ /mnt/hgfs/ -o allow_other -o uid=1000'
 alias gamp='git commit -am updates && git pull && git push'
 alias gdw='git diff --word-diff=color'
-alias gs='git status -sb'
+alias gs='echo "Staged diff:"; git --no-pager diff --staged --stat; echo "Current diff:"; git --no-pager diff --stat; echo "Status:"; git --no-pager status -sb'
 alias gds='git diff --numstat | awk '\''{ print "+" $1 " -" $2 " " $3 }'\'
 alias htmltidy='tidy -mi -wrap 100'
 alias hs='history | grep'
@@ -838,12 +838,22 @@ get_default_if() {
 ffp() {
 	FF_PROFILE_INI=~/.mozilla/firefox/profiles.ini
 	FF_EXE=/usr/bin/firefox
+	FF_PROFILE_DIR="$(dirname $FF_PROFILE_INI)"
+
+	# Called via niceprompt() -> get-basic-sysinfo() but we need it here if used by itself
+	vm_check
 	if [ "$VM_TYPE" = "WSL" ]; then
 		# Look in windows profiles:
 		FF_PROFILE_INI="$WINDOWS_HOME/AppData/Roaming/Mozilla/Firefox/profiles.ini"
 		FF_EXE="/mnt/c/Program Files/Mozilla Firefox/firefox.exe"
+		FF_PROFILE_DIR="$(dirname $FF_PROFILE_INI)/Profiles"
+	elif [ "$VM_TYPE" = "MINGW" ]; then
+		# Look in windows profiles:
+		FF_PROFILE_INI="$HOME/AppData/Roaming/Mozilla/Firefox/profiles.ini"
+		FF_EXE="/c/Program Files/Mozilla Firefox/firefox.exe"
+		FF_PROFILE_DIR="$(dirname $FF_PROFILE_INI)/Profiles"
 	fi
-	FF_PROFILE_DIR="$(dirname $FF_PROFILE_INI)"
+	
 	if [ -z "$1" ]; then
 		echo "Available profiles ( in $FF_PROFILE_INI ) :"
 		#grep ^Name "$FF_PROFILE_INI" | cut -f 2 -d=
@@ -885,6 +895,18 @@ ffp() {
 
 	# And now start FF, just in case the files get screwed up during startup
 	for i in "$@"; do
+		# Try to set FF sync device name and nightly tester title bar correctly:
+		# Hmm nightly tester config is stored in sqlite. Bummer dude.
+		PREFSJS="$(dirname $FF_PROFILE_INI)/$(egrep -iA 3 "^Name=${i}" "$FF_PROFILE_INI" | grep ^Path | cut -f 2 -d'=' | tr -d '\r\n')/prefs.js"
+		ls -la "${PREFSJS}"*
+		if [ -r "${PREFSJS}" ]; then
+			echo "Updating FF sync debice name..."
+			perl -pi.bak -e \
+				"s/identity.fxaccounts.account.device.name\",.*\$/identity.fxaccounts.account.device.name\", \"${i} @ $HOSTNAME\");/" \
+				"${PREFSJS}"
+		fi
+		ls -la "${PREFSJS}"*
+		echo "Launching FireFox profile '$i'... "
 		"${FF_EXE}" -P "$i" --new-instance &
 	done
 	

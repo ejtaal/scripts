@@ -244,12 +244,18 @@ vm_check() {
 	elif [ -r /var/log/dmesg ] && grep -q "^hd.: VBOX " /var/log/dmesg; then
     VM_TYPE="VBOX"
 		VM_COLOR="$bluefb$blackb"
-	elif uname -r | grep -q Microsoft; then
+	elif uname -r | grep -qi Microsoft; then
 		# Pigs can finally fly, it's 2019 and we have M$ Linux O_O
     VM_TYPE="WSL"
 		# Windows home path seems to leak through the $PATH
 		WINDOWS_HOME=$(echo $PATH | sed 's#.*:\(/mnt/c/Users/[^/]*\)/.*#\1#')
 		VM_COLOR="$whitefb$blueb"
+	elif uname -s | grep -q MINGW64; then
+		# Either Git Bash or Msys
+    VM_TYPE="MINGW"
+		# No need to set this as $HOME etc is available correctly
+		#WINDOWS_HOME=$(echo $PATH | sed 's#.*:\(/mnt/c/Users/[^/]*\)/.*#\1#')
+		VM_COLOR="$redfb$blackb"
 	else
 		for i in /sys/devices/virtual/dmi/id/product_name /proc/scsi/scsi; do
 			if [ -f $i ] && grep -qi "VMware" $i; then
