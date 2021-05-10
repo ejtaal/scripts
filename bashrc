@@ -50,7 +50,9 @@ alias htmltidy='tidy -mi -wrap 100'
 alias hs='history | grep'
 alias killdupes='fdupes -dr .'
 alias ks="dcop `echo $KONSOLE_DCOP_SESSION | sed 's/.*(\(.*\),\(.*\).*)/\1 \2/'` setSize"
-alias la='ls -alF --color=auto'
+#alias la='ls -alF --color=auto'
+# Thanks WSL for not allowing to choose word separation symbols!
+alias la='ls -al --color=auto'
 alias lac='ls -alF --color=auto'
 alias ll='ls -lF --color=auto'
 alias l.='ls -dalF --color=auto .[^.]*'
@@ -491,7 +493,7 @@ niceprompt() {
 # Now launch the statusline in the background
 	#statusline &
 	#write_statusline "[...gathering system information...]"
-	export TERM=xterm-256color
+	#export TERM=xterm-256color
 	#dist_info=$(get_basic_dist_info)
 	get_basic_dist_info
 
