@@ -862,7 +862,8 @@ git-convert-url() {
 				echo before:
 				git remote -v
 				SSHURL=$(git remote -v | grep fetch | sed -e 's/.*:\/\///' -e 's/\//:/' | cut -f 1 -d' ')
-				git remote set-url origin "git@${SSHURL}.git"
+				echo "git remote set-url origin git@${SSHURL}"
+				git remote set-url origin "git@${SSHURL}"
 				echo after:
 				git remote -v
 				echo "Happy gitting! :)"
