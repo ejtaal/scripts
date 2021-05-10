@@ -420,7 +420,7 @@ niceprompt() {
 # Now launch the statusline in the background
 	#statusline &
 	#write_statusline "[...gathering system information...]"
-	export TERM=xterm-256color
+	#export TERM=xterm-256color
 	#dist_info=$(get_basic_dist_info)
 	get_basic_dist_info
 
