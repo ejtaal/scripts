@@ -22,83 +22,10 @@ fi
 umask 022
 
 ### Part 1. aliases ###
-alias 2dos='perl -pi -e "s#([^\r]*?)\n#\$1\r\n#"'
-# maybe better one?: perl -pi -e "s#([^\x0D]*?)\0A#\$1\0D\x0A#"
-alias 2unix="perl -pi -e 's/\r//'"
-alias agi="apt-get install"
-alias ags='apt-get install $(apt-show-versions -u -b | grep security)'
-alias acs="apt-cache search"
-alias as="aptitude show"
-alias bzless='{ bzcat | less; } <'
-alias c='for i in {1..$LINES}; do echo; done; clear'
-alias cls='cd; for i in {1..$LINES}; do echo; done; clear'
-alias cp='cp -vip'
-alias d='du -csk -- * .[^.]*'
-alias ds='du -csk -- * .[^.]* | sort -n'
-alias dh='du -csk -- * .[^.]* | sort -n | while read size fname; do for unit in k M G T P E Z Y; do if [ $size -lt 1024 ]; then echo -e "${size}${unit}\t${fname}"; break; fi; size=$((size/1024)); done; done'
-alias ds='du -csk -- * .[^.]* | sort -n'
-alias er="extract-rpm.sh"
-alias ff="find . -name"
-alias fixbackspace='reset -e "^?"'
-alias fixbackspace2='stty erase `tput kbs`'
-alias fixvmwarehgfs='vmhgfs-fuse .host:/ /mnt/hgfs/ -o allow_other -o uid=1000'
-alias gamp='git commit -am updates && git pull && git push'
-alias gdw='git diff --word-diff=color'
-alias gs='echo "Staged diff:"; git --no-pager diff --staged --stat; echo "Current diff:"; git --no-pager diff --stat; echo "Status:"; git --no-pager status -sb'
-alias gds='git diff --numstat | awk '\''{ print "+" $1 " -" $2 " " $3 }'\'
-alias htmltidy='tidy -mi -wrap 100'
-alias hs='history | grep'
-alias killdupes='fdupes -dr .'
-alias ks="dcop `echo $KONSOLE_DCOP_SESSION | sed 's/.*(\(.*\),\(.*\).*)/\1 \2/'` setSize"
-#alias la='ls -alF --color=auto'
-# Thanks WSL for not allowing to choose word separation symbols!
-alias la='ls -al --color=auto'
-alias lac='ls -alF --color=auto'
-alias ll='ls -lF --color=auto'
-alias l.='ls -dalF --color=auto .[^.]*'
-alias lt='ls -lartF --color=auto'
-alias lat='ls -latF --color=auto'
-alias md=mkdir
-alias mp3i='mp3info -x -ra -p "%-30F %6k kb  %02mm:%02ss  %.1r kbs  %q kHz  %o  mpg %.1v layer %L\n"'
-alias mv='mv -vi'
-alias ncat='ncat -v'
-alias	np=niceprompt
-alias ntulp='netstat -ntulp'
-alias onp='opera -newpage'
-#alias psf='ps auxwww --forest | less -S'
-alias pcc='ping -c 2 c.cc'
-alias psf='ps -eo user,pid,ni,%cpu,%mem,vsz,tty,stat,lstart,time,args --forest | less -S'
-alias remove-ansi-codes="sed 's/\\x1b\\[[0-9;]*m//g'"
-alias rm='rm -vi'
-alias rpma='rpm -qa --qf "%{n}-%{v}-%{r}.%{arch}\n"'
-alias rlsql='/usr/local/wmfs/scripts/rlsql.sh'
-#alias sagi="sudo apt-get install"
-alias sagi="sudo apt install"
-alias save-tmux-buffer='tmux capture-pane -peJ -S -'
-alias se='start-electrolysis.sh'
-alias sf='start-firefox.sh'
-alias smbmplayer='mplayer -cache 10000 -framedrop'
-# This is getting more and more in the way:
-#alias su='su -m'
-alias svnid='svn propset svn:keywords Id'
-alias svnex='svn propset svn:executable 1'
-alias svkid='svk propset svn:keywords Id'
-alias svkex='svk propset svn:executable 1'
-alias svnign='svn propset svn:ignore'
-alias spaces2underscores='for a in *\ *; do mv -vi "$a" ${a// /_}; done'
-alias supernice='ionice -c 3 nice'
-alias vanish="kill -9 $$"
-alias vimhtml='vim -c ":se ft=html"'
-alias vimphp='vim -c ":se ft=php"'
-alias vless="vim -R -c 'nmap q :q!<CR>' -c 'nmap r :e<CR>'"
-alias watp='watch --differences=permanent -n'
-alias watc='watch --differences=cumulative -n'
-alias x='startx'
-#alias xset-fast-keyboard='xset r rate 200 36'
-
-# Please no ugly colours from ls:
-alias ls > /dev/null 2>&1 && unalias ls
-### End of aliases ###
+# Now exported externally due to popular proliferation of zsh. Oh it's not so bad.
+if [ -r ~/.common_sh_funcs ]; then
+	. ~/.common_sh_funcs
+fi
 
 ### Part 2. Variables ###
 
