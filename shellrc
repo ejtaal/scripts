@@ -795,9 +795,9 @@ find_ssh_agent() {
 	for agent in $SSH_AUTH_SOCK /tmp/ssh-*/agent.*; do
 		export SSH_AUTH_SOCK=$agent
 		# If loaded keys found then use that agent
-		ssh-add -l | egrep -q "( |)[0-9][0-9]:" && break
-		echo SSH_AUTH_SOCK=$agent
-		ssh-add -l
+		ssh-add -l 2> /dev/null | egrep -q "( |)[0-9][0-9]:" && break
+		#echo SSH_AUTH_SOCK=$agent
+		#ssh-add -l
 		SSH_AUTH_SOCK=
 	done
 	# If no suitable agent was found then run the ssh-agent 
@@ -815,10 +815,12 @@ find_ssh_agent() {
 			{ echo -n "SSH agent $SSH_AUTH_SOCK ($SSH_AGENT_PID): "; ssh-add -l | awk '{ print $3 }' | xargs; }
 }
 
-ctd() {
-	sudo tcpdump "$@" \
-		| tcpdump-colorize.pl
-}
+# There's an actual CTD now :)
+# github.com/ejtaal/colorful-tcpdump
+# ctd() {
+#	sudo tcpdump "$@" \
+#		| tcpdump-colorize.pl
+#}
 
 vdiff() {
 	TMPDIFF="/tmp/vdiff-$USER-diff.$$"
