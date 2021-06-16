@@ -197,11 +197,6 @@ set_zshellisms() {
 	    zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 	fi
 	
-	# some more ls aliases
-	alias ll='ls -l'
-	alias la='ls -A'
-	alias l='ls -CF'
-	
 	# enable auto-suggestions based on the history
 	if [ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
 	    . /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
@@ -250,10 +245,6 @@ set_bashisms() {
 		fi
 	fi
 }
-
-
-# My .bashrc full of magical bash wizardry...well sort of.
-# Depends on: generic-linux-funcs.sh
 
 
 if [ -f ~/scripts/generic-linux-funcs.sh ]; then
@@ -417,7 +408,7 @@ normalprompt() {
 # The preexec stuff here allows you to set a variable
 # before a command starts. I use it to set a timestamp
 # so we can calc how long a command ran.
-preexec () { 
+bash_preexec () { 
 	# Show system info only after first command has finished.
 #	if [ "$BASH_SHOW_SYSINFO" = "0" ]; then
 #		BASH_SHOW_SYSINFO=1
@@ -447,7 +438,7 @@ preexec () {
 preexec_invoke_exec () {
     [ -n "$COMP_LINE" ] && return  # do nothing if completing
     local this_command=`history 1 | sed -e "s/^[ ]*[0-9]*[ ]*[0-9:\-]*[ ]*//g"`;
-    preexec "$this_command"
+    bash_preexec "$this_command"
 		
 }
 
