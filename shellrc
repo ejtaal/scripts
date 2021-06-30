@@ -18,6 +18,7 @@ set_zshellisms() {
 	setopt notify              # report the status of background jobs immediately
 	setopt numericglobsort     # sort filenames numerically when it makes sense
 	setopt promptsubst         # enable command substitution in prompt
+	setopt no_auto_remove_slash # stop removing slashes, you silly shell
 	
 	WORDCHARS=${WORDCHARS//\/} # Don't consider certain characters part of the word
 	
@@ -207,6 +208,15 @@ set_zshellisms() {
 			. /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 			# change suggestion color
 			ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#999'
+	fi
+
+	if [ -r ~/.zsh-plugins/zsh-tmux-auto-title.plugin.zsh ]; then
+		source ~/.zsh-plugins/zsh-tmux-auto-title.plugin.zsh
+		DISABLE_AUTO_TITLE=true
+		ZSH_TMUX_AUTO_TITLE_TARGET=window
+		ZSH_TMUX_AUTO_TITLE_EXPAND_ALIASES=false
+		ZSH_TMUX_AUTO_TITLE_IDLE_TEXT="%pwd"
+		ZSH_TMUX_AUTO_TITLE_SHORT=true
 	fi
 # ----8<----8<----8<----8<----8<--
 }
