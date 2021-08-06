@@ -841,6 +841,7 @@ vdiff() {
 
   MINPLUS=$(diff -u ${R} ${B} "$1" "$2" | grep "^[-+]" | grep -v "^---\|^+++" | cut -b 1 | sort | uniq -c | xargs echo)
   echo "# $MINPLUS" > "$TMPDIFF"
+	chmod 0600 "$TMPDIFF"
   echo "# diff -u ${R} ${B} " >> "$TMPDIFF"
   diff -u ${R} ${B} "$1" "$2" >> "$TMPDIFF"
   echo '# vim:ft=diff:syntax=diff' >> "$TMPDIFF"
@@ -1211,6 +1212,15 @@ viewlocate() {
 		locate $1
 		view `locate $1 | head -1`
 	fi
+}
+
+venv() {
+	VENV_BASE=~/venvs/
+	VENV_NAME="$1"
+	if [ ! -d "$VENV_BASE/$VENV_NAME" ]; then
+		virtualenv "$VENV_BASE/$VENV_NAME"
+	fi
+	source "$VENV_BASE/$VENV_NAME/bin/activate"
 }
 
 
