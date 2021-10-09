@@ -641,3 +641,19 @@ tm() {
 		tmux new -s $TMUX_SESSION
 	fi
 }
+
+file_older_than_mins() {
+	file="$1"
+	age="$2"
+
+	if [ ! -r "$file" ]; then
+		return 0
+	else
+		if [ "$(find "$file" -not -mmin "+$age" | wc -l)" = 0 ]; then
+			return 0
+		else
+			return 1
+		fi
+	fi
+	return 0
+}
