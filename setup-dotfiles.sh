@@ -5,14 +5,17 @@
 echo "  Installing dot files ..."
 
 cd
-if [ -L ~/.bashrc ]; then
-	echo "Bashrc seems already installed:"
-	ls -l ~/.bashrc
-else
-	mv -v ~/.bashrc ~/.bashrc.bak
-	ln -s ~/scripts/bashrc ~/.bashrc
-	echo "New bashrc installed"
-fi
+
+for rcfile in ~/.bashrc ~/.zshrc; do
+	if [ -L $rcfile ]; then
+		echo "~/$(basename $rcfile) seems already installed:"
+		ls -l $rcfile
+	else
+		mv -v $rcfile $rcfile.bak
+		ln -s ~/scripts/shellrc $rcfile
+		echo "New ~/$(basename $rcfile) installed"
+	fi
+done
 
 pushd ~/scripts/dotfiles
 for i in *; do

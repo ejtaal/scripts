@@ -1,6 +1,13 @@
 #!/bin/bash
 
-# Usage: $0 <project_name> <cmd_to_run> [<argument1>] ...
+usage() {
+	echo "Usage: $0 <project_name> <cmd_to_run> [<argument1>] ..."
+	exit 1
+}
+
+if [ -z "$2" ]; then
+	usage
+fi
 
 WHAT="$1"
 shift
