@@ -249,6 +249,11 @@ vm_check() {
     VM_TYPE="WSL"
 		# Windows home path seems to leak through the $PATH
 		WINDOWS_HOME=$(echo $PATH | sed 's#.*:\(/mnt/c/Users/[^/]*\)/.*#\1#')
+		
+		if [ ! -L ~/WinHome ]; then
+			ln -vs $WINDOWS_HOME ~/WinHome
+		fi
+
 		VM_COLOR="$whitefb$blueb"
 	elif uname -s | grep -q MINGW64; then
 		# Either Git Bash or Msys
