@@ -1214,15 +1214,6 @@ viewlocate() {
 	fi
 }
 
-venv() {
-	VENV_BASE=~/venvs/
-	VENV_NAME="$1"
-	if [ ! -d "$VENV_BASE/$VENV_NAME" ]; then
-		virtualenv "$VENV_BASE/$VENV_NAME"
-	fi
-	source "$VENV_BASE/$VENV_NAME/bin/activate"
-}
-
 
 ### End of subroutines ###
 

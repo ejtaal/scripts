@@ -662,3 +662,27 @@ file_older_than_mins() {
 	fi
 	return 0
 }
+
+download_if_not_older(){
+	file="$1"
+	age="$2"
+	url="$3"
+	if file_older_than_mins "$file" "$age"; then
+		echo "-> $file seems old, downloading current version..."
+		wget -O "$file" "$url"
+	else
+		echo "-> $file seems up to date (modified in the last $age mins)."
+	fi
+	ls -l "$file"
+}
+
+
+venv() {
+	VENV_BASE=~/venvs/
+	VENV_NAME="$1"
+	if [ ! -d "$VENV_BASE/$VENV_NAME" ]; then
+		virtualenv "$VENV_BASE/$VENV_NAME"
+	fi
+	source "$VENV_BASE/$VENV_NAME/bin/activate"
+}
+
