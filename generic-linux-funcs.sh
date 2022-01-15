@@ -686,3 +686,17 @@ venv() {
 	source "$VENV_BASE/$VENV_NAME/bin/activate"
 }
 
+cmd_repeat() {
+	count="$1"
+	shift
+
+	if [ ! "$count" -gt 0 ]; then
+		echo "usage: cmd_repeat NUM COMMAND [ARG1 [ARG2 [...]]]"
+		echo "e.g.:  cmd_repeat 5 sleep 1"
+		return
+	fi
+	for cmd_repeat_count in $(seq 1 "$count"); do
+		echo "$(date) - cmd_repeat() $cmd_repeat_count/$count: $*"
+		"$@"
+	done
+}
