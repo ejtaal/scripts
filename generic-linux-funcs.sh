@@ -249,6 +249,11 @@ vm_check() {
     VM_TYPE="WSL"
 		# Windows home path seems to leak through the $PATH
 		WINDOWS_HOME=$(echo $PATH | sed 's#.*:\(/mnt/c/Users/[^/]*\)/.*#\1#')
+		
+		if [ ! -L ~/WinHome ]; then
+			ln -vs $WINDOWS_HOME ~/WinHome
+		fi
+
 		VM_COLOR="$whitefb$blueb"
 	elif uname -s | grep -q MINGW64; then
 		# Either Git Bash or Msys
@@ -656,4 +661,42 @@ file_older_than_mins() {
 		fi
 	fi
 	return 0
+}
+
+download_if_not_older(){
+	file="$1"
+	age="$2"
+	url="$3"
+	if file_older_than_mins "$file" "$age"; then
+		echo "-> $file seems old, downloading current version..."
+		wget -O "$file" "$url"
+	else
+		echo "-> $file seems up to date (modified in the last $age mins)."
+	fi
+	ls -l "$file"
+}
+
+
+venv() {
+	VENV_BASE=~/venvs/
+	VENV_NAME="$1"
+	if [ ! -d "$VENV_BASE/$VENV_NAME" ]; then
+		virtualenv "$VENV_BASE/$VENV_NAME"
+	fi
+	source "$VENV_BASE/$VENV_NAME/bin/activate"
+}
+
+cmd_repeat() {
+	count="$1"
+	shift
+
+	if [ ! "$count" -gt 0 ]; then
+		echo "usage: cmd_repeat NUM COMMAND [ARG1 [ARG2 [...]]]"
+		echo "e.g.:  cmd_repeat 5 sleep 1"
+		return
+	fi
+	for cmd_repeat_count in $(seq 1 "$count"); do
+		echo "$(date) - cmd_repeat() $cmd_repeat_count/$count: $*"
+		"$@"
+	done
 }
