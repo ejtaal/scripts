@@ -19,6 +19,7 @@ set_zshellisms() {
 	setopt numericglobsort     # sort filenames numerically when it makes sense
 	setopt promptsubst         # enable command substitution in prompt
 	setopt no_auto_remove_slash # stop removing slashes, you silly shell
+	setopt NO_HUP              # Disown background processes so they are not killed if the parent zsh is killed
 	
 	WORDCHARS=${WORDCHARS//\/} # Don't consider certain characters part of the word
 	
