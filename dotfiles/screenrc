@@ -25,6 +25,8 @@
 
 #defflow on # will force screen to process ^S/^Q
 deflogin on
+# should remove the error of "Utmp slot not found" after panel closure
+deflogin off
 #autodetach off
 
 # turn visual bell on
