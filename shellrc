@@ -299,6 +299,7 @@ alias fixbackspace='reset -e "^?"'
 alias fixbackspace2='stty erase `tput kbs`'
 alias fixvmwarehgfs='vmhgfs-fuse .host:/ /mnt/hgfs/ -o allow_other -o uid=1000'
 alias gamp='git commit -am updates && git pull && git push'
+alias gd='git diff --color-moved --color-moved-ws=allow-indentation-change --minimal'
 alias gdw='git diff --word-diff=color'
 alias gs='echo "Staged diff:"; git --no-pager diff --staged --stat; echo "Current diff:"; git --no-pager diff --stat; echo "Status:"; git --no-pager status -sb'
 alias gds='git diff --numstat | awk '\''{ print "+" $1 " -" $2 " " $3 }'\'
@@ -1162,6 +1163,7 @@ ffp() {
   fi
 
   # And now start FF, just in case the files get screwed up during startup
+	last=${@: -1}
   for i in "$@"; do
     # Try to set FF sync device name and nightly tester title bar correctly:
     # Hmm nightly tester config is stored in sqlite. Bummer dude.
@@ -1176,6 +1178,10 @@ ffp() {
     ls -la "${PREFSJS}"*
     echo "Launching FireFox profile '$i'... "
     "${FF_EXE}" -P "$i" --new-instance &
+		if [ "$i" != "$last" ]; then
+			echo "Waiting 60s before launching another"
+			sleep 60
+		fi
   done
   
 }
