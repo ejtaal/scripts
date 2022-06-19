@@ -246,7 +246,8 @@ set_bashisms() {
   
   # Alternative to putting things in .inputrc we can define readline options using 'bind' within bash:
   bind 'set completion-ignore-case On'
-  bind 'set completion-map-case On'
+	# Don't add -/_ to your case mappings index
+  bind 'set completion-map-case Off'
   bind 'set completion-prefix-display-length 3'
   bind 'set mark-symlinked-directories on'
   bind 'set bell-style none'
