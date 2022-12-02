@@ -250,7 +250,7 @@ vm_check() {
 		# Windows home path seems to leak through the $PATH
 		WINDOWS_HOME=$(echo $PATH | sed 's#.*:\(/mnt/c/Users/[^/]*\)/.*#\1#')
 		
-		if [ ! -L ~/WinHome ]; then
+		if [ ! -L ~/WinHome -a -d "$WINDOWS_HOME" ]; then
 			ln -vs $WINDOWS_HOME ~/WinHome
 		fi
 

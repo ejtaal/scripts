@@ -1109,6 +1109,7 @@ ffp() {
   FF_PROFILE_INI=~/.mozilla/firefox/profiles.ini
   FF_EXE=/usr/bin/firefox
   FF_PROFILE_DIR="$(dirname $FF_PROFILE_INI)"
+	THIS_IS_WINDOWS=0
 
   # Called via niceprompt() -> get-basic-sysinfo() but we need it here if used by itself
   vm_check
@@ -1117,11 +1118,13 @@ ffp() {
     FF_PROFILE_INI="$WINDOWS_HOME/AppData/Roaming/Mozilla/Firefox/profiles.ini"
     FF_EXE="/mnt/c/Program Files/Mozilla Firefox/firefox.exe"
     FF_PROFILE_DIR="$(dirname $FF_PROFILE_INI)/Profiles"
+		THIS_IS_WINDOWS=1
   elif [ "$VM_TYPE" = "MINGW" ]; then
     # Look in windows profiles:
     FF_PROFILE_INI="$HOME/AppData/Roaming/Mozilla/Firefox/profiles.ini"
     FF_EXE="/c/Program Files/Mozilla Firefox/firefox.exe"
     FF_PROFILE_DIR="$(dirname $FF_PROFILE_INI)/Profiles"
+		THIS_IS_WINDOWS=1
   fi
   
   if [ -z "$1" ]; then
@@ -1133,6 +1136,7 @@ ffp() {
     return
     # Don't make a backup now
   fi
+	FF_EXE_ORIGINAL="${FF_EXE}"
 
   RECENT_FF_BACKUPS=$(find $FF_PROFILE_DIR -maxdepth 1 -name 'ff-sessions*gz' -mmin -60)
   if [ -z "$RECENT_FF_BACKUPS" ]; then
@@ -1163,6 +1167,7 @@ ffp() {
     find $FF_PROFILE_DIR -maxdepth 1 -name 'ff-sessions*gz' -mmin -60
   fi
 
+	cd "$(dirname "$FF_EXE")"
   # And now start FF, just in case the files get screwed up during startup
 	last=${@: -1}
   for i in "$@"; do
@@ -1171,12 +1176,24 @@ ffp() {
     PREFSJS="$(dirname $FF_PROFILE_INI)/$(egrep -iA 3 "^Name=${i}" "$FF_PROFILE_INI" | grep ^Path | cut -f 2 -d'=' | tr -d '\r\n')/prefs.js"
     ls -la "${PREFSJS}"*
     if [ -r "${PREFSJS}" ]; then
-      echo "Updating FF sync debice name..."
+      echo "Updating FF sync device name..."
       perl -pi.bak -e \
         "s/identity.fxaccounts.account.device.name\",.*\$/identity.fxaccounts.account.device.name\", \"${i} @ $HOSTNAME\");/" \
         "${PREFSJS}"
     fi
     ls -la "${PREFSJS}"*
+
+		if [ "$THIS_IS_WINDOWS" = 1 ]; then
+			# Prefix profile name to FF executable, so that its windows don't get mixed up
+			# on the taskbar.
+			# TODO: figure out how to deal with upgrades...
+			FF_EXE_NEW="$FF_PROFILE_DIR/firefox-bin-$i/firefox.exe"
+			if [ ! -x "$FF_EXE_NEW" ]; then
+				cp -vr "$(dirname "$FF_EXE")" "$FF_PROFILE_DIR/firefox-bin-$i/"
+			fi
+			FF_EXE="$FF_EXE_NEW"
+		fi
+
     echo "Launching FireFox profile '$i'... "
     "${FF_EXE}" -P "$i" --new-instance &
 		if [ "$i" != "$last" ]; then
