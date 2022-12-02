@@ -681,9 +681,21 @@ download_if_not_older(){
 
 venv() {
 	VENV_BASE=~/venvs/
-	VENV_NAME="$1"
+	if [ -z "$1" ]; then
+		echo "Usage: venv [ -p /path/to/python-X.Y ] VENV_NAME"
+		return
+	fi
+	
+	VENV_PYPATH_ARG=
+	if [ "$1" = '-p' ]; then
+		VENV_PYPATH_ARG="-p $2"
+		VENV_NAME="$3"
+	else
+		VENV_NAME="$1"
+	fi
+
 	if [ ! -d "$VENV_BASE/$VENV_NAME" ]; then
-		virtualenv "$VENV_BASE/$VENV_NAME"
+		virtualenv $VENV_PYPATH_ARG "$VENV_BASE/$VENV_NAME"
 	fi
 	source "$VENV_BASE/$VENV_NAME/bin/activate"
 }
