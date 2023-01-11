@@ -244,6 +244,9 @@ vm_check() {
 	elif [ -r /var/log/dmesg ] && grep -q "^hd.: VBOX " /var/log/dmesg; then
     VM_TYPE="VBOX"
 		VM_COLOR="$bluefb$blackb"
+	elif [ -r /var/log/dmesg ] && grep -qi "Hypervisor detected: KVM " /var/log/dmesg; then
+    VM_TYPE="KVM"
+		VM_COLOR="$bluefb$greenb"
 	elif uname -r | grep -qi Microsoft; then
 		# Pigs can finally fly, it's 2019 and we have M$ Linux O_O
     VM_TYPE="WSL"
@@ -640,7 +643,18 @@ rainbow256=( 53 89 125 161 197
 }
 
 tm() {
-	TMUX_SESSION="$1"
+	# Usage: tm [ /path/to/start/in ] TMUX_NAME
+	if [ -n "$2" ]; then
+		if [ -d "$1" ]; then
+			hm \* "Starting tmux session '$2' in $1"
+			cd "$1"
+			pwd
+			sleep 2
+		fi
+		TMUX_SESSION="$2"
+	else
+		TMUX_SESSION="$1"
+	fi
 	if ! tmux att -t $TMUX_SESSION; then
 		hm \! "Couldn't find tmux session '$TMUX_SESSION'"
 		hm \* "Starting it ..."
