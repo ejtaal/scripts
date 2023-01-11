@@ -244,6 +244,23 @@ vm_check() {
 	elif [ -r /var/log/dmesg ] && grep -q "^hd.: VBOX " /var/log/dmesg; then
     VM_TYPE="VBOX"
 		VM_COLOR="$bluefb$blackb"
+	elif uname -r | grep -qi Microsoft; then
+		# Pigs can finally fly, it's 2019 and we have M$ Linux O_O
+    VM_TYPE="WSL"
+		# Windows home path seems to leak through the $PATH
+		WINDOWS_HOME=$(echo $PATH | sed 's#.*:\(/mnt/c/Users/[^/]*\)/.*#\1#')
+		
+		if [ ! -L ~/WinHome -a -d "$WINDOWS_HOME" ]; then
+			ln -vs $WINDOWS_HOME ~/WinHome
+		fi
+
+		VM_COLOR="$whitefb$blueb"
+	elif uname -s | grep -q MINGW64; then
+		# Either Git Bash or Msys
+    VM_TYPE="MINGW"
+		# No need to set this as $HOME etc is available correctly
+		#WINDOWS_HOME=$(echo $PATH | sed 's#.*:\(/mnt/c/Users/[^/]*\)/.*#\1#')
+		VM_COLOR="$redfb$blackb"
 	else
 		for i in /sys/devices/virtual/dmi/id/product_name /proc/scsi/scsi; do
 			if [ -f $i ] && grep -qi "VMware" $i; then
@@ -383,7 +400,9 @@ hm() {
 		'*') color="$cyanfb";;
 	esac
 	shift
-	echo -e "${color}[${icon}] $@${reset}"
+	echo -en "${color}[${icon}] "
+	echo -n "$@"
+	echo -e "${reset}"
 	
 }
 
@@ -434,7 +453,8 @@ THREADS_CMDS=()
 THREADS_CUR=0
 
 threads_addcmd() {
-	THREADS_CMDS[THREADS_CUR]="${THREADS_CMDS[THREADS_CUR]}$*;"
+	THREADS_CMDS[THREADS_CUR]="
+	${THREADS_CMDS[THREADS_CUR]}$*;"
 	echo "==>> Command '$*' added to thread# $THREADS_CUR"
 	THREADS_CUR=$((THREADS_CUR+1))
 	if [ "$THREADS_CUR" = "$THREADS_TOTAL" ]; then
@@ -463,8 +483,9 @@ windowlist string " screen[%n %t] %h"
 		echo "exec 2> >(tee -a $err_log)" >> "$threadfile"
 		chmod +x "$threadfile"
 		echo "${THREADS_CMDS[i]}" >> "$threadfile"
-		echo "echo Waiting 5 secs before exit..." >> "$threadfile"
+		echo "echo 'Waiting 5 secs before exit and self deletion of this script ($threadfile)...'" >> "$threadfile"
 		echo "sleep 5" >> "$threadfile"
+		echo "rm -vf $threadfile" >> "$threadfile"
 		echo "screen -t thread_${i} bash -c '$threadfile'" \
 			>> "/tmp/threads_screenrc_test_$$"
 	done
@@ -568,4 +589,144 @@ rainbowify() {
 		echo -en "${rainbow[i]}${substr}"
 	done
 	echo -e $reset
+}
+
+bright_rainbowify256() {
+  str="$1"
+##### dark purple blue teal green yellow orange red
+rainbow256=( 53 89 125 161 197 
+	198 199 200 201 165 129 93 57 
+	63 69 33 27 21 20 26 32 39 45 51 50 44 43 37 30 29 28 34 40 46 82 
+	118 154 190 226 
+	220 214 208 202 
+	166 130 94 52 88 124 160 196
+	)
+	#for k in ${rainbow256[*]}; do
+	#	/usr/bin/printf "%b%s%b" "\e[38;5;${k}m" "${k}" "\e[0m"
+	#done
+	#echo
+	#for k in ${rainbow256[*]}; do
+	#	/usr/bin/printf "%b%s%b" "\e[38;5;${k}m" "#" "\e[0m"
+	#done
+	#echo
+  
+	total=${#rainbow256[*]}
+  
+	#echo "[$str]"
+  length=$(echo "$str" | wc -c)
+	print_str=
+  for i in `seq 1 $total`; do
+    start=$(( (i-1)*length/total+1))
+    end=$(( i*length/total ))
+    #echo "i = $i, start = $start, end = $end"
+		#echo if  $start -gt $end 
+		if [ $start -gt $end ]; then
+			continue
+		fi
+		if [ $i = $total ]; then
+			#echo MARK
+			end=
+		fi
+    substr=$(echo "$str" | cut -b "$start-$end")
+		#echo "SUB = [$substr]"
+    #echo -n "$substr "
+    #echo -en "${bright_rainbow[i]}${substr}"
+		j=$((i-1))
+		#print_str="${print_str}\e[38;5;${rainbow256[j]}m${substr}"
+		/usr/bin/printf "%b%s" "\e[38;5;${rainbow256[j]}m" "${substr}" 
+  done
+	#echo -en "${print_str}"
+  echo -e $reset
+}
+
+tm() {
+	TMUX_SESSION="$1"
+	if ! tmux att -t $TMUX_SESSION; then
+		hm \! "Couldn't find tmux session '$TMUX_SESSION'"
+		hm \* "Starting it ..."
+		sleep 1
+		tmux new -s $TMUX_SESSION
+	fi
+}
+
+file_older_than_mins() {
+	file="$1"
+	age="$2"
+
+	if [ ! -r "$file" ]; then
+		return 0
+	else
+		if [ "$(find "$file" -not -mmin "+$age" | wc -l)" = 0 ]; then
+			return 0
+		else
+			return 1
+		fi
+	fi
+	return 0
+}
+
+download_if_not_older(){
+	file="$1"
+	age="$2"
+	url="$3"
+	if file_older_than_mins "$file" "$age"; then
+		echo "-> $file seems old, downloading current version..."
+		wget -O "$file" "$url"
+	else
+		echo "-> $file seems up to date (modified in the last $age mins)."
+	fi
+	ls -l "$file"
+}
+
+
+venv() {
+	VENV_BASE=~/venvs/
+	if [ -z "$1" ]; then
+		echo "Usage: venv [ -p /path/to/python-X.Y ] VENV_NAME"
+		return
+	fi
+	
+	VENV_PYPATH_ARG=
+	if [ "$1" = '-p' ]; then
+		VENV_PYPATH_ARG="-p $2"
+		VENV_NAME="$3"
+	else
+		VENV_NAME="$1"
+	fi
+
+	if [ ! -d "$VENV_BASE/$VENV_NAME" ]; then
+		virtualenv $VENV_PYPATH_ARG "$VENV_BASE/$VENV_NAME"
+	fi
+	source "$VENV_BASE/$VENV_NAME/bin/activate"
+}
+
+pyrun() {
+	py_exe="$1"
+	if [ -z "$py_exe" ]; then
+		echo "pyrun(): No python executable specified"
+		return
+	fi
+	venv "$py_exe"
+	if ! which "$py_exe" 2> /dev/null; then
+		echo "pyrun(): '$py_exe' appears to be not installed, trying to use pip to install it"
+		pip install "$py_exe"
+	fi
+	echo "pyrun(): now running original command:"
+	echo "$*"
+	"$@"
+}
+
+cmd_repeat() {
+	count="$1"
+	shift
+
+	if [ ! "$count" -gt 0 ]; then
+		echo "usage: cmd_repeat NUM COMMAND [ARG1 [ARG2 [...]]]"
+		echo "e.g.:  cmd_repeat 5 sleep 1"
+		return
+	fi
+	for cmd_repeat_count in $(seq 1 "$count"); do
+		echo "$(date) - cmd_repeat() $cmd_repeat_count/$count: $*"
+		"$@"
+	done
 }

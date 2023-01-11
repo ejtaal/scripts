@@ -30,43 +30,90 @@ PRIORITY_PKGS="-y openssh-server git screen tmux htop vim"
 
 # Duff packages: openvas-cli openvas-client openvas-manager openvas-server 
 
-COMMON_PKGS="
-apmd
-autofs
+# For WSL and/or lean server installs we could suffice with just cmd line apps:
+CMDLINE_PKGS="
 automake
 bmon
 build-essential
+clinfo
+cryptcat
+dc
+elinks
+expect
+fdupes
+firefox
+g++
+gcc-mingw-w64-x86-64
+git
+gnupg
+grc
+htop
+ionice
+iotop
+ipcalc
+john
+lftp
+libc6-dev
+links
+linux-headers-`uname -r` ltrace
+lynx
+links links2
+mtr
+man-db
+mc
+mosh
+multitail
+netcat
+ncdu
+nmap
+openvpn
+p7zip-full
+perl-doc
+perldoc
+pv
+pwgen
+python3-numpy
+python-numpy
+r-base-core
+screen
+sshpass
+ssldump
+sslscan
+strace
+supercat
+tidy
+timelimit
+unzip
+win-iconv-mingw-w64-dev
+"
+
+COMMON_PKGS="
+$CMDLINE_PKGS
+apmd
+autofs
 cherrytree
 cifs-utils
 cpulimit
 ddd
 dkms
 edb-debugger
-elinks
 fatsort
-fdupes
 filezilla
 gadmin-openvpn-client
 gdb
 gedit
-git
 git-gui
 gitk
 gparted
-htop
 httrack
 iftop
 ike-qtgui
 inotify-tools
-ionice
-iotop
-ipcalc
 iptraf-ng
 kbtin
 kde-spectacle
 keepass2
 knockd
-lftp
 libav-tools
 libcpan-checksums-perl
 libdigest-crc-perl
@@ -77,46 +124,26 @@ libsox-fmt-mp3
 libstring-crc32-perl
 libstring-crc-cksum-perl
 libtool
-links
-linux-headers-`uname -r` ltrace
-lynx
-mc
-mosh
-mtr
 munin
 munin-node
-ncdu
-netcat
 nethogs
-nmap
 ntp-doc
 okular
 onboard
 openssh-blacklist
 openssh-blacklist-extra
 openssh-server
-openvpn
 partimage
-pv
 python3-notify2
 python-notify2
 python-pip
 python-setuptools
-screen
 smartmontools
 smplayer
 sox
 sshfs
-sshpass
-ssldump
-sslscan
-strace
-supercat
-supercat
 sysfsutils
 system-config-lvm
-tidy
-timelimit
 uswsusp
 vinagre
 virtualenvwrapper
@@ -129,6 +156,7 @@ wine
 DESKTOP_PKGS="
 $COMMON_PKGS
 calibre
+csvkit
 curl
 encfs
 fbreader
@@ -142,6 +170,7 @@ kate
 krusader
 mp3info
 myspell-en-gb
+odt2txt
 open-vm-tools-desktop
 parcellite
 qbittorrent
@@ -355,6 +384,10 @@ choose_setup() {
 			# Do different stuff
 			install_pkgs "$DESKTOP_PKGS"
 			#myapt install "$DESKTOP_PKGS"
+			;;
+		wsl|server|lean) # Will install a generic Mate based desktop environment
+			# Do different stuff
+			install_pkgs "$CMDLINE_PKGS"
 			;;
 		*) hm "-" "entry not recognised"
 	esac
