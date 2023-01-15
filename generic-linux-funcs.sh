@@ -244,13 +244,16 @@ vm_check() {
 	elif [ -r /var/log/dmesg ] && grep -q "^hd.: VBOX " /var/log/dmesg; then
     VM_TYPE="VBOX"
 		VM_COLOR="$bluefb$blackb"
+	elif [ -r /var/log/dmesg ] && grep -qi "Hypervisor detected: KVM" /var/log/dmesg; then
+    VM_TYPE="KVM"
+		VM_COLOR="$greenfb$blueb"
 	elif uname -r | grep -qi Microsoft; then
 		# Pigs can finally fly, it's 2019 and we have M$ Linux O_O
     VM_TYPE="WSL"
 		# Windows home path seems to leak through the $PATH
 		WINDOWS_HOME=$(echo $PATH | sed 's#.*:\(/mnt/c/Users/[^/]*\)/.*#\1#')
 		
-		if [ ! -L ~/WinHome ]; then
+		if [ ! -L ~/WinHome -a -d "$WINDOWS_HOME" ]; then
 			ln -vs $WINDOWS_HOME ~/WinHome
 		fi
 
@@ -640,7 +643,18 @@ rainbow256=( 53 89 125 161 197
 }
 
 tm() {
-	TMUX_SESSION="$1"
+	# Usage: tm [ /path/to/start/in ] TMUX_NAME
+	if [ -n "$2" ]; then
+		if [ -d "$1" ]; then
+			hm \* "Starting tmux session '$2' in $1"
+			cd "$1"
+			pwd
+			sleep 2
+		fi
+		TMUX_SESSION="$2"
+	else
+		TMUX_SESSION="$1"
+	fi
 	if ! tmux att -t $TMUX_SESSION; then
 		hm \! "Couldn't find tmux session '$TMUX_SESSION'"
 		hm \* "Starting it ..."
@@ -681,9 +695,21 @@ download_if_not_older(){
 
 venv() {
 	VENV_BASE=~/venvs/
-	VENV_NAME="$1"
+	if [ -z "$1" ]; then
+		echo "Usage: venv [ -p /path/to/python-X.Y ] VENV_NAME"
+		return
+	fi
+	
+	VENV_PYPATH_ARG=
+	if [ "$1" = '-p' ]; then
+		VENV_PYPATH_ARG="-p $2"
+		VENV_NAME="$3"
+	else
+		VENV_NAME="$1"
+	fi
+
 	if [ ! -d "$VENV_BASE/$VENV_NAME" ]; then
-		virtualenv "$VENV_BASE/$VENV_NAME"
+		virtualenv $VENV_PYPATH_ARG "$VENV_BASE/$VENV_NAME"
 	fi
 	source "$VENV_BASE/$VENV_NAME/bin/activate"
 }
