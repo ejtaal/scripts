@@ -214,7 +214,14 @@ set_zshellisms() {
 	if [ -r ~/.zsh-plugins/zsh-tmux-auto-title.plugin.zsh ]; then
 		source ~/.zsh-plugins/zsh-tmux-auto-title.plugin.zsh
 		DISABLE_AUTO_TITLE=true
-		ZSH_TMUX_AUTO_TITLE_TARGET=window
+		# Only enable ZSH_TMUX_AUTO_TITLE_TARGET when inside of tmux, else it will just 
+		# keep printing it on your prompt messing everything up
+		if [ -n "$TMUX_PANE" ]; then
+			ZSH_TMUX_AUTO_TITLE_TARGET=window
+		else
+			ZSH_TMUX_AUTO_TITLE_TARGET=be-silent-please
+		fi
+
 		ZSH_TMUX_AUTO_TITLE_EXPAND_ALIASES=false
 		ZSH_TMUX_AUTO_TITLE_IDLE_TEXT="%pwd"
 		ZSH_TMUX_AUTO_TITLE_SHORT=true

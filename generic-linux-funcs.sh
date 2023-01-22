@@ -244,9 +244,9 @@ vm_check() {
 	elif [ -r /var/log/dmesg ] && grep -q "^hd.: VBOX " /var/log/dmesg; then
     VM_TYPE="VBOX"
 		VM_COLOR="$bluefb$blackb"
-	elif [ -r /var/log/dmesg ] && grep -qi "Hypervisor detected: KVM " /var/log/dmesg; then
+	elif [ -r /var/log/dmesg ] && grep -qi "Hypervisor detected: KVM" /var/log/dmesg; then
     VM_TYPE="KVM"
-		VM_COLOR="$bluefb$greenb"
+		VM_COLOR="$greenfb$blueb"
 	elif uname -r | grep -qi Microsoft; then
 		# Pigs can finally fly, it's 2019 and we have M$ Linux O_O
     VM_TYPE="WSL"
