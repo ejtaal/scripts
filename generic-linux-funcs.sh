@@ -650,8 +650,15 @@ tm() {
 			cd "$1"
 			pwd
 			sleep 2
+			TMUX_SESSION="$2"
 		fi
-		TMUX_SESSION="$2"
+		if [ -d "$2" ]; then
+			hm \* "Starting tmux session '$1' in $2"
+			cd "$2"
+			pwd
+			sleep 2
+			TMUX_SESSION="$1"
+		fi
 	else
 		TMUX_SESSION="$1"
 	fi
