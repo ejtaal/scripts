@@ -100,7 +100,21 @@ set_zshellisms() {
 			#PROMPT=$'%F{%(#.blue.green,bold)}─${debian_chroot:+($debian_chroot)──}(%B%F{%(#.red.blue,bold)}%n%(#.💀.㉿)%m%b%F{%(#.blue.green)})-[%F{%(#.yellow.green)}%W %*%F{%(#.blue.green)}]-[ %B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)} ]\n%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
 			#RPROMPT=$'%(?.. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.)'
 	
-			PROMPT=$'%(?.. %? %F{red}%B⨯%b%F{reset}\n)%(1j. %j %F{yellow}%B⚙%b%F{reset}.)%F{%(#.blue.green)}─${debian_chroot:+($debian_chroot)──}(%B%F{%(#.red.blue)}%n%(#.💀.㉿)%m%b%F{%(#.blue.green)})-[%F{%(#.yellow.green)}%W %*%F{%(#.blue.green)}]-[ %B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)} ]\n%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
+			## ZSH niceprompt semi-equivalent alternative
+			# Optional error from prev command incl. error code
+			PROMPT=$'%(?.. %? %F{red}%B:(%b%F{reset}\n)'
+			# The rest
+			PROMPT="$PROMPT"$'%(1j. %j %F{yellow}%B⚙%b%F{reset}.)%F{%(#.blue.green)}─${debian_chroot:+($debian_chroot)──}(%B%F{%(#.red.blue)}%n'
+			PROMPT="$PROMPT"$'㉿%m%b%F{%(#.blue.green)})-[%F{%(#.yellow.green)}%W %*%F{%(#.blue.green)}]'
+			# PWD
+			PROMPT="$PROMPT"$'-[ %B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)} ]'
+			# IPs
+			IPS=$(ip addr | grep 'inet ' | awkf 2 | cut -f 1 -d '/' | grep -v '^127' | sort -V | xargs)
+			PROMPT="$PROMPT"$'-[ %B%F{reset}'"$IPS"$'%F{%(#.blue.green)} ]'
+			# Newline and commandline prefix
+			PROMPT="$PROMPT"$'\n%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
+			#PROMPT=$'%(?.. %? %F{red}%B⨯%b%F{reset}\n)%(1j. %j %F{yellow}%B⚙%b%F{reset}.)%F{%(#.blue.green)}─${debian_chroot:+($debian_chroot)──}(%B%F{%(#.red.blue)}%n%(#.💀.㉿)%m%b%F{%(#.blue.green)})-[%F{%(#.yellow.green)}%W %*%F{%(#.blue.green)}]-[ %B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)} ]\n%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
+			#PROMPT=$'%(?.. %? %F{red}%B⨯%b%F{reset}\n)%(1j. %j %F{yellow}%B⚙%b%F{reset}.)%F{%(#.blue.green)}─${debian_chroot:+($debian_chroot)──}(%B%F{%(#.red.blue)}%n%(#.💀.㉿)%m%b%F{%(#.blue.green)})-[%F{%(#.yellow.green)}%W %*%F{%(#.blue.green)}]-[ %B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)} ]\n%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
 			#RPROMPT=$''
 	
 			# enable syntax-highlighting

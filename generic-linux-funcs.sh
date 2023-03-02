@@ -651,8 +651,7 @@ tm() {
 			pwd
 			sleep 2
 			TMUX_SESSION="$2"
-		fi
-		if [ -d "$2" ]; then
+		else
 			hm \* "Starting tmux session '$1' in $2"
 			cd "$2"
 			pwd
