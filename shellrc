@@ -614,7 +614,7 @@ prompt_command() {
     status=$(cat $i/status)
     #perc=$((current*100/full))
     if [ -f $i/capacity ]; then
-      cap=$(cat $i/capacity)
+      cap=$(cat $i/capacity 2> /dev/null)
     else
       cap=1
     fi

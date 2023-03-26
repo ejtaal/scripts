@@ -213,7 +213,7 @@ system_info() {
 	for i in /sys/class/power_supply/BAT*; do
 		if [ ! -f "$i" ]; then continue; fi
 		bat=$(basename $i)
-		cap=$(cat $i/capacity)
+		cap=$(cat $i/capacity 2> /dev/null)
 		status=$(cat $i/status | cut -b -3)
 		echo -n "$bat($status):${cap}% "
 	done
@@ -676,6 +676,17 @@ download_if_not_older(){
 	ls -l "$file"
 }
 
+download_if_modified_since(){
+	file="$1"
+	url="$2"
+	# Use the If-Modified-Since HTTP header to determine whether to (re)download a file
+	if test -e "$file"; then 
+		zflag="-z '$file'"
+	else
+		zflag=
+	fi
+	curl -o "$file" $zflag "$uri"
+}
 
 venv() {
 	VENV_BASE=~/venvs/
