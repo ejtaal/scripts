@@ -19,6 +19,7 @@ set_zshellisms() {
 	setopt numericglobsort     # sort filenames numerically when it makes sense
 	setopt promptsubst         # enable command substitution in prompt
 	setopt no_auto_remove_slash # stop removing slashes, you silly shell
+	setopt NO_HUP              # Disown background processes so they are not killed if the parent zsh is killed
 	
 	WORDCHARS=${WORDCHARS//\/} # Don't consider certain characters part of the word
 	
@@ -99,7 +100,21 @@ set_zshellisms() {
 			#PROMPT=$'%F{%(#.blue.green,bold)}─${debian_chroot:+($debian_chroot)──}(%B%F{%(#.red.blue,bold)}%n%(#.💀.㉿)%m%b%F{%(#.blue.green)})-[%F{%(#.yellow.green)}%W %*%F{%(#.blue.green)}]-[ %B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)} ]\n%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
 			#RPROMPT=$'%(?.. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.)'
 	
-			PROMPT=$'%(?.. %? %F{red}%B⨯%b%F{reset}\n)%(1j. %j %F{yellow}%B⚙%b%F{reset}.)%F{%(#.blue.green)}─${debian_chroot:+($debian_chroot)──}(%B%F{%(#.red.blue)}%n%(#.💀.㉿)%m%b%F{%(#.blue.green)})-[%F{%(#.yellow.green)}%W %*%F{%(#.blue.green)}]-[ %B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)} ]\n%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
+			## ZSH niceprompt semi-equivalent alternative
+			# Optional error from prev command incl. error code
+			PROMPT=$'%(?.. %? %F{red}%B:(%b%F{reset}\n)'
+			# The rest
+			PROMPT="$PROMPT"$'%(1j. %j %F{yellow}%B⚙%b%F{reset}.)%F{%(#.blue.green)}─${debian_chroot:+($debian_chroot)──}(%B%F{%(#.red.blue)}%n'
+			PROMPT="$PROMPT"$'㉿%m%b%F{%(#.blue.green)})-[%F{%(#.yellow.green)}%W %*%F{%(#.blue.green)}]'
+			# PWD
+			PROMPT="$PROMPT"$'-[ %B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)} ]'
+			# IPs
+			IPS=$(ip addr | grep 'inet ' | awkf 2 | cut -f 1 -d '/' | grep -v '^127' | sort -V | xargs)
+			PROMPT="$PROMPT"$'-[ %B%F{reset}'"$IPS"$'%F{%(#.blue.green)} ]'
+			# Newline and commandline prefix
+			PROMPT="$PROMPT"$'\n%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
+			#PROMPT=$'%(?.. %? %F{red}%B⨯%b%F{reset}\n)%(1j. %j %F{yellow}%B⚙%b%F{reset}.)%F{%(#.blue.green)}─${debian_chroot:+($debian_chroot)──}(%B%F{%(#.red.blue)}%n%(#.💀.㉿)%m%b%F{%(#.blue.green)})-[%F{%(#.yellow.green)}%W %*%F{%(#.blue.green)}]-[ %B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)} ]\n%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
+			#PROMPT=$'%(?.. %? %F{red}%B⨯%b%F{reset}\n)%(1j. %j %F{yellow}%B⚙%b%F{reset}.)%F{%(#.blue.green)}─${debian_chroot:+($debian_chroot)──}(%B%F{%(#.red.blue)}%n%(#.💀.㉿)%m%b%F{%(#.blue.green)})-[%F{%(#.yellow.green)}%W %*%F{%(#.blue.green)}]-[ %B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)} ]\n%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
 			#RPROMPT=$''
 	
 			# enable syntax-highlighting
@@ -213,7 +228,14 @@ set_zshellisms() {
 	if [ -r ~/.zsh-plugins/zsh-tmux-auto-title.plugin.zsh ]; then
 		source ~/.zsh-plugins/zsh-tmux-auto-title.plugin.zsh
 		DISABLE_AUTO_TITLE=true
-		ZSH_TMUX_AUTO_TITLE_TARGET=window
+		# Only enable ZSH_TMUX_AUTO_TITLE_TARGET when inside of tmux, else it will just 
+		# keep printing it on your prompt messing everything up
+		if [ -n "$TMUX_PANE" ]; then
+			ZSH_TMUX_AUTO_TITLE_TARGET=window
+		else
+			ZSH_TMUX_AUTO_TITLE_TARGET=be-silent-please
+		fi
+
 		ZSH_TMUX_AUTO_TITLE_EXPAND_ALIASES=false
 		ZSH_TMUX_AUTO_TITLE_IDLE_TEXT="%pwd"
 		ZSH_TMUX_AUTO_TITLE_SHORT=true
@@ -245,7 +267,8 @@ set_bashisms() {
   
   # Alternative to putting things in .inputrc we can define readline options using 'bind' within bash:
   bind 'set completion-ignore-case On'
-  bind 'set completion-map-case On'
+	# Don't add -/_ to your case mappings index
+  bind 'set completion-map-case Off'
   bind 'set completion-prefix-display-length 3'
   bind 'set mark-symlinked-directories on'
   bind 'set bell-style none'
@@ -298,8 +321,10 @@ alias fixbackspace='reset -e "^?"'
 alias fixbackspace2='stty erase `tput kbs`'
 alias fixvmwarehgfs='vmhgfs-fuse .host:/ /mnt/hgfs/ -o allow_other -o uid=1000'
 alias gamp='git commit -am updates && git pull && git push'
+alias gd='git diff --color-moved --color-moved-ws=allow-indentation-change --minimal'
 alias gdw='git diff --word-diff=color'
 alias gs='echo "Staged diff:"; git --no-pager diff --staged --stat; echo "Current diff:"; git --no-pager diff --stat; echo "Status:"; git --no-pager status -sb'
+alias gs='echo "Status:"; git --no-pager status -sb; echo "Staged diff:"; git --no-pager diff --staged --stat; echo "Current diff:"; git --no-pager diff --stat '
 alias gds='git diff --numstat | awk '\''{ print "+" $1 " -" $2 " " $3 }'\'
 alias htmltidy='tidy -mi -wrap 100'
 alias hs='history | grep'
@@ -663,8 +688,22 @@ prompt_command() {
   # Echo ' username[tty]@hostname(uname) | time | '
   echo -n -e "$boldon$usercolour$USERNAME${reset}@${boldon}${HOST_COLOR}$HOSTNAME${reset} $PROMPTDIR "
   line3="${line3}$USERNAME@$HOSTNAME $PROMPTDIR "
-  CURPOS=${#line3}
-  SPACELEFT=$((COLUMNS-CURPOS))
+	# Quick git branch check
+	git_branch=
+	for gitdir in ./{,../,../../,../../../}.git; do
+		if [ -d "$gitdir" ]; then
+			git_branch=$(git branch 2> /dev/null | grep '^*' | tr -d ' ')
+			break
+		fi
+	done
+	if [ -n "$git_branch" ]; then
+		echo -ne "(${yellowf}$git_branch$reset) "
+  	line3="${line3}($git_branch) "
+	fi
+  
+	CURPOS=${#line3}
+  
+	SPACELEFT=$((COLUMNS-CURPOS))
   #echo SPACELEFT = $SPACELEFT
   # this sets $if_gateway_info
   get_default_if
@@ -687,6 +726,10 @@ prompt_command() {
     echo -ne " "
   done
   echo -e "${os_color}$os_icon $os_release${reset} $if_gateway_info${XINFO} ${coloured_indent}"
+
+
+	######
+	# $PS1 printed after here
 
   if [ "$INSIDE_SCREEN" = 'y' ]; then
     SCREENTITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/')
@@ -908,14 +951,14 @@ persistcommand() {
   fi
 
   while :; do
-    echo "Starting persistcommand:($*). Delay = $DELAY, limit = $LIMIT, force = $FORCE "
+    echo "Starting persistcommand, delay = $DELAY, limit = $LIMIT, force = $FORCE: $* "
     date
     startcommand=`date +%s`
     "$@"
     EXITCODE=$?
     endcommand=`date +%s`
     #secondsran=$((endcommand-startcommand))
-    readable_string=`human_time startcommand $endcommand`
+    readable_string=`human_time $startcommand $endcommand`
     days=$((secondsran/86400))
     secondsran=$((secondsran-(days*86400)))
     hours=$((secondsran/3600))
@@ -926,9 +969,9 @@ persistcommand() {
     echo "The command ran for [${readable_string}]"
     if [ $EXITCODE -eq 0 ]; then
       if [ "$FORCE" = "y" ]; then
-        echo "Seems like a normal exit, but forcing a resume of persistcommand:($*)."
+        echo "Seems like a normal exit, but forcing a resume of persistcommand: $*"
       else
-        echo "Seems like a normal exit, quitting persistcommand:($*)."
+        echo "Seems like a normal exit, quitting persistcommand: $*"
         break
       fi
     else
@@ -955,9 +998,7 @@ human_time() {
     # Remove the extra 6 zeros
     START=${START/000000/}
     END=${END/000000/}
-  fi
-
-  if [ "${#START}" = 13 ]; then
+  elif [ "${#START}" = 13 ]; then
     # We've been given millisecs (length of 10 - 7 = 3)
     seconds=$(($END-$START))
     msecs="$((seconds%1000))"
@@ -966,7 +1007,11 @@ human_time() {
     if [ $msecs -lt 10 ]; then pad='00'; fi
     msecs=".${pad}$((seconds%1000))"
     seconds=$(( seconds / 1000))
+  elif [ "${#START}" = 10 -o "${#START}" = 11 ]; then
+    # We've been given a plain unix timestamp
+    seconds=$(($END-$START))
   else
+		# Not sure what to do here
     seconds="$START"
   fi
   #echo "seconds $seconds msecs $msecs"
@@ -1086,6 +1131,7 @@ ffp() {
   FF_PROFILE_INI=~/.mozilla/firefox/profiles.ini
   FF_EXE=/usr/bin/firefox
   FF_PROFILE_DIR="$(dirname $FF_PROFILE_INI)"
+	THIS_IS_WINDOWS=0
 
   # Called via niceprompt() -> get-basic-sysinfo() but we need it here if used by itself
   vm_check
@@ -1094,11 +1140,13 @@ ffp() {
     FF_PROFILE_INI="$WINDOWS_HOME/AppData/Roaming/Mozilla/Firefox/profiles.ini"
     FF_EXE="/mnt/c/Program Files/Mozilla Firefox/firefox.exe"
     FF_PROFILE_DIR="$(dirname $FF_PROFILE_INI)/Profiles"
+		THIS_IS_WINDOWS=1
   elif [ "$VM_TYPE" = "MINGW" ]; then
     # Look in windows profiles:
     FF_PROFILE_INI="$HOME/AppData/Roaming/Mozilla/Firefox/profiles.ini"
     FF_EXE="/c/Program Files/Mozilla Firefox/firefox.exe"
     FF_PROFILE_DIR="$(dirname $FF_PROFILE_INI)/Profiles"
+		THIS_IS_WINDOWS=1
   fi
   
   if [ -z "$1" ]; then
@@ -1110,6 +1158,7 @@ ffp() {
     return
     # Don't make a backup now
   fi
+	FF_EXE_ORIGINAL="${FF_EXE}"
 
   RECENT_FF_BACKUPS=$(find $FF_PROFILE_DIR -maxdepth 1 -name 'ff-sessions*gz' -mmin -60)
   if [ -z "$RECENT_FF_BACKUPS" ]; then
@@ -1140,21 +1189,39 @@ ffp() {
     find $FF_PROFILE_DIR -maxdepth 1 -name 'ff-sessions*gz' -mmin -60
   fi
 
+	cd "$(dirname "$FF_EXE")"
   # And now start FF, just in case the files get screwed up during startup
+	last=${@: -1}
   for i in "$@"; do
     # Try to set FF sync device name and nightly tester title bar correctly:
     # Hmm nightly tester config is stored in sqlite. Bummer dude.
     PREFSJS="$(dirname $FF_PROFILE_INI)/$(egrep -iA 3 "^Name=${i}" "$FF_PROFILE_INI" | grep ^Path | cut -f 2 -d'=' | tr -d '\r\n')/prefs.js"
     ls -la "${PREFSJS}"*
     if [ -r "${PREFSJS}" ]; then
-      echo "Updating FF sync debice name..."
+      echo "Updating FF sync device name..."
       perl -pi.bak -e \
         "s/identity.fxaccounts.account.device.name\",.*\$/identity.fxaccounts.account.device.name\", \"${i} @ $HOSTNAME\");/" \
         "${PREFSJS}"
     fi
     ls -la "${PREFSJS}"*
+
+		if [ "$THIS_IS_WINDOWS" = 1 ]; then
+			# Prefix profile name to FF executable, so that its windows don't get mixed up
+			# on the taskbar.
+			# TODO: figure out how to deal with upgrades...
+			FF_EXE_NEW="$FF_PROFILE_DIR/firefox-bin-$i/firefox.exe"
+			if [ ! -x "$FF_EXE_NEW" ]; then
+				cp -vr "$(dirname "$FF_EXE")" "$FF_PROFILE_DIR/firefox-bin-$i/"
+			fi
+			FF_EXE="$FF_EXE_NEW"
+		fi
+
     echo "Launching FireFox profile '$i'... "
     "${FF_EXE}" -P "$i" --new-instance &
+		if [ "$i" != "$last" ]; then
+			echo "Waiting 60s before launching another"
+			sleep 60
+		fi
   done
   
 }

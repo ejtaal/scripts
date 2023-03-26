@@ -244,13 +244,16 @@ vm_check() {
 	elif [ -r /var/log/dmesg ] && grep -q "^hd.: VBOX " /var/log/dmesg; then
     VM_TYPE="VBOX"
 		VM_COLOR="$bluefb$blackb"
+	elif [ -r /var/log/dmesg ] && grep -qi "Hypervisor detected: KVM" /var/log/dmesg; then
+    VM_TYPE="KVM"
+		VM_COLOR="$greenfb$blueb"
 	elif uname -r | grep -qi Microsoft; then
 		# Pigs can finally fly, it's 2019 and we have M$ Linux O_O
     VM_TYPE="WSL"
 		# Windows home path seems to leak through the $PATH
 		WINDOWS_HOME=$(echo $PATH | sed 's#.*:\(/mnt/c/Users/[^/]*\)/.*#\1#')
 		
-		if [ ! -L ~/WinHome ]; then
+		if [ ! -L ~/WinHome -a -d "$WINDOWS_HOME" ]; then
 			ln -vs $WINDOWS_HOME ~/WinHome
 		fi
 
@@ -453,7 +456,8 @@ THREADS_CMDS=()
 THREADS_CUR=0
 
 threads_addcmd() {
-	THREADS_CMDS[THREADS_CUR]="${THREADS_CMDS[THREADS_CUR]}$*;"
+	THREADS_CMDS[THREADS_CUR]="
+	${THREADS_CMDS[THREADS_CUR]}$*;"
 	echo "==>> Command '$*' added to thread# $THREADS_CUR"
 	THREADS_CUR=$((THREADS_CUR+1))
 	if [ "$THREADS_CUR" = "$THREADS_TOTAL" ]; then
@@ -482,8 +486,9 @@ windowlist string " screen[%n %t] %h"
 		echo "exec 2> >(tee -a $err_log)" >> "$threadfile"
 		chmod +x "$threadfile"
 		echo "${THREADS_CMDS[i]}" >> "$threadfile"
-		echo "echo Waiting 5 secs before exit..." >> "$threadfile"
+		echo "echo 'Waiting 5 secs before exit and self deletion of this script ($threadfile)...'" >> "$threadfile"
 		echo "sleep 5" >> "$threadfile"
+		echo "rm -vf $threadfile" >> "$threadfile"
 		echo "screen -t thread_${i} bash -c '$threadfile'" \
 			>> "/tmp/threads_screenrc_test_$$"
 	done
@@ -638,7 +643,24 @@ rainbow256=( 53 89 125 161 197
 }
 
 tm() {
-	TMUX_SESSION="$1"
+	# Usage: tm [ /path/to/start/in ] TMUX_NAME
+	if [ -n "$2" ]; then
+		if [ -d "$1" ]; then
+			hm \* "Starting tmux session '$2' in $1"
+			cd "$1"
+			pwd
+			sleep 2
+			TMUX_SESSION="$2"
+		else
+			hm \* "Starting tmux session '$1' in $2"
+			cd "$2"
+			pwd
+			sleep 2
+			TMUX_SESSION="$1"
+		fi
+	else
+		TMUX_SESSION="$1"
+	fi
 	if ! tmux att -t $TMUX_SESSION; then
 		hm \! "Couldn't find tmux session '$TMUX_SESSION'"
 		hm \* "Starting it ..."
@@ -690,10 +712,52 @@ download_if_modified_since(){
 
 venv() {
 	VENV_BASE=~/venvs/
-	VENV_NAME="$1"
+	if [ -z "$1" ]; then
+		echo "Usage: venv [ -p /path/to/python-X.Y ] VENV_NAME"
+		return
+	fi
+	
+	VENV_PYPATH_ARG=
+	if [ "$1" = '-p' ]; then
+		VENV_PYPATH_ARG="-p $2"
+		VENV_NAME="$3"
+	else
+		VENV_NAME="$1"
+	fi
+
 	if [ ! -d "$VENV_BASE/$VENV_NAME" ]; then
-		virtualenv "$VENV_BASE/$VENV_NAME"
+		virtualenv $VENV_PYPATH_ARG "$VENV_BASE/$VENV_NAME"
 	fi
 	source "$VENV_BASE/$VENV_NAME/bin/activate"
 }
 
+pyrun() {
+	py_exe="$1"
+	if [ -z "$py_exe" ]; then
+		echo "pyrun(): No python executable specified"
+		return
+	fi
+	venv "$py_exe"
+	if ! which "$py_exe" 2> /dev/null; then
+		echo "pyrun(): '$py_exe' appears to be not installed, trying to use pip to install it"
+		pip install "$py_exe"
+	fi
+	echo "pyrun(): now running original command:"
+	echo "$*"
+	"$@"
+}
+
+cmd_repeat() {
+	count="$1"
+	shift
+
+	if [ ! "$count" -gt 0 ]; then
+		echo "usage: cmd_repeat NUM COMMAND [ARG1 [ARG2 [...]]]"
+		echo "e.g.:  cmd_repeat 5 sleep 1"
+		return
+	fi
+	for cmd_repeat_count in $(seq 1 "$count"); do
+		echo "$(date) - cmd_repeat() $cmd_repeat_count/$count: $*"
+		"$@"
+	done
+}
