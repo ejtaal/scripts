@@ -309,6 +309,7 @@ alias fixvmwarehgfs='vmhgfs-fuse .host:/ /mnt/hgfs/ -o allow_other -o uid=1000'
 alias gamp='git commit -am updates && git pull && git push'
 alias gd='git diff --color-moved --color-moved-ws=allow-indentation-change --minimal'
 alias gdw='git diff --word-diff=color'
+alias got='hm "!" Use git, not got, you git\!; git'
 alias gs='echo "Staged diff:"; git --no-pager diff --staged --stat; echo "Current diff:"; git --no-pager diff --stat; echo "Status:"; git --no-pager status -sb'
 alias gs='echo "Status:"; git --no-pager status -sb; echo "Staged diff:"; git --no-pager diff --staged --stat; echo "Current diff:"; git --no-pager diff --stat '
 alias gds='git diff --numstat | awk '\''{ print "+" $1 " -" $2 " " $3 }'\'
@@ -1266,7 +1267,6 @@ viewlocate() {
 		view `locate $1 | head -1`
 	fi
 }
-
 
 ### End of subroutines ###
 

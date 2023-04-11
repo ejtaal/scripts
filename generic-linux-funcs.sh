@@ -690,9 +690,10 @@ download_if_not_older(){
 	file="$1"
 	age="$2"
 	url="$3"
+	options="$4"
 	if file_older_than_mins "$file" "$age"; then
-		echo "-> $file seems old, downloading current version..."
-		wget -O "$file" "$url"
+		echo "-> $file seems too old/non-existant, downloading current version..."
+		wget $options -O "$file" "$url"
 	else
 		echo "-> $file seems up to date (modified in the last $age mins)."
 	fi
@@ -751,3 +752,27 @@ cmd_repeat() {
 		"$@"
 	done
 }
+
+timetail() {
+	params="$*"
+	tail -f ---disable-inotify $params \
+	| while read line; do 
+		echo "$(date +%Y%m%d-%H:%M) $line"
+	done
+}
+
+preview_file() {
+    # Show file a la print( pandas.dataframe)
+    file="$1"
+    HUMAN_SIZE="$(ls -lh "$file" | awk '{ print $5}')"
+    FILE_LINES="$(cat "$file" | wc -l)"
+    echo "$(ls -l "$file") / $HUMAN_SIZE / $FILE_LINES l."
+    head -3 "$file" | grep .
+    echo ...
+    tail -3 "$file" | grep .
+}
+
+calc() { 
+	printf "%s\n" "$@" | bc -l;
+}
+
