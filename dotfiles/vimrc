@@ -125,3 +125,7 @@ set noshowmode
 autocmd BufReadPost,FileReadPost,BufNewFile,BufEnter * call system("tmux rename-window " . expand("%:t"))
 
 set number
+
+" Fix vim suddenly starting in replace mode for everything
+" https://superuser.com/questions/1284561/why-is-vim-starting-in-replace-mode
+set t_u7=

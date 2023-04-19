@@ -5,6 +5,10 @@ My collection of scripts. The ones that I'm particularly fond of have screenshot
 
 .. image:: tcpdump-colorize-1.png
 
+(This script has now evolved into its own project called Colorful Tcpdump! 
+Please see here: `Colorful Tcpdump <https://github.com/ejtaal/colorful-tcpdump>`_ )
+
+
 How the scripts works: First it collects your local ip4/6 and MAC addresses.
 When they occur in the tcpdump output they are placed on the left. All ip
 addresses and port numbers are hashed and given a color according to the
@@ -13,6 +17,8 @@ in the output, making output more easy to interpret. All non-local ips
 are also checked for country code, which is suffixed in the output. This
 would allow you to quickly see if $rogue_nation is mounting an attack on
 your network perimeter.
+
+
 
 .. image:: niceprompt-1.png
 

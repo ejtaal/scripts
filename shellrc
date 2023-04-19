@@ -380,6 +380,7 @@ alias vimphp='vim -c ":se ft=php"'
 alias vless="vim -R -c 'nmap q :q!<CR>' -c 'nmap r :e<CR>'"
 alias watp='watch --differences=permanent -n'
 alias watc='watch --differences=cumulative -n'
+alias wget='wget --no-use-server-timestamps'
 alias x='startx'
 #alias xset-fast-keyboard='xset r rate 200 36'
 
