@@ -213,7 +213,7 @@ system_info() {
 	for i in /sys/class/power_supply/BAT*; do
 		if [ ! -f "$i" ]; then continue; fi
 		bat=$(basename $i)
-		cap=$(cat $i/capacity)
+		cap=$(cat $i/capacity 2> /dev/null)
 		status=$(cat $i/status | cut -b -3)
 		echo -n "$bat($status):${cap}% "
 	done
@@ -244,6 +244,9 @@ vm_check() {
 	elif [ -r /var/log/dmesg ] && grep -q "^hd.: VBOX " /var/log/dmesg; then
     VM_TYPE="VBOX"
 		VM_COLOR="$bluefb$blackb"
+	elif [ -r /var/log/dmesg ] && grep -qi "Hypervisor detected: KVM" /var/log/dmesg; then
+    VM_TYPE="KVM"
+		VM_COLOR="$greenfb$blueb"
 	elif uname -r | grep -qi Microsoft; then
 		# Pigs can finally fly, it's 2019 and we have M$ Linux O_O
     VM_TYPE="WSL"
@@ -640,12 +643,31 @@ rainbow256=( 53 89 125 161 197
 }
 
 tm() {
-	TMUX_SESSION="$1"
-	if ! tmux att -t $TMUX_SESSION; then
+	# Usage: tm [ /path/to/start/in ] TMUX_NAME
+	if [ -n "$2" ]; then
+		if [ -d "$1" ]; then
+			hm \* "Starting tmux session '$2' in $1"
+			cd "$1"
+			pwd
+			sleep 2
+			TMUX_SESSION="$2"
+		else
+			hm \* "Starting tmux session '$1' in $2"
+			cd "$2"
+			pwd
+			sleep 2
+			TMUX_SESSION="$1"
+		fi
+	else
+		TMUX_SESSION="$1"
+	fi
+	# Use -L for running independant sessions that don't share
+	# persistent shared config while at least 1 is still running!
+	if ! tmux -L $TMUX_SESSION att -t $TMUX_SESSION; then
 		hm \! "Couldn't find tmux session '$TMUX_SESSION'"
 		hm \* "Starting it ..."
 		sleep 1
-		tmux new -s $TMUX_SESSION
+		tmux -L $TMUX_SESSION new -s $TMUX_SESSION
 	fi
 }
 
@@ -669,15 +691,27 @@ download_if_not_older(){
 	file="$1"
 	age="$2"
 	url="$3"
+	options="$4"
 	if file_older_than_mins "$file" "$age"; then
-		echo "-> $file seems old, downloading current version..."
-		wget -O "$file" "$url"
+		echo "-> $file seems too old/non-existant, downloading current version..."
+		wget $options -O "$file" "$url"
 	else
 		echo "-> $file seems up to date (modified in the last $age mins)."
 	fi
 	ls -l "$file"
 }
 
+download_if_modified_since(){
+	file="$1"
+	url="$2"
+	# Use the If-Modified-Since HTTP header to determine whether to (re)download a file
+	if test -e "$file"; then 
+		zflag="-z '$file'"
+	else
+		zflag=
+	fi
+	curl -o "$file" $zflag "$uri"
+}
 
 venv() {
 	VENV_BASE=~/venvs/
@@ -745,4 +779,27 @@ wait_till_wakeup() {
 		PREV=$NOW
 		sleep $INTERVAL
 	done
+}
+
+timetail() {
+	params="$*"
+	tail -f ---disable-inotify $params \
+	| while read line; do 
+		echo "$(date +%Y%m%d-%H:%M) $line"
+	done
+}
+
+preview_file() {
+    # Show file a la print( pandas.dataframe)
+    file="$1"
+    HUMAN_SIZE="$(ls -lh "$file" | awk '{ print $5}')"
+    FILE_LINES="$(cat "$file" | wc -l)"
+    echo "$(ls -l "$file") / $HUMAN_SIZE / $FILE_LINES l."
+    head -3 "$file" | grep .
+    echo ...
+    tail -3 "$file" | grep .
+}
+
+calc() { 
+	printf "%s\n" "$@" | bc -l;
 }

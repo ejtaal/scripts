@@ -100,7 +100,21 @@ set_zshellisms() {
 			#PROMPT=$'%F{%(#.blue.green,bold)}─${debian_chroot:+($debian_chroot)──}(%B%F{%(#.red.blue,bold)}%n%(#.💀.㉿)%m%b%F{%(#.blue.green)})-[%F{%(#.yellow.green)}%W %*%F{%(#.blue.green)}]-[ %B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)} ]\n%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
 			#RPROMPT=$'%(?.. %? %F{red}%B⨯%b%F{reset})%(1j. %j %F{yellow}%B⚙%b%F{reset}.)'
 	
-			PROMPT=$'%(?.. %? %F{red}%B⨯%b%F{reset}\n)%(1j. %j %F{yellow}%B⚙%b%F{reset}.)%F{%(#.blue.green)}─${debian_chroot:+($debian_chroot)──}(%B%F{%(#.red.blue)}%n%(#.💀.㉿)%m%b%F{%(#.blue.green)})-[%F{%(#.yellow.green)}%W %*%F{%(#.blue.green)}]-[ %B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)} ]\n%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
+			## ZSH niceprompt semi-equivalent alternative
+			# Optional error from prev command incl. error code
+			PROMPT=$'%(?.. %? %F{red}%B:(%b%F{reset}\n)'
+			# The rest
+			PROMPT="$PROMPT"$'%(1j. %j %F{yellow}%B⚙%b%F{reset}.)%F{%(#.blue.green)}─${debian_chroot:+($debian_chroot)──}(%B%F{%(#.red.blue)}%n'
+			PROMPT="$PROMPT"$'㉿%m%b%F{%(#.blue.green)})-[%F{%(#.yellow.green)}%W %*%F{%(#.blue.green)}]'
+			# PWD
+			PROMPT="$PROMPT"$'-[ %B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)} ]'
+			# IPs
+			IPS=$(ip addr | grep 'inet ' | awkf 2 | cut -f 1 -d '/' | grep -v '^127' | sort -V | xargs)
+			PROMPT="$PROMPT"$'-[ %B%F{reset}'"$IPS"$'%F{%(#.blue.green)} ]'
+			# Newline and commandline prefix
+			PROMPT="$PROMPT"$'\n%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
+			#PROMPT=$'%(?.. %? %F{red}%B⨯%b%F{reset}\n)%(1j. %j %F{yellow}%B⚙%b%F{reset}.)%F{%(#.blue.green)}─${debian_chroot:+($debian_chroot)──}(%B%F{%(#.red.blue)}%n%(#.💀.㉿)%m%b%F{%(#.blue.green)})-[%F{%(#.yellow.green)}%W %*%F{%(#.blue.green)}]-[ %B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)} ]\n%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
+			#PROMPT=$'%(?.. %? %F{red}%B⨯%b%F{reset}\n)%(1j. %j %F{yellow}%B⚙%b%F{reset}.)%F{%(#.blue.green)}─${debian_chroot:+($debian_chroot)──}(%B%F{%(#.red.blue)}%n%(#.💀.㉿)%m%b%F{%(#.blue.green)})-[%F{%(#.yellow.green)}%W %*%F{%(#.blue.green)}]-[ %B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)} ]\n%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
 			#RPROMPT=$''
 	
 			# enable syntax-highlighting
@@ -214,7 +228,14 @@ set_zshellisms() {
 	if [ -r ~/.zsh-plugins/zsh-tmux-auto-title.plugin.zsh ]; then
 		source ~/.zsh-plugins/zsh-tmux-auto-title.plugin.zsh
 		DISABLE_AUTO_TITLE=true
-		ZSH_TMUX_AUTO_TITLE_TARGET=window
+		# Only enable ZSH_TMUX_AUTO_TITLE_TARGET when inside of tmux, else it will just 
+		# keep printing it on your prompt messing everything up
+		if [ -n "$TMUX_PANE" ]; then
+			ZSH_TMUX_AUTO_TITLE_TARGET=window
+		else
+			ZSH_TMUX_AUTO_TITLE_TARGET=be-silent-please
+		fi
+
 		ZSH_TMUX_AUTO_TITLE_EXPAND_ALIASES=false
 		ZSH_TMUX_AUTO_TITLE_IDLE_TEXT="%pwd"
 		ZSH_TMUX_AUTO_TITLE_SHORT=true
@@ -302,7 +323,9 @@ alias fixvmwarehgfs='vmhgfs-fuse .host:/ /mnt/hgfs/ -o allow_other -o uid=1000'
 alias gamp='git commit -am updates && git pull && git push'
 alias gd='git diff --color-moved --color-moved-ws=allow-indentation-change --minimal'
 alias gdw='git diff --word-diff=color'
+alias got='hm "!" Use git, not got, you git\!; git'
 alias gs='echo "Staged diff:"; git --no-pager diff --staged --stat; echo "Current diff:"; git --no-pager diff --stat; echo "Status:"; git --no-pager status -sb'
+alias gs='echo "Status:"; git --no-pager status -sb; echo "Staged diff:"; git --no-pager diff --staged --stat; echo "Current diff:"; git --no-pager diff --stat '
 alias gds='git diff --numstat | awk '\''{ print "+" $1 " -" $2 " " $3 }'\'
 alias htmltidy='tidy -mi -wrap 100'
 alias hs='history | grep'
@@ -357,6 +380,7 @@ alias vimphp='vim -c ":se ft=php"'
 alias vless="vim -R -c 'nmap q :q!<CR>' -c 'nmap r :e<CR>'"
 alias watp='watch --differences=permanent -n'
 alias watc='watch --differences=cumulative -n'
+alias wget='wget --no-use-server-timestamps'
 alias x='startx'
 #alias xset-fast-keyboard='xset r rate 200 36'
 
@@ -617,7 +641,7 @@ prompt_command() {
     status=$(cat $i/status)
     #perc=$((current*100/full))
     if [ -f $i/capacity ]; then
-      cap=$(cat $i/capacity)
+      cap=$(cat $i/capacity 2> /dev/null)
     else
       cap=1
     fi
@@ -1258,7 +1282,6 @@ viewlocate() {
 		view `locate $1 | head -1`
 	fi
 }
-
 
 ### End of subroutines ###
 
