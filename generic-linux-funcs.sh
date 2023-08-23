@@ -716,8 +716,20 @@ download_if_modified_since(){
 venv() {
 	VENV_BASE=~/venvs/
 	if [ -z "$1" ]; then
-		echo "Usage: venv [ -p /path/to/python-X.Y ] VENV_NAME"
-		return
+		found_dotvenv=n
+		for f in {.,..,../..}/.venv; do
+			if [ -r "$f" ]; then
+				found_dotvenv=y
+				v=$(head -1 "$f" | awkf 1)
+				echo "Setting VENV to '$v' as mentioned in $f ..."
+				venv "$v"
+				return
+			fi
+		done
+		if [ "$found_dotvenv" = n ]; then
+			echo "Usage: venv [ -p /path/to/python-X.Y ] VENV_NAME"
+			return
+		fi
 	fi
 	
 	VENV_PYPATH_ARG=
@@ -765,7 +777,7 @@ cmd_repeat() {
 	done
 }
 
-timetail() {
+tailwithtime() {
 	params="$*"
 	tail -f ---disable-inotify $params \
 	| while read line; do 
