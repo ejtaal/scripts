@@ -661,11 +661,13 @@ tm() {
 	else
 		TMUX_SESSION="$1"
 	fi
-	if ! tmux att -t $TMUX_SESSION; then
+	# Use -L for running independant sessions that don't share
+	# persistent shared config while at least 1 is still running!
+	if ! tmux -L $TMUX_SESSION att -t $TMUX_SESSION; then
 		hm \! "Couldn't find tmux session '$TMUX_SESSION'"
 		hm \* "Starting it ..."
 		sleep 1
-		tmux new -s $TMUX_SESSION
+		tmux -L $TMUX_SESSION new -s $TMUX_SESSION
 	fi
 }
 
@@ -763,6 +765,22 @@ cmd_repeat() {
 	done
 }
 
+wait_till_wakeup() {
+	PREV=$(date +%s)
+	INTERVAL=10
+	hm \* "$(date) - Waiting until Wakeup from sleep/suspend detected ..."
+	while :; do
+		NOW=$(date +%s)
+		DIFF=$((NOW-PREV))
+		if [ $DIFF -gt $((INTERVAL*3)) ]; then
+			hm + "$(date) - Wakeup from sleep/suspend detected, continueing ..."
+			break
+		fi
+		PREV=$NOW
+		sleep $INTERVAL
+	done
+}
+
 timetail() {
 	params="$*"
 	tail -f ---disable-inotify $params \
@@ -785,4 +803,3 @@ preview_file() {
 calc() { 
 	printf "%s\n" "$@" | bc -l;
 }
-
