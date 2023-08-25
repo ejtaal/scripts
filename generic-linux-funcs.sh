@@ -777,6 +777,22 @@ cmd_repeat() {
 	done
 }
 
+wait_till_wakeup() {
+	PREV=$(date +%s)
+	INTERVAL=10
+	hm \* "$(date) - Waiting until Wakeup from sleep/suspend detected ..."
+	while :; do
+		NOW=$(date +%s)
+		DIFF=$((NOW-PREV))
+		if [ $DIFF -gt $((INTERVAL*3)) ]; then
+			hm + "$(date) - Wakeup from sleep/suspend detected, continueing ..."
+			break
+		fi
+		PREV=$NOW
+		sleep $INTERVAL
+	done
+}
+
 tailwithtime() {
 	params="$*"
 	tail -f ---disable-inotify $params \
@@ -799,4 +815,3 @@ preview_file() {
 calc() { 
 	printf "%s\n" "$@" | bc -l;
 }
-
