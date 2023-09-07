@@ -1268,8 +1268,11 @@ set-dhcp-lease-forever() {
 }
 
 awkf() {
-  field="$1"
-  awk "{ print \$$field }"
+  fields="$*"
+	fields="\$${fields}"
+	fields="${fields// /\" \"\$}"
+	echo "fields = [$fields]"
+  awk "{ print $fields }"
 }
 
 viewlocate() {
