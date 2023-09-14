@@ -1271,7 +1271,7 @@ awkf() {
   fields="$*"
 	fields="\$${fields}"
 	fields="${fields// /\" \"\$}"
-	echo "fields = [$fields]"
+	#echo "fields = [$fields]"
   awk "{ print $fields }"
 }
 

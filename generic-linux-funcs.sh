@@ -720,7 +720,7 @@ venv() {
 		for f in {.,..,../..}/.venv; do
 			if [ -r "$f" ]; then
 				found_dotvenv=y
-				v=$(head -1 "$f" | awkf 1)
+				v=$(head -1 "$f" | awk '{print $1}')
 				echo "Setting VENV to '$v' as mentioned in $f ..."
 				venv "$v"
 				return
