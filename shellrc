@@ -349,7 +349,7 @@ alias md=mkdir
 alias mp3i='mp3info -x -ra -p "%-30F %6k kb  %02mm:%02ss  %.1r kbs  %q kHz  %o  mpg %.1v layer %L\n"'
 alias mv='mv -vi'
 alias ncat='ncat -v'
-alias  np=niceprompt
+alias np=niceprompt
 alias ntulp='netstat -ntulp'
 alias onp='opera -newpage'
 #alias psf='ps auxwww --forest | less -S'
@@ -588,6 +588,9 @@ prompt_command() {
   # Right justify mem, battery and VMs info:
   right1_info=
   right1_bare=
+	get_all_parent_procs
+  right1_info="${right1_info}$PPIDS_COLORED | "
+  right1_bare="${right1_bare}$PPIDS_UNCOLORED | "
 
   MemTotal=$(grep ^MemTotal: /proc/meminfo | awk '{ print $2 }')
   MemAvailable=$(grep ^MemAvailable: /proc/meminfo | awk '{ print $2 }')
@@ -942,24 +945,44 @@ keepalive() {
 }
 
 persistcommand() {
+	# TODO: potentially support these situations:
+	# - keep running whatever happens
+	# - only rerun if error occurred, stop once no error occurred
+	# - only rerun if no errors occcurred, stop once error occurred
+
   # If command takes less then LIMIT seconds, don't execute it again
   LIMIT=2
   # Wait DELAY seconds before running the command again
   DELAY=15
   FORCE="n"
-  if [ "$1" = "-f" -o "$1" = "--force" ]; then
+	COUNT=0
+	RAN_AS_WANTED=y
+	TILL_ERROR=n
+	TILL_OK=n
+  if [ "$1" = "--force" -o "$1" = "-f" ]; then
     FORCE="y"
     shift
+  elif [ "$1" = "--till-error" -o "$1" = "-e" ]; then
+		TILL_ERROR=y
+    shift
+  elif [ "$1" = "--till-ok" -o "$1" = "-o" ]; then
+		TILL_OK=y
+    shift
+	else
+		echo "Options for persistcommand: "
+		type persistcommand | grep 'if \[ "$1"' | perl -pe 's/.*?=//;s/ -o "\$1" =//;s/ \].*//;'
+		return 0
   fi
 
   while :; do
-    echo "Starting persistcommand, delay = $DELAY, limit = $LIMIT, force = $FORCE: $* "
+		COUNT=$((COUNT+1))
+    echo "Persistcommand count $COUNT, delay = $DELAY, limit = $LIMIT, force = $FORCE: $* "
     date
     startcommand=`date +%s`
     "$@"
     EXITCODE=$?
     endcommand=`date +%s`
-    #secondsran=$((endcommand-startcommand))
+    secondsran=$((endcommand-startcommand))
     readable_string=`human_time $startcommand $endcommand`
     days=$((secondsran/86400))
     secondsran=$((secondsran-(days*86400)))
@@ -971,13 +994,19 @@ persistcommand() {
     echo "The command ran for [${readable_string}]"
     if [ $EXITCODE -eq 0 ]; then
       if [ "$FORCE" = "y" ]; then
-        echo "Seems like a normal exit, but forcing a resume of persistcommand: $*"
+        echo "Seems like a normal exit, but forcing resume was requested of persistcommand: $*"
       else
-        echo "Seems like a normal exit, quitting persistcommand: $*"
-        break
+				if [ "$TILL_OK" = y ]; then
+					echo "Requested persist until OK exitcode, quitting persistcommand: $*"
+        	break
+				fi
       fi
     else
       echo "Exitcode was: $EXITCODE."
+			if [ "$TILL_ERROR" = y ]; then
+				echo "Requested persist until OK exitcode, quitting persistcommand: $*"
+        break
+			fi
     fi
     if [ "$secondsran" -gt $LIMIT -o "$FORCE" = "y" ]; then
       echo "Running the command again after $DELAY seconds..."
@@ -1284,6 +1313,63 @@ viewlocate() {
 		locate $1
 		view `locate $1 | head -1`
 	fi
+}
+
+get_all_parent_procs() {
+	count=0
+	ppid=$(grep -oP '^PPid:\s+\K.*' /proc/$$/status)
+	keep_searching=1
+	PPIDS_COLORED=
+	PPIDS_UNCOLORED=
+	while [ "$keep_searching" = 1 ]; do
+		#echo CHECK1
+		if [ -r /proc/$ppid/status ]; then
+			#echo CHECK2
+			new_ppid=$(grep -oP '^PPid:\s+\K.*' /proc/$ppid/status)
+			ppid_name=$(grep -oP '^Name:\s+\K.*' /proc/$ppid/status)
+
+
+			ppid_add=
+			if [ -n "$PPIDS_UNCOLORED" ]; then
+				ppid_add='/'
+			fi
+
+			ppid_color=''
+			
+			if [[ "$ppid_name" =~ ^tmux ]]; then
+				ppid_color="$greenfb"
+				#echo CHECK3
+			elif [[ "$ppid_name" =~ ^script ]]; then
+				ppid_color="$yellowfb"
+				#echo CHECK4
+			fi
+
+			PPIDS_COLORED="$ppid_color${ppid_name}$reset[$ppid]$ppid_add${PPIDS_COLORED}"
+			PPIDS_UNCOLORED="$ppid_add${ppid_name}[$ppid]$ppid_add${PPIDS_UNCOLORED}"
+	
+			if [ "$ppid" = 1 ]; then
+				keep_searching=0
+			fi
+	
+			ppid=$new_ppid
+		else
+			keep_searching=0
+		fi
+
+		count=$((count+1))
+		if [ "$count" -gt 32 ]; then
+			keep_searching=0
+		fi
+		#echo $count
+		
+	done
+	#export PPIDS_COLORED
+	#export PPIDS_UNCOLORED
+	#echo PPIDS_COLORED = $PPIDS_COLORED
+	#echo PPIDS_UNCOLORED = PPIDS_UNCOLORED
+
+	PPIDS_COLORED="PP: ${PPIDS_COLORED}"
+	PPIDS_UNCOLORED="PP: ${PPIDS_UNCOLORED}"
 }
 
 ### End of subroutines ###

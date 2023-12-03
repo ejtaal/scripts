@@ -109,7 +109,7 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 #		fi
 #	done
 #	echo
-	for gitdir in ~/scripts ~/repos/*; do
+	for gitdir in ~/scripts ~/repos/* ~/keybase/*; do
 		if [ -d "$gitdir/.git" ]; then
 			pushd "$gitdir" > /dev/null
 			#fetch remotes if done more than 30 mins ago
@@ -174,7 +174,7 @@ while [ "$EXIT_REQUESTED" = 0 ] ; do
 		RUNS_REQUESTED=$((RUNS_REQUESTED-1))
 	fi
 
-	SECS=30
+	SECS=60
 	LAST_TIMECHECK=$TIMECHECK
 	TIMECHECK="$(date +%s)"
 	if [ "$FIRSTRUN" != "1" -a $((TIMECHECK-LAST_TIMECHECK)) -gt $((SECS*2)) ]; then
