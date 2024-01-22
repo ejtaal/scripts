@@ -340,6 +340,8 @@ alias ks="dcop `echo $KONSOLE_DCOP_SESSION | sed 's/.*(\(.*\),\(.*\).*)/\1 \2/'`
 ### alias lt='ls -lartF --color=auto'
 ### alias lat='ls -latF --color=auto'
 alias la='ls -al --color=auto'
+alias lh='ls -alh --color=auto'
+alias lah='ls -alh --color=auto'
 alias lac='ls -al --color=auto'
 alias ll='ls -l --color=auto'
 alias l.='ls -dal --color=auto .[^.]*'
