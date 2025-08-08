@@ -111,6 +111,12 @@ get_basic_dist_info() {
 				os_info=$(head -1 /etc/issue | sed -e 's/Red Hat Linux/RH/' -e 's/Red Hat Enterprise Linux/RHEL/' -e 's# release##' -e 's# Server##' -e 's/ (.*//')
 				os_icon="RHEL"
 				os_color="$redfb"
+			elif head -1 /etc/issue | grep -qi ^deb; then
+				os_info="$(cat /etc/debian_version)"
+				os_release="$os_info"
+				#os_icon="꩜ Deb"
+				os_icon="꩜"
+				os_color="$redfb"
 			fi
 		elif [ -x /usr/bin/lsb_release ]; then
 			os_release=$(/usr/bin/lsb_release -rs)

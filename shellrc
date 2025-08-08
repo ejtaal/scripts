@@ -1256,6 +1256,8 @@ ffp() {
 			sleep 60
 		fi
   done
+
+	cd "$FF_PROFILE_DIR"
   
 }
 
