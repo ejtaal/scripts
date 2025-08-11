@@ -667,6 +667,7 @@ tm() {
 	else
 		TMUX_SESSION="$1"
 	fi
+	echo -n $'\033]30;'TMUX - $TMUX_SESSION$'\007'
 	# Use -L for running independant sessions that don't share
 	# persistent shared config while at least 1 is still running!
 	if ! tmux -L $TMUX_SESSION att -t $TMUX_SESSION; then

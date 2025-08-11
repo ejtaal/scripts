@@ -742,11 +742,14 @@ prompt_command() {
     SCREENTITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/')
     #echo -ne "\033k$SCREENTITLE\033\134";
     echo -ne "\033k$SCREENTITLE\033\\";
-  fi
-  if [ -n "$TMUX_PANE" ]; then
+  elif [ -n "$TMUX_PANE" ]; then
     TMUX_PANE_TITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/')
     #ps h -o cmd -q $PPID | grep script
     tmux rename-window "$TMUX_PANE_TITLE"
+	else
+		# If not in tmux or screen (bare terminal?) then set konsole window title if present
+    KONSOLE_TITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/')
+		#echo -n $'\033]30;'$KONSOLE_TITLE$'\007'
   fi
 }
 
