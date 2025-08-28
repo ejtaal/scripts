@@ -26,7 +26,7 @@ popd
 
 source ~/.bashrc
 
-PRIORITY_PKGS="-y openssh-server git screen tmux htop vim"
+PRIORITY_PKGS="-y openssh-server git screen tmux vim btop"
 
 # Duff packages: openvas-cli openvas-client openvas-manager openvas-server 
 

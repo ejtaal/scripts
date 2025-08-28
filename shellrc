@@ -742,11 +742,14 @@ prompt_command() {
     SCREENTITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/')
     #echo -ne "\033k$SCREENTITLE\033\134";
     echo -ne "\033k$SCREENTITLE\033\\";
-  elif [ -n "$TMUX_PANE" ]; then
+  elif [ -n "$TMUX_PANE" -o "$INSIDE_TMUX" = y ]; then
     TMUX_PANE_TITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/')
     #ps h -o cmd -q $PPID | grep script
+		if [ "$USER" = root ]; then
+			TMUX_PANE_TITLE="# $TMUX_PANE_TITLE"
+		fi
     tmux rename-window "$TMUX_PANE_TITLE"
-	else
+	elif [ -n "$KONSOLE_VERSION" ]; then
 		# If not in tmux or screen (bare terminal?) then set konsole window title if present
     KONSOLE_TITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/')
 		#echo -n $'\033]30;'$KONSOLE_TITLE$'\007'
@@ -802,8 +805,12 @@ niceprompt() {
   fi
 
   INSIDE_SCREEN=n
-  if echo "$TERMCAP $TERM" | grep -q 'screen'; then
+  if [[ "$PPIDS_UNCOLORED" =~ 'screen' ]]; then
+    echo INSIDE_SCREEN=y
     INSIDE_SCREEN=y
+  elif [[ "$PPIDS_UNCOLORED" =~ 'tmux' ]]; then
+    echo INSIDE_TMUX=y
+    INSIDE_TMUX=y
   fi
   
   if [ -n "$SSH_CLIENT" -o -n "$KONSOLE_DCOP" -o "$TERM" = "xterm" -o "$TERM" = "xterm-color" ]; then
@@ -1352,7 +1359,7 @@ get_all_parent_procs() {
 			fi
 
 			PPIDS_COLORED="$ppid_color${ppid_name}$reset[$ppid]$ppid_add${PPIDS_COLORED}"
-			PPIDS_UNCOLORED="$ppid_add${ppid_name}[$ppid]$ppid_add${PPIDS_UNCOLORED}"
+			PPIDS_UNCOLORED="${ppid_name}[$ppid]$ppid_add${PPIDS_UNCOLORED}"
 	
 			if [ "$ppid" = 1 ]; then
 				keep_searching=0

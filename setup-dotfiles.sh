@@ -17,6 +17,12 @@ for rcfile in ~/.bashrc ~/.zshrc; do
 	fi
 done
 
+if [ ! -f $HOME/.shellrc.local ]; then
+	echo "# Add directives for this machine only here:
+#niceprompt
+	" > $HOME/.shellrc.local
+fi
+
 pushd ~/scripts/dotfiles
 for i in *; do
 	if [ "$i" = vim -a ! -d ~/."$i" ]; then
