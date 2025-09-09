@@ -466,9 +466,38 @@ bash_preexec () {
   history -a
 
   CMD="${1%% *}"
+  
   if [ -n "$CMD" ]; then
-    SCREENTITLE=$(echo "$@" | sed -e "s# $HOME# ~#" | sed -e 's/^\(............\).*/\1/');
-    echo "$TERM" | grep -q 'screen' && echo -ne "\ek${SCREENTITLE}\e\\"
+
+    # SCREENTITLE=$(echo "$@" | sed -e "s# $HOME# ~#" | sed -e 's/^\(............\).*/\1/');
+    SCREENTITLE="$*"
+    SCREENTITLE="${SCREENTITLE/$HOME/~}"
+
+    if (( ${#SCREENTITLE} > 15 )); then
+      SCREENTITLE="${SCREENTITLE:0:15}…"
+    fi
+
+    # echo BBB '$@' = "$@" "SCREENTITLE = [$SCREENTITLE]"
+    # echo "$TERM" | grep -q 'screen' && echo -ne "\ek${SCREENTITLE}\e\\"
+    if [ "$INSIDE_SCREEN" = 'y' ]; then
+      SCREENTITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/')
+      #echo -ne "\033k$SCREENTITLE\033\134";
+      echo -ne "\033k$SCREENTITLE\033\\";
+    elif [ -n "$TMUX_PANE" -o "$INSIDE_TMUX" = y ]; then
+      TMUX_PANE_TITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/')
+      #ps h -o cmd -q $PPID | grep script
+      if [ "$USER" = root ]; then
+        # TMUX_PANE_TITLE="# $TMUX_PANE_TITLE"
+        SCREENTITLE="# $SCREENTITLE"
+      fi
+      # tmux rename-window "$TMUX_PANE_TITLE" 2> /dev/null
+      # echo tmux rename-window "$SCREENTITLE" 2> /dev/null
+      tmux rename-window "$SCREENTITLE" 2> /dev/null
+    elif [ -n "$KONSOLE_VERSION" ]; then
+      # If not in tmux or screen (bare terminal?) then set konsole window title if present
+      KONSOLE_TITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/')
+      #echo -n $'\033]30;'$KONSOLE_TITLE$'\007'
+    fi
   fi
   
   if [ "$WINDOWTITLE_SETTABLE" = "y" ]; then
@@ -489,9 +518,16 @@ prompt_command() {
   # First get the last exit code to display later
   LASTEXIT=$?
 
+  # Need to get PPID first before potentially running niceprompt below
+	get_all_parent_procs
 
-  if [ "$last_username" != $USERNAME ]; then
-    # We've switched users, update PS1 if necessary
+  if [ "$last_username" != "$USERNAME" ]; then
+    # This is most likely due to being in sudo, whilst our environment was retained.
+    # echo "# We've switched users, update PS1 if necessary"
+    # echo "[$last_username] [$USERNAME]"
+    # Env was retained, but niceprompt() sets a few key things, so rerun it
+    niceprompt
+    # We've switched users, or are initializing, update PS1 if necessary
     # Note: this also allows 3rd party mods of PS1 by software
     # such as virtualenvwrapper.
     indentcolour="$boldon$cyanf"
@@ -504,17 +540,35 @@ prompt_command() {
       prompt_char='$'
     fi;
     #echo PS1="[$PS1]"
-    PS1="\[${indentcolour}\]${prompt_char}\[${reset}\] "
+		VIRTUAL_ENV_PREFIX=
+		if [ -n "$VIRTUAL_ENV" ]; then
+			VIRTUAL_ENV_PREFIX="(`basename \"$VIRTUAL_ENV\"`) "
+		fi
+    PS1="\[${indentcolour}\]${VIRTUAL_ENV_PREFIX}${prompt_char}\[${reset}\] "
   fi
   last_username=$USERNAME
 
-  echo -ne "${indentcolour}┌"
+	left_corner="┌"
+	right_corner="┐"
+	bar_char="─"
+	wall_char="|"
+	
+	if [ "$container" = "firejail" ]; then
+		# Or if it needs to be detected in another way
+		left_corner="\\"
+		right_corner="/"
+		bar_char="|"
+		wall_char="─"
+    indentcolour="$boldon$yellowf"
+	fi
+
+  echo -ne "${indentcolour}$left_corner"
   i=2
   while [ $i -lt $COLUMNS ]; do
     i=$((i+1))
-    echo -ne "─"
+    echo -ne "$bar_char"
   done
-  echo -e "┐${reset}"
+  echo -e "$right_corner${reset}"
   # Ph34r |\/|y l33t B45h |-|A<k3r Pr0|\/|p7 ;)
 
 
@@ -590,7 +644,6 @@ prompt_command() {
   # Right justify mem, battery and VMs info:
   right1_info=
   right1_bare=
-	get_all_parent_procs
   right1_info="${right1_info}$PPIDS_COLORED | "
   right1_bare="${right1_bare}$PPIDS_UNCOLORED | "
 
@@ -737,7 +790,7 @@ prompt_command() {
 
 	######
 	# $PS1 printed after here
-
+  
   if [ "$INSIDE_SCREEN" = 'y' ]; then
     SCREENTITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/')
     #echo -ne "\033k$SCREENTITLE\033\134";
@@ -748,7 +801,7 @@ prompt_command() {
 		if [ "$USER" = root ]; then
 			TMUX_PANE_TITLE="# $TMUX_PANE_TITLE"
 		fi
-    tmux rename-window "$TMUX_PANE_TITLE"
+    tmux rename-window "$TMUX_PANE_TITLE" 2> /dev/null
 	elif [ -n "$KONSOLE_VERSION" ]; then
 		# If not in tmux or screen (bare terminal?) then set konsole window title if present
     KONSOLE_TITLE=$(pwd | sed "s#^$HOME#~#" | sed 's/^\(............\).*/\1/')
@@ -806,10 +859,10 @@ niceprompt() {
 
   INSIDE_SCREEN=n
   if [[ "$PPIDS_UNCOLORED" =~ 'screen' ]]; then
-    echo INSIDE_SCREEN=y
+    # echo INSIDE_SCREEN=y
     INSIDE_SCREEN=y
   elif [[ "$PPIDS_UNCOLORED" =~ 'tmux' ]]; then
-    echo INSIDE_TMUX=y
+    # echo INSIDE_TMUX=y
     INSIDE_TMUX=y
   fi
   
@@ -818,7 +871,7 @@ niceprompt() {
   fi
   
   export PROMPT_COMMAND="prompt_command"
-  export PS1="> "
+  # export PS1="> "
   export PS2='...> '
 }
 
@@ -1115,7 +1168,7 @@ get_default_if() {
     if_ip="x.x.x.x"
     last_digit="x"
   else
-    if_ips=($(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}'))
+    if_ips=($(ip addr show dev $device 2> /dev/null| awk -F'[ /]*' '/inet /{print $3}'))
     if_ip=${if_ips[0]}
     #if_ip=$(ip addr show dev $device | awk -F'[ /]*' '/inet /{print $3}')
     first_3_if_ip=${if_ip%.[0-9]*}
@@ -1149,7 +1202,7 @@ get_default_if() {
   fi
 
   # Other ips active:
-  other_ips=$(ip addr show  | egrep -v "($device|127.0.0.1)" | awk -F'[ /]*' '/inet /{print $3}' | xargs echo -n)
+  other_ips=$(ip addr show 2> /dev/null | egrep -v "($device|127.0.0.1)" | awk -F'[ /]*' '/inet /{print $3}' | xargs echo -n)
   if [ -n "$other_ips" ]; then
     if_gateway_info="$other_ips / $if_gateway_info"
   fi
@@ -1203,7 +1256,7 @@ ffp() {
   fi
 	FF_EXE_ORIGINAL="${FF_EXE}"
 
-  RECENT_FF_BACKUPS=$(find $FF_PROFILE_DIR -maxdepth 1 -name 'ff-sessions*gz' -mmin -60)
+  RECENT_FF_BACKUPS=$(find $FF_PROFILE_DIR -maxdepth 1 -name 'ff-sessions*gz' -mmin -400)
   if [ -z "$RECENT_FF_BACKUPS" ]; then
     echo "No recent backups of FF sessions found."
     echo "While we're here, let's back up all FF profile sessions, just in case, stand by..."
@@ -1260,7 +1313,42 @@ ffp() {
 		fi
 
     echo "Launching FireFox profile '$i'... "
-    "${FF_EXE}" -P "$i" --new-instance &
+		
+		#FJ_PREFIX=
+		if [ -x /usr/bin/firejail ]; then
+			FJ_PROFILE="$HOME/.config/firejail/firefox-$i.local"
+			hm \* "Adding firejail protection ..."
+			if [ -f "$FJ_PROFILE" ]; then
+				echo "Using existing config in $FJ_PROFILE ..."
+			else
+				echo Initializing firejail config in $FJ_PROFILE ...
+				BLACKLIST_DIRS="$(find ~/.mozilla/firefox/ -mindepth 1 -maxdepth 1 -type d | perl -pe 's/^/blacklist /;' | grep -v "/$i$")"
+				echo "
+
+# Include baseline Firefox sandboxing
+include /etc/firejail/firefox.profile
+
+# Blacklist all profile dirs except requested profile 
+$BLACKLIST_DIRS
+#whitelist ~/.mozilla/firefox/$i
+
+# Optional: isolate cache and temp
+private-cache
+private-tmp
+
+# Drop dangerous privileges
+caps.drop all
+seccomp
+nonewprivs
+" > "$FJ_PROFILE"
+			fi
+		
+			FF_EXE="/usr/bin/firejail --profile=$FJ_PROFILE firefox --no-remote"
+			FF_EXE="/usr/bin/firejail --profile=$FJ_PROFILE firefox "
+		fi
+
+    #$FJ_PREFIX"${FF_EXE}" -P "$i" --new-instance &
+    ${FF_EXE} -P "$i" --new-instance &
 		if [ "$i" != "$last" ]; then
 			echo "Waiting 60s before launching another"
 			sleep 60
@@ -1354,6 +1442,9 @@ get_all_parent_procs() {
 				ppid_color="$greenfb"
 				#echo CHECK3
 			elif [[ "$ppid_name" =~ ^script ]]; then
+				ppid_color="$yellowfb"
+				#echo CHECK4
+			elif [[ "$ppid_name" =~ ^firejail ]]; then
 				ppid_color="$yellowfb"
 				#echo CHECK4
 			fi
