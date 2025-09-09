@@ -55,7 +55,8 @@ john
 lftp
 libc6-dev
 links
-linux-headers-`uname -r` ltrace
+linux-headers-`uname -r` 
+ltrace
 lynx
 links links2
 mtr
@@ -155,11 +156,15 @@ wine
 
 DESKTOP_PKGS="
 $COMMON_PKGS
+btrfs-progs
 calibre
 csvkit
 curl
 encfs
 fbreader
+ffmpeg
+firejail 
+firetools
 flashplugin-nonfree
 gimp
 gnome-system-monitor
@@ -168,11 +173,16 @@ hunspell-en-gb
 k4dirstat
 kate
 krusader
+mate-desktop
+mate-desktop-environment
+mate-desktop-environment-extras
 mp3info
 myspell-en-gb
+nvtop
 odt2txt
 open-vm-tools-desktop
 parcellite
+python3.11-venv
 qbittorrent
 system-config-lvm
 ubuntu-mate-desktop
