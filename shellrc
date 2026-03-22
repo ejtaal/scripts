@@ -320,6 +320,7 @@ alias ff="find . -name"
 alias fixbackspace='reset -e "^?"'
 alias fixbackspace2='stty erase `tput kbs`'
 alias fixvmwarehgfs='vmhgfs-fuse .host:/ /mnt/hgfs/ -o allow_other -o uid=1000'
+alias fixkdepanel='systemctl restart --user plasma-plasmashell'
 alias gamp='git commit -am updates && git pull && git push'
 alias gd='git diff --color-moved --color-moved-ws=allow-indentation-change --minimal'
 alias gdw='git diff --word-diff=color'
@@ -597,6 +598,7 @@ prompt_command() {
   fi
   
   indent="│"
+  indent="$wall_char"
   coloured_indent="${indentcolour}${indent}${reset}"
   echo -ne "${coloured_indent} "
   line2="${indent} "

@@ -11,7 +11,7 @@ fi
 # Semi intelijent firejail wrapper
 # Three use cases? venv, appimage, or custom cmd
 
-# TODO" set --name also
+# TODO " set --name also
 
 
 
@@ -41,11 +41,17 @@ if [ -z "$1" ]; then
 				hm + "Profile: $(firejail --profile.print=$pid)"
 #				firejail --protocol.print=$pid
 #				firejail --seccomp.print=$pid
-			pstree -Tap "$pid"
+			pstree -TapU "$pid" \
+			| perl -pe 's/(Isolated Web Co),\d+/\1/' | uniq -c | perl -pe 's/^\s+1//'
 
 		done
-	hm \* 'Available local FJ profiles:'
+	hm \* 'Available local FJ profiles (in ~/.config/firejail/ ):'
 	ls -1 ~/.config/firejail/ | sed 's/.local$//' | xargs
+	hm \* 'These are appimage profiles:'
+	ls -1 ~/.config/firejail/ | sed 's/.local$//' \
+	| grep ^appimage- \
+	| perl -pe 's/^appimage-//; s/-\w+$//;' \
+	| xargs
 	exit 1
 fi
 
@@ -59,11 +65,13 @@ APP_IMAGE_FILE=
 LOCAL_PROFILE_NAME=default
 NET_ENABLED=none
 for option in "$@"; do
-	echo parsing option "$option"
+	echo parsing option "[$option]"
 
 	if ip addr show dev "$option" 2> /dev/null 1>&2; then
 		echo "Network device $option received, running firejail with --net=$option"
 		NET_ENABLED="$option"
+	elif [ $VENV_ENABLED = y -a $LOCAL_PROFILE_NAME = default ]; then
+		LOCAL_PROFILE_NAME="$option"	
 	elif [ "$option" = "venv" ]; then
 		VENV_ENABLED=y
 	# if App image
@@ -76,7 +84,8 @@ for option in "$@"; do
 		else
 			#if [ -x "$option" ]; then
 			# regular target file or option thereof
-			FJ_OPTIONS="$FJ_OPTIONS $option"
+			# FJ_OPTIONS="$FJ_OPTIONS $option"
+			FJ_POSTARGS="$FJ_POSTARGS $option"
 		fi
 ### 	elif [ -z "$FJ_OPTIONS" ]; then
 ### 		LOCAL_PROFILE_NAME="$option"
@@ -88,17 +97,51 @@ for option in "$@"; do
 			APP_IMAGE_FILE="$(ls -t1 ~/Downloads/VSCodium-*-x86_64.AppImage | tail -1)"
 
 			FJ_OPTIONS="$FJ_OPTIONS "
-		elif [ "$option" = 'scripts' ]; then
+		elif [ "$option" = 'github-ejtaal' ]; then
 			hm \* "Special case $option detected"
 
 			FJ_OPTIONS="$FJ_OPTIONS
-				--whitelist=~/scripts
+				--whitelist=~/repos/github/ejtaal
 				--whitelist=~/.config/VSCodium
 				"
 
-			FJ_POSTARGS=/home/taal/scripts/scripts.code-workspace
+			# FJ_POSTARGS=/home/taal/github/github-ejtaal.code-workspace
+			# elif [ "$option" = 'xxx' ]; then
+			# 	hm \* "Special case $option detected"
+
+			# 	FJ_OPTIONS="$FJ_OPTIONS
+			# 		--whitelist=~/scripts
+			# 		--whitelist=~/.config/VSCodium
+			# 		"
+
+			# 	FJ_POSTARGS=/home/taal/scripts/scripts.code-workspace
+			FJ_POSTARGS="-n"
+		elif [ "$option" = 'scripts' ]; then
+			hm \* "Special case $option detected"
+
+			FJ_OPTIONS="$FJ_OPTIONS \\
+				--whitelist=~/scripts \\
+				--mkdir=~/.config/VSCodium-scripts \\
+				--whitelist=~/.config/VSCodium-scripts \\
+				"
+
+			#FJ_POSTARGS="$HOME/scripts.code-workspace --user-data-dir=$HOME/.config/VSCodium-scripts -n"
+			FJ_POSTARGS="$FJ_POSTARGS --user-data-dir=$HOME/.config/VSCodium-scripts"
+
+		elif [ "$option" = 'keybase' ]; then
+			hm \* "Special case $option detected"
+
+			FJ_OPTIONS="$FJ_OPTIONS \\
+				--whitelist=~/keybase \\
+				--mkdir=~/.config/VSCodium-keybase \\
+				--whitelist=~/.config/VSCodium-keybase \\
+				"
+			#FJ_POSTARGS="$HOME/scripts.code-workspace --user-data-dir=$HOME/.config/VSCodium-scripts -n"
+			FJ_POSTARGS="$FJ_POSTARGS --user-data-dir=$HOME/.config/VSCodium-keybase"
+
 		else
-			FJ_OPTIONS="$FJ_OPTIONS $option"
+			# FJ_OPTIONS="$FJ_OPTIONS $option"
+			FJ_POSTARGS="$FJ_POSTARGS \"$option\""
 		fi
 	fi
 
@@ -120,6 +163,7 @@ if [ "$VENV_ENABLED" = y ]; then
 		hm \* "Initializing firejail for python venv $venv_name ($venv_dir) ..."
 	else
 		hm \! "venv $venv_name ($venv_dir) not found!"
+		hm \! "Initalize it first and install dependencies before running it in a jail"
 		return 1
 	fi
 
@@ -159,6 +203,7 @@ venv $venv_name
 	#echo -- firejail --profile="$FJ_PROFILE" bash --rcfile $venv_dir/bash-init.sh  -i
 	FJ_OPTIONS="$FJ_OPTIONS --profile='$FJ_PROFILE' bash --rcfile $venv_dir/bash-init.sh  -i"
 	# End of venv option
+	eval "firejail $FJ_OPTIONS"
 elif [ "$APP_IMAGE_ENABLED" = y ]; then
 	appname="${APP_IMAGE_FILE%%-*}"
 	appname="${appname##*/}"
@@ -199,8 +244,9 @@ elif [ "$APP_IMAGE_ENABLED" = y ]; then
 	
 	# Specify --appimage first so that ?HAS_APPIMAGE in profiles works
 	FJ_OPTIONS="$FJ_OPTIONS --appimage $APP_IMAGE_FILE $FJ_POSTARGS"
-	hm \* Running firejail as: "firejail $FJ_OPTIONS"
-	firejail $FJ_OPTIONS
+	hm \* Running firejail with APPIMAGE: "firejail $FJ_OPTIONS"
+	# firejail $FJ_OPTIONS
+	eval "firejail $FJ_OPTIONS"
 else
 	# Just some other random command?
 	hm \* Running firejail as: "firejail $FJ_OPTIONS"

@@ -42,3 +42,7 @@ for i in *; do
 	fi
 done
 popd
+
+echo "Installing under root as well (sudo bash -c 'cd /root && ln -s /home/taal/scripts && cd scripts && ./setup-dotfiles.sh')"
+read -p "Enter to continue, or ctrl-c to cancel..." dummy
+sudo bash -c 'cd /root && ln -s /home/taal/scripts && cd scripts && ./setup-dotfiles.sh'
