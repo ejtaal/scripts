@@ -319,7 +319,7 @@ alias er="extract-rpm.sh"
 alias ff="find . -name"
 alias fixbackspace='reset -e "^?"'
 alias fixbackspace2='stty erase `tput kbs`'
-alias fixvmwarehgfs='vmhgfs-fuse .host:/ /mnt/hgfs/ -o allow_other -o uid=1000'
+alias fixvmwarehgfs='sudo vmhgfs-fuse .host:/ /mnt/hgfs/ -o allow_other -o uid=1000'
 alias fixkdepanel='systemctl restart --user plasma-plasmashell'
 alias gamp='git commit -am updates && git pull && git push'
 alias gd='git diff --color-moved --color-moved-ws=allow-indentation-change --minimal'
@@ -344,11 +344,13 @@ alias la='ls -al --color=auto'
 alias lh='ls -alh --color=auto'
 alias lah='ls -alh --color=auto'
 alias lac='ls -al --color=auto'
+alias list-qemu-shares="for dev in /sys/bus/virtio/drivers/9pnet_virtio/virtio*/; do     echo \"Device: $(basename $dev)  Tag: $(tr -d '\0' < $dev/mount_tag)\"; done"
 alias ll='ls -l --color=auto'
 alias l.='ls -dal --color=auto .[^.]*'
 alias lt='ls -lart --color=auto'
 alias lat='ls -lat --color=auto'
 alias md=mkdir
+
 alias mp3i='mp3info -x -ra -p "%-30F %6k kb  %02mm:%02ss  %.1r kbs  %q kHz  %o  mpg %.1v layer %L\n"'
 alias mv='mv -vi'
 alias ncat='ncat -v'
@@ -1477,6 +1479,16 @@ get_all_parent_procs() {
 
 	PPIDS_COLORED="PP: ${PPIDS_COLORED}"
 	PPIDS_UNCOLORED="PP: ${PPIDS_UNCOLORED}"
+}
+
+mount-qemu-shares() {
+	for dev in /sys/bus/virtio/drivers/9pnet_virtio/virtio*/; do 
+		tag="$(tr -d '\0' < $dev/mount_tag)"
+		echo "Device: $(basename $dev)  Tag: $tag"
+		sudo mkdir -p /mnt/qemu/$tag
+		findmnt /mnt/qemu/$tag \
+		|| sudo mount -t 9p -o trans=virtio,version=9p2000.L $tag /mnt/qemu/$tag
+	done
 }
 
 ### End of subroutines ###

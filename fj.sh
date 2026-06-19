@@ -201,8 +201,11 @@ venv $venv_name
 " 		> $venv_dir/bash-init.sh
 
 	#echo -- firejail --profile="$FJ_PROFILE" bash --rcfile $venv_dir/bash-init.sh  -i
-	FJ_OPTIONS="$FJ_OPTIONS --profile='$FJ_PROFILE' bash --rcfile $venv_dir/bash-init.sh  -i"
+	#FJ_OPTIONS="$FJ_OPTIONS --profile='$FJ_PROFILE' bash --rcfile $venv_dir/bash-init.sh  -i"
+	FJ_OPTIONS="$FJ_OPTIONS --profile='$FJ_PROFILE' bash "
+	#FJ_OPTIONS="$FJ_OPTIONS bash "
 	# End of venv option
+	echo eval "firejail $FJ_OPTIONS"
 	eval "firejail $FJ_OPTIONS"
 elif [ "$APP_IMAGE_ENABLED" = y ]; then
 	appname="${APP_IMAGE_FILE%%-*}"
