@@ -344,7 +344,6 @@ alias la='ls -al --color=auto'
 alias lh='ls -alh --color=auto'
 alias lah='ls -alh --color=auto'
 alias lac='ls -al --color=auto'
-alias list-qemu-shares="for dev in /sys/bus/virtio/drivers/9pnet_virtio/virtio*/; do     echo \"Device: $(basename $dev)  Tag: $(tr -d '\0' < $dev/mount_tag)\"; done"
 alias ll='ls -l --color=auto'
 alias l.='ls -dal --color=auto .[^.]*'
 alias lt='ls -lart --color=auto'
@@ -529,7 +528,9 @@ prompt_command() {
     # echo "# We've switched users, update PS1 if necessary"
     # echo "[$last_username] [$USERNAME]"
     # Env was retained, but niceprompt() sets a few key things, so rerun it
-    niceprompt
+		if [ -n "$last_username" ]; then
+    	niceprompt
+		fi
     # We've switched users, or are initializing, update PS1 if necessary
     # Note: this also allows 3rd party mods of PS1 by software
     # such as virtualenvwrapper.
@@ -1483,11 +1484,13 @@ get_all_parent_procs() {
 
 mount-qemu-shares() {
 	for dev in /sys/bus/virtio/drivers/9pnet_virtio/virtio*/; do 
-		tag="$(tr -d '\0' < $dev/mount_tag)"
-		echo "Device: $(basename $dev)  Tag: $tag"
-		sudo mkdir -p /mnt/qemu/$tag
-		findmnt /mnt/qemu/$tag \
-		|| sudo mount -t 9p -o trans=virtio,version=9p2000.L $tag /mnt/qemu/$tag
+		if [ -f "$dev" ]; then
+			tag="$(tr -d '\0' < $dev/mount_tag)"
+			echo "Device: $(basename $dev)  Tag: $tag"
+			sudo mkdir -p /mnt/qemu/$tag
+			findmnt /mnt/qemu/$tag \
+			|| sudo mount -t 9p -o trans=virtio,version=9p2000.L $tag /mnt/qemu/$tag
+		fi
 	done
 }
 
