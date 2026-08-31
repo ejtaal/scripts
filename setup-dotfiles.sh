@@ -19,7 +19,10 @@ done
 
 if [ ! -f $HOME/.shellrc.local ]; then
 	echo "# Add directives for this machine only here:
-#niceprompt
+if shopt -q login_shell; then
+	# otherwise rsync and friends will complain about non-clean shells etc.
+	niceprompt
+fi
 	" > $HOME/.shellrc.local
 fi
 
