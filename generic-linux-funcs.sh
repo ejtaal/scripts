@@ -238,9 +238,9 @@ vm_check() {
   if [ -f /proc/user_beancounters -o -d /proc/vz ]; then
     VM_TYPE="OPENVZ"  # Or Virtuozzo
 		VM_COLOR="$blackb$greenfb"
-  elif grep -qi "QEMU Virtual CPU" /proc/cpuinfo; then
+  elif grep -qi "QEMU Virtual CPU" /proc/cpuinfo || grep -qi qemu /sys/class/dmi/id/sys_vendor; then
     VM_TYPE="QEMU"
-		VM_COLOR="$blackb$purplef"
+		VM_COLOR="$blackb$boldoff$yellowf🐦"
 	elif [ -r /proc/timer_list ] && grep -qi 'Clock Event Device: xen' /proc/timer_list; then
     VM_TYPE="XEN"
 		VM_COLOR="$whiteb$blackf"

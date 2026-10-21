@@ -7,7 +7,7 @@ run_curl() {
 	file="$2"
 	output="$3"
 	curl \
-		-X POST http://${host}:8000/v1/audio/transcriptions   \
+		-X POST http://${host}:8080/v1/audio/transcriptions   \
 		-H "Content-Type: multipart/form-data"   \
 		-o "$output" \
 		-F "file=@$file"   \

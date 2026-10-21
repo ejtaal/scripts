@@ -321,6 +321,7 @@ alias fixbackspace='reset -e "^?"'
 alias fixbackspace2='stty erase `tput kbs`'
 alias fixvmwarehgfs='sudo vmhgfs-fuse .host:/ /mnt/hgfs/ -o allow_other -o uid=1000'
 alias fixkdepanel='systemctl restart --user plasma-plasmashell'
+alias fixsudonopasswd="echo '$USER	ALL=(ALL:ALL) NOPASSWD: ALL' | sudo tee /etc/sudoers.d/${USER}-nopasswd; grep -H . /etc/sudoers.d/${USER}-nopasswd"
 alias gamp='git commit -am updates && git pull && git push'
 alias gd='git diff --color-moved --color-moved-ws=allow-indentation-change --minimal'
 alias gdw='git diff --word-diff=color'
@@ -1484,7 +1485,7 @@ get_all_parent_procs() {
 
 mount-qemu-shares() {
 	for dev in /sys/bus/virtio/drivers/9pnet_virtio/virtio*/; do 
-		if [ -f "$dev" ]; then
+		if [ -d "$dev" ]; then
 			tag="$(tr -d '\0' < $dev/mount_tag)"
 			echo "Device: $(basename $dev)  Tag: $tag"
 			sudo mkdir -p /mnt/qemu/$tag
