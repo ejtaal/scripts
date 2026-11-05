@@ -1,18 +1,23 @@
 #!/bin/bash
 #
-# xfer.sh — Foolproof encrypted file transfer via stdout
+# term-xfer.sh — Foolproof encrypted file transfer via stdout
 #
 # Encrypt a file and output base64 for safe copy-paste.
 # Decrypt base64 input from stdin back to a file.
-#
-# Usage:
-#   ENCKEY="myphrase" xfer.sh encrypt file.tar.bz2
-#     → prints base64 text to stdout
-#
-#   echo "base64 text here" | ENCKEY="myphrase" xfer.sh decrypt -o output.tar.bz2
-#     → writes decrypted file
 
 set -euo pipefail
+
+T=$(basename "$0")
+usage() {
+  cat <<EOF
+Usage:
+  $T generate                     # show a new ENCKEY
+  ENCKEY='myphrase' $T encrypt file.tar.bz2
+    → prints base64 text to stdout
+  echo "base64 text here" | ENCKEY='myphrase' $T decrypt -o output.tar.bz2
+    → writes decrypted file
+EOF
+}
 
 # --- Config ---
 CIPHER="aes-256-cbc"
@@ -69,20 +74,18 @@ case "${1:-help}" in
         echo "ENCKEY=$(generate_key)"
         ;;
     encrypt|enc)
-        do_encrypt "${2:?usage: xfer.sh encrypt <file>}"
+        do_encrypt "${2:?$T: usage: $T encrypt <file>}"
         ;;
     decrypt|dec)
         shift; do_decrypt "$@"
         ;;
     help|--help)
-        echo "Usage:"
-        echo "  xfer.sh generate                     # show a new ENCKEY"
-        echo "  ENCKEY='myphrase' xfer.sh encrypt file.tar.bz2"
-        echo "  ENCKEY='myphrase' xfer.sh decrypt -o output.tar.bz2  # reads base64 from stdin"
+        usage
         ;;
     *)
         echo "Unknown command: $1" >&2
-        echo "Usage: xfer.sh [encrypt|decrypt|help]" >&2
+        echo "$0: unknown command: $1" >&2
+        usage >&2
         exit 1
         ;;
 esac
