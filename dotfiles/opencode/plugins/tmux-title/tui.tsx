@@ -1,5 +1,5 @@
 import { Plugin } from "@opencode/plugin/tui"
-import { createSignal, Show } from "solid-js"
+import { createSignal, Show, createComputed } from "solid-js"
 import { exec } from "child_process"
 import { promisify } from "util"
 
@@ -28,6 +28,15 @@ async function SetTmuxTitle(title: string): Promise<void> {
   await execAsync(`tmux -S "${socketPath}" rename-window -t ${process.env.TMUX_PANE} "${title}"`)
 }
 
+// Status may be a SessionStatus object ({ type: "busy" }) or a plain type string.
+function IsBusyStatus(status: unknown): boolean {
+  const type =
+    typeof status === "object" && status
+      ? (status as { type?: string }).type
+      : (status as string | undefined)
+  return type === "busy" || type === "retry" || type === "running"
+}
+
 export default Plugin.define({
   id: "opencode-tmux-title",
   setup(context) {
@@ -35,69 +44,114 @@ export default Plugin.define({
     const [enabled, setEnabled] = createSignal(true)
     const [basename, setBasename] = createSignal<string>(".")
     let pollInterval: ReturnType<typeof setInterval> | null = null
-    let currentBasename = "."
 
     const loc = context.location ?? context.data.location.default()
     if (loc?.directory) {
-      currentBasename = RepoBasename(loc.directory)
-      setBasename(currentBasename)
+      setBasename(RepoBasename(loc.directory))
     }
 
-    if (enabled()) {
-      SetTmuxTitle(BuildTitle("idle", currentBasename))
+    // --- Scope to the session this TUI (this tmux window) is viewing. ---
+
+    // The router is local to this TUI instance, so its route identifies exactly
+    // the session shown in this window. Subagents belong to the viewed session's
+    // family, so their activity counts as this session.
+    function ViewedSessionID(): string | undefined {
+      try {
+        const route = context.ui.router.current() as
+          | { type?: string; sessionID?: string }
+          | undefined
+        if (route?.type !== "session" || !route.sessionID) return undefined
+        return route.sessionID
+      } catch {
+        return undefined
+      }
     }
 
+    function SafeRoot(sessionID: string): string | undefined {
+      try {
+        return context.data.session.root(sessionID) ?? sessionID
+      } catch {
+        return undefined
+      }
+    }
+
+    function BelongsToViewed(sessionID: string): boolean {
+      const viewed = ViewedSessionID()
+      if (!viewed) return false
+      return SafeRoot(sessionID) === viewed || sessionID === viewed
+    }
+
+    // --- State evaluation over only the viewed session's family. ---
+    function RefreshState(): void {
+      if (!enabled()) return
+      const viewed = ViewedSessionID()
+      let busy = false
+      if (viewed) {
+        const sessions = context.data.session.list()
+        if (Array.isArray(sessions)) {
+          for (const s of sessions) {
+            const sid = typeof s === "object" ? s.id : s
+            if (sid !== viewed && SafeRoot(sid) !== viewed) continue
+            if (IsBusyStatus(context.data.session.status(sid))) {
+              busy = true
+              break
+            }
+          }
+        }
+      }
+      setState(busy ? "thinking" : "idle")
+    }
+
+    function ApplyState(): void {
+      if (enabled()) SetTmuxTitle(BuildTitle(state(), basename()))
+    }
+
+    // Re-derive state on initial mount and every time the viewed session changes.
+    createComputed(() => {
+      ViewedSessionID()
+      RefreshState()
+    })
+
+    // Fast path from events — but only for sessions belonging to this window.
     const onStatus = context.data.on(
       "session.status",
-      (event: { properties: { status: { type: string } } }) => {
-        if (event.properties.status.type === "busy") {
-          setState("thinking")
-          if (enabled()) SetTmuxTitle(BuildTitle("thinking", currentBasename))
-        }
+      (event: { properties?: { sessionID?: string; status?: unknown } }) => {
+        if (!enabled()) return
+        const sessionID = event.properties?.sessionID
+        if (!sessionID || !BelongsToViewed(sessionID)) return
+        setState(
+          IsBusyStatus(event.properties?.status) ? "thinking" : "idle",
+        )
       },
     )
 
-    const onIdle = context.data.on("session.idle", () => {
-      setState("idle")
-      if (enabled()) SetTmuxTitle(BuildTitle("idle", currentBasename))
-    })
+    const onIdle = context.data.on(
+      "session.idle",
+      (event: { properties?: { sessionID?: string } }) => {
+        if (!enabled()) return
+        const sessionID = event.properties?.sessionID
+        if (!sessionID || !BelongsToViewed(sessionID)) return
+        setState("idle")
+      },
+    )
 
     const cleanupFns = [onStatus, onIdle]
 
-    const poll = () => {
-      if (!enabled()) return
-      const sessions = context.data.session.list()
-      if (!Array.isArray(sessions) || sessions.length === 0) return
-
-      let anyBusy = false
-      for (const s of sessions) {
-        const sid = typeof s === "object" ? s.id : s
-        const status = context.data.session.status(sid)
-        if (status === "busy" || status === "retry" || status === "running") {
-          anyBusy = true
-          break
-        }
-      }
-
-      const newState: State = anyBusy ? "thinking" : "idle"
-      if (newState !== state()) {
-        setState(newState)
-        if (enabled()) SetTmuxTitle(BuildTitle(newState, currentBasename))
-      }
+    function StartPolling(): void {
+      if (pollInterval) return
+      RefreshState()
+      ApplyState()
+      pollInterval = setInterval(() => {
+        RefreshState()
+        ApplyState()
+      }, 2000)
     }
 
-    const startPolling = () => {
-      poll()
-      pollInterval = setInterval(poll, 2000)
-    }
-
-    const stopPolling = () => {
+    function StopPolling(): void {
       if (pollInterval) { clearInterval(pollInterval); pollInterval = null }
-      cleanupFns.forEach((fn) => fn())
-      cleanupFns.length = 0
     }
 
-    if (enabled()) startPolling()
+    if (enabled()) StartPolling()
 
     context.keymap.layer(() => ({
       mode: "global",
@@ -111,12 +165,12 @@ export default Plugin.define({
             const next = !enabled()
             setEnabled(next)
             if (next) {
-              startPolling()
-              SetTmuxTitle(BuildTitle(state(), currentBasename))
+              StartPolling()
               context.ui.toast.show({ message: "Tmux title updates enabled", variant: "success" })
             } else {
-              stopPolling()
-              SetTmuxTitle(BuildTitle("idle", currentBasename))
+              StopPolling()
+              setState("idle")
+              SetTmuxTitle(BuildTitle("idle", basename()))
               context.ui.toast.show({ message: "Tmux title updates disabled", variant: "info" })
             }
           },
@@ -140,9 +194,10 @@ export default Plugin.define({
     })
 
     return () => {
-      stopPolling()
+      cleanupFns.forEach((fn) => fn())
+      StopPolling()
       unregister()
-      if (enabled()) SetTmuxTitle(BuildTitle("idle", currentBasename))
+      SetTmuxTitle(BuildTitle("idle", basename()))
     }
   },
 })
