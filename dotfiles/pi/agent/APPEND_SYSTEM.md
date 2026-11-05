@@ -4,3 +4,6 @@ When the user asks to commit changes:
 2. Show a proposed commit message
 3. Wait for explicit approval before actually running `git commit`
 4. Never auto-commit without the user saying "yes", "commit", or similar approval
+
+## Compaction
+When the user asks to compact, wait until any current operation is fully finished before triggering it.
